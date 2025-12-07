@@ -1,26 +1,464 @@
 @import "tailwindcss";
 
+/* Design tokens */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #060607;
+  --panel: #0b0b0d;
+  --muted: #9b9798;
+  --fg: #efece8;
+  --gold-rgb: 212 175 55;
+  --glass: rgba(255,255,255,0.03);
 }
 
+/* Theme to use with Tailwind @theme inline if needed */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Inter', system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Apply base */
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--fg);
+  letter-spacing: -0.02em;
+}
+
+/* Polished card */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.5);
+}
+
+/* Buttons */
+.btn-cta {
+  background: rgb(var(--gold-rgb));
+  color: #070707;
+  padding: .7rem 1.1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.btn-cta:active { transform: translateY(1px); }
+.btn-cta:hover { box-shadow: 0 10px 30px rgba(212,175,55,0.12); }
+
+/* Link focus */
+a:focus {
+  outline: 2px solid rgba(212,175,55,0.2);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* Image shine overlay for product cards */
+.card .img-wrap { position: relative; overflow: hidden; border-radius: 10px; }
+.card .img-wrap::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -70%;
+  width: 60%;
+  height: 220%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.0), rgba(255,255,255,0.28), rgba(255,255,255,0.0));
+  transform: rotate(20deg);
+  transition: transform .9s ease;
+  pointer-events: none;
+}
+.card:hover .img-wrap::after { transform: translateX(220%); }
+
+/* subtle float on hero asset */
+.hero-float { animation: float 6s ease-in-out infinite; }
+
+/* utility */
+.text-muted { color: var(--muted); }
+
+/* responsive spacing tweaks for luxury feel */
+.container { max-width: 1200px; margin-left: auto; margin-right: auto; padding-left: 1.25rem; padding-right: 1.25rem; }
+
+/* small screens tweak */
+@media (max-width: 640px) {
+  .container { padding-left: .75rem; padding-right: .75rem; }
+}
+
+
+/* Prevent scroll when menu open */
+.no-scroll { overflow: hidden; height: 100%; }
+
+/* Backdrop style and smooth fade */
+.menu-backdrop {
+  background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.55));
+  transition: opacity .28s cubic-bezier(.2,.9,.3,1);
+  backdrop-filter: blur(6px);
+}
+
+/* Panel slide-in: uses transform for GPU accel */
+.menu-panel {
+  transition: transform .38s cubic-bezier(.2,.9,.25,1), opacity .28s ease;
+  will-change: transform;
+}
+
+/* Responsive width */
+@media (max-width: 768px) {
+  .menu-panel { width: 92vw; }
+}
+
+/* ---------------------------
+   Luxury typography overlay
+   (append-only; uses your existing variables)
+   --------------------------- */
+
+/* font fallbacks use your defined tokens in @theme inline:
+   --font-display and --font-body are already present in your globals.
+   This block *only* references those variables. */
+
+:root {
+  /* keep existing variables untouched; only set derived font-families */
+  --typography-heading: var(--font-display), serif;
+  --typography-body: var(--font-body), system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Base body (preserves your existing colors) */
+html, body {
+  font-family: var(--typography-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.55;
+  color: var(--fg); /* uses your token */
+}
+
+/* Kicker / small uppercase labels */
+.kicker {
+  font-family: var(--typography-body);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.72);
+}
+
+/* HEADINGS — responsive, elegant scale using clamp() */
+/* Keeps your color variables and does not change class names. */
+
+h1 {
+  font-family: var(--typography-heading);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  font-size: clamp(2.0rem, 1.6rem + 2.8vw, 4.25rem);
+  margin: 0 0 0.6rem 0;
+  color: var(--fg);
+}
+
+h2 {
+  font-family: var(--typography-heading);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.012em;
+  font-size: clamp(1.4rem, 1.1rem + 1.6vw, 2.25rem);
+  margin: 0 0 0.5rem 0;
+  color: var(--fg);
+}
+
+h3 {
+  font-family: var(--typography-heading);
+  font-weight: 600;
+  line-height: 1.12;
+  font-size: clamp(1.08rem, 0.98rem + 0.6vw, 1.35rem);
+  margin: 0 0 0.45rem 0;
+  color: var(--fg);
+}
+
+/* Paragraphs and list items — balanced measure */
+p, li {
+  font-family: var(--typography-body);
+  font-weight: 400;
+  color: rgba(255,255,255,0.88);
+  font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.05rem);
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+/* Small text (footer, captions) */
+.small, .text-small, .caption {
+  font-size: clamp(.78rem, .72rem + .12vw, .92rem);
+  color: var(--muted);
+}
+
+/* Product title class (keeps existing markup) */
+.product-title {
+  font-family: var(--typography-heading);
+  font-size: clamp(1.0rem, 0.98rem + 0.12vw, 1.06rem);
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0;
+}
+
+/* Buttons: balanced, slightly bigger for touch targets */
+.btn-cta, .btn-primary {
+  font-family: var(--typography-body);
+  font-weight: 600;
+  font-size: 0.98rem;
+  letter-spacing: 0.01em;
+}
+
+/* Axis for readable measures on long prose */
+.container p, .container li {
+  max-width: 70ch;
+}
+
+/* Micro-typography polish */
+strong { font-weight: 600; }
+em { font-style: italic; color: rgba(255,255,255,0.95); }
+
+/* Ensure headings and hero scales nicely on small screens */
+@media (max-width: 640px) {
+  h1 { font-size: clamp(1.8rem, 1.8rem + 2.0vw, 3.25rem); }
+  h2 { font-size: clamp(1.15rem, 1.08rem + 1.0vw, 1.75rem); }
+  p, li { font-size: .98rem; }
+}
+
+/* Optional: refined underline focus for keyboard users (keeps your existing a:focus rule) */
+a:focus {
+  outline: 2px solid rgba(var(--gold-rgb), 0.18);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+/* Slightly increase heading contrast on small screens for punch */
+@media (max-width: 480px) {
+  h1, h2 { color: var(--fg); letter-spacing: -0.01em; }
+}
+
+/* Keep .card img-shine and other effects (no overrides) */
+/* End of appended typography overlay */
+
+
+/* Product page niceties (append-only) */
+.product-page-image-thumb {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.card.p-4 { padding: 1rem; } /* keeps review and actions padding consistent */
+
+
+/* ---- LUXURY SPARKLE BACKDROP ---- */
+.sparkle-layer {
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.25) 2px, transparent 3px),
+    radial-gradient(circle, rgba(255,255,255,0.18) 1.5px, transparent 3px),
+    radial-gradient(circle, rgba(212,175,55,0.35) 2px, transparent 4px);
+  background-size: 120px 120px, 100px 100px, 160px 160px;
+  background-position: 0px 0px, 40px 30px, 20px 60px;
+  animation: sparkle-float 12s linear infinite;
+  mix-blend-mode: screen;
+  opacity: 0; /* controlled in component */
+}
+
+@keyframes sparkle-float {
+  0% {
+    background-position: 0px 0px, 40px 30px, 20px 60px;
+  }
+  50% {
+    background-position: 15px 25px, 60px 45px, 35px 90px;
+  }
+  100% {
+    background-position: 0px 0px, 40px 30px, 20px 60px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------- Collections page & product card polish (append-only) ---------- */
+
+/* Sidebar scroll area */
+.sidebar-scroll {
+  max-height: calc(100vh - 260px); /* leaves room for header & hero */
+  overflow-y: auto;
+  padding-right: 8px;
 }
+
+/* nicer scrollbar (only shows on platforms that support it) */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ----------------------------------------------------
+   LUXURY PRODUCT CARD (GOLD BORDER + SMOOTH INTERACTIONS)
+---------------------------------------------------- */
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 14px;
+
+  /* New luxury background */
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.015),
+    rgba(255,255,255,0.008)
+  );
+
+  /* New gold glow border (very subtle) */
+  border: 1px solid rgba(212,175,55,0.14); /* gold subtone */
+
+  /* Depth */
+  box-shadow: 0 6px 20px rgba(0,0,0,0.55);
+
+  /* Smoother GPU-powered transitions */
+  transform: translateZ(0);
+  transition:
+    transform .28s cubic-bezier(.25,.9,.25,1),
+    box-shadow .28s ease,
+    border-color .3s ease;
+  will-change: transform, box-shadow, border-color;
+}
+
+/* Image container */
+.product-card__media {
+  position: relative;
+  width: 100%;
+  padding-top: 125%; /* portrait ratio */
+  overflow: hidden;
+  border-bottom: 1px solid rgba(212,175,55,0.08); /* gold faint line */
+}
+
+/* Image */
+.product-card__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  /* GPU-powered */
+  transform: translateZ(0);
+  transition:
+    transform .48s cubic-bezier(.3,.85,.25,1),
+    filter .35s ease;
+  will-change: transform, filter;
+}
+
+/* Gold Shine Overlay */
+.product-card__media::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -130%;
+  width: 60%;
+  height: 100%;
+  pointer-events: none;
+
+  background: linear-gradient(
+    75deg,
+    rgba(255,255,255,0) 0%,
+    rgba(var(--gold-rgb), 0.32) 50%,
+    rgba(255,255,255,0) 100%
+  );
+
+  opacity: 0;
+  transform: translateZ(0);
+  transition:
+    transform .55s cubic-bezier(.25,.9,.3,1),
+    opacity .25s ease;
+  will-change: transform, opacity;
+}
+
+/* Body */
+.product-card__body {
+  flex: 1 1 auto;
+  padding: 1rem;
+}
+
+.product-card__title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--fg);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.product-card__price {
+  font-weight: 600;
+  margin-top: 4px;
+  color: rgba(var(--gold-rgb), 0.95);
+}
+
+/* Footer */
+.product-card__actions {
+  padding: 0.9rem 1rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* CTA button refinement */
+.product-card .btn-cta {
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+  background: rgb(var(--gold-rgb));
+  color: #070707;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.product-card .btn-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(212,175,55,0.22);
+}
+
+/* -----------------------------------------
+   HOVER — LUXURY CARD INTERACTION
+------------------------------------------ */
+.product-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(var(--gold-rgb), 0.35); /* brighter gold */
+  box-shadow:
+    0 22px 45px rgba(0,0,0,0.6),
+    0 0 14px rgba(var(--gold-rgb), 0.22); /* elegant glow edge */
+}
+
+/* Image motion */
+.product-card:hover .product-card__img {
+  transform: scale(1.045); /* reduced scale = smoother */
+  filter: brightness(1.07);
+}
+
+/* Shine sweep */
+.product-card:hover .product-card__media::after {
+  opacity: 1;
+  transform: translateX(240%);
+}
+
+/* -----------------------------------------
+   Mobile refinement
+------------------------------------------ */
+@media (max-width: 768px) {
+  .sidebar-scroll { max-height: 260px; }
+  .product-card__media { padding-top: 100%; }
+}
+
+
+/* Craft page small polish */
+.card img { display: block; border-radius: 10px; }
+.card .kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .8rem; }
+.container { max-width: 1200px; margin-left:auto; margin-right:auto; padding-left:1.25rem; padding-right:1.25rem; }
+

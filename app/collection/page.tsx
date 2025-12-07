@@ -1,0 +1,43 @@
+// src/app/collections/page.tsx
+import type { Metadata } from 'next'
+import { getAllProducts } from '../../libs/products'
+import CollectionHero from '../../components/CollectionHero'
+import CollectionBrowser from '../../components/CollectionBrowser'
+import type { Product } from '../../types/products'
+
+export const metadata: Metadata = {
+  title: 'Collections — Aurum',
+  description: 'Explore Aurum’s curated collections: rings, necklaces, earrings and more. Handcrafted, ethically sourced, heirloom quality.'
+}
+
+export default async function CollectionsPage() {
+  // server-side fetch of all catalog products (fast local JSON)
+  const allProducts: Product[] = await getAllProducts()
+
+  // derive categories for filters (unique)
+  const categories = Array.from(
+    new Set((allProducts.flatMap((p) => p.categories ?? []) as string[]))
+  )
+
+  // picking a hero image: first product image or fallback
+  const heroImage =
+    allProducts.find((p) => p.images && p.images.length > 0)?.images?.[0] ??
+    '/images/hero-collections.jpg'
+
+  return (
+    <main className="container py-12">
+      <CollectionHero
+        title="Curated Collections"
+        subtitle="Timeless designs — handpicked for every story"
+        description="Explore our signature collections: engagement rings, pearl necklaces, statement earrings and modern everyday pieces. Each design is crafted with care and backed by lifetime polishing."
+        image={heroImage}
+      />
+
+      <section className="mt-10">
+        {/* The client-side browser will receive `allProducts` and categories */}
+        {/* It handles filtering, sorting, search and pagination on the client for instant UX */}
+        <CollectionBrowser initialProducts={allProducts} categories={categories} />
+      </section>
+    </main>
+  )
+}

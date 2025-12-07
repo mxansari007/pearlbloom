@@ -1,0 +1,59 @@
+[
+  {
+    "id": "j-001",
+    "title": "Solitaire Diamond Ring",
+    "slug": "solitaire-diamond-ring",
+    "price": 159999,
+    "description": "A timeless solitaire diamond ring in 18K white gold.",
+    "images": [
+      "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?q=80&w=687&auto=format&fit=crop"
+    ],
+    "metal": "18K White Gold",
+    "gemstone": "Diamond",
+    "brand": "Aurum",
+    "categories": ["Rings", "Engagement"],
+    "sku": "AU-R-001",
+    "marketplaces": {
+      "amazon": "https://www.amazon.in/dp/EXAMPLE-ASIN",
+      "flipkart": "https://www.flipkart.com/example-product/p/itmEXAMPLE",
+      "meesho": "https://www.meesho.com/product/example/p/EXAMPLE"
+    }
+  },
+  {
+    "id": "j-002",
+    "title": "Vintage Pearl Necklace",
+    "slug": "vintage-pearl-necklace",
+    "price": 79999,
+    "description": "Hand-strung Akoya pearls with a classic gold clasp.",
+    "images": [
+      "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?q=80&w=880&auto=format&fit=crop"
+    ],
+    "metal": "14K Yellow Gold",
+    "gemstone": "Pearl",
+    "brand": "Aurum",
+    "categories": ["Necklaces", "Pearls"],
+    "sku": "AU-N-002",
+    "marketplaces": {
+      "amazon": "https://www.amazon.in/dp/EXAMPLE2",
+      "flipkart": "https://www.flipkart.com/example-product-2/p/itmEXAMPLE2"
+    }
+  },
+  {
+    "id": "j-003",
+    "title": "Emerald Halo Earrings",
+    "slug": "emerald-halo-earrings",
+    "price": 45999,
+    "description": "Emeralds set in a halo of pavé diamonds.",
+    "images": [
+      "https://images.unsplash.com/photo-1589128777073-263566ae5e4d?q=80&w=1974&auto=format&fit=crop"
+    ],
+    "metal": "Platinum",
+    "gemstone": "Emerald",
+    "brand": "Aurum",
+    "categories": ["Earrings"],
+    "sku": "AU-E-003",
+    "marketplaces": {
+      "meesho": "https://www.meesho.com/product/example-3/p/EXAMPLE3"
+    }
+  }
+]
