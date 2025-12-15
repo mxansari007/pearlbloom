@@ -174,16 +174,21 @@ export default async function ProductPage({ params }: { params: ParamsLike }) {
             {/* Quick actions (client) */}
             <ProductActions product={product} />
 
-            {/* Dynamic attributes */}
-            {product.attributes?.length > 0 && (
+          {/* Dynamic attributes */}
+          {(() => {
+            const attrs = product.attributes;
+            if (!attrs || attrs.length === 0) return null;
+
+            return (
               <div className="text-sm text-muted mt-4 space-y-1">
-                {product.attributes.map((attr) => (
+                {attrs.map((attr) => (
                   <div key={attr.key}>
                     <strong>{attr.key}:</strong> {attr.value}
                   </div>
                 ))}
               </div>
-            )}
+            );
+          })()}
 
             {/* Always show SKU line with fallback */}
             <div className="text-sm text-muted mt-2">
