@@ -36,7 +36,7 @@ export async function generateMetadata({
       : ["/images/placeholder.png"];
 
   return {
-    title: `${product.title} — Aurum`,
+    title: `${product.title} — Pearl Bloom`,
     description: product.description ?? "",
     openGraph: {
       title: product.title,
@@ -50,7 +50,7 @@ export default async function ProductPage({ params }: { params: ParamsLike }) {
   const { slug } = (await params) as { slug?: string };
   if (!slug) notFound();
 
-  const product: Product | undefined = await getProductBySlug(slug);
+  const product: Product | null = await getProductBySlug(slug);
   if (!product) notFound();
 
   const images =
