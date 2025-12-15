@@ -6,7 +6,7 @@ import ProductGallery from "../../../components/ProductGallery";
 import RelatedProducts from "../../../components/RelatedProducts";
 import Reviews from "../../../components/Reviews";
 import ProductActions from "../../../components/ProductActions";
-import ProductAnalyticsTracker from "../../../components/ProductAnalyticsTracker";
+
 
 // types
 type ParamsLike = { slug?: string } | Promise<{ slug?: string }>;
@@ -92,7 +92,6 @@ export default async function ProductPage({ params }: { params: ParamsLike }) {
       />
 
       {/* Client-side analytics (PostHog) */}
-      <ProductAnalyticsTracker product={product} />
 
       <div className="container py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">

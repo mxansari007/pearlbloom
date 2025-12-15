@@ -3,7 +3,6 @@ import Hero from "../components/Hero";
 import ProductGrid from "../components/ProductGrid";
 import CollectionCard from "../components/CollectionCard";
 import SubscribeForm from "../components/SubscriptionForm";
-import HomeAnalyticsTracker from "../components/HomeAnalyticsTracker";
 
 import { getHomepageSections } from "../libs/homepage";
 import { getProductsByIds } from "../libs/products";
@@ -16,8 +15,6 @@ export default async function Home() {
 
   return (
     <>
-      {/* Client-only analytics */}
-      <HomeAnalyticsTracker />
 
       {/* Hero always on top */}
       <Hero />

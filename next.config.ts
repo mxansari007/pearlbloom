@@ -2,9 +2,7 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  experimental: {
-    instrumentationHook: true,
-  },
+
   // appDir option is no longer supported in Next 16+; App Router behavior is implicit.
   reactStrictMode: true,
 

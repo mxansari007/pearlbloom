@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getPosthog } from "../libs/posthog-client";
+
 
 /* ---------------- Types ---------------- */
 
@@ -25,18 +25,10 @@ export default function CollectionCard({
 }: CollectionCardProps) {
   const [hover, setHover] = useState(false);
 
-  const handleClick = () => {
-    const ph = getPosthog();
-    ph?.capture("click_collection", {
-      collection: title,
-      slug,
-    });
-  };
 
   return (
     <Link
       href={`/collections/${slug}`}
-      onClick={handleClick}
       className={`
         group block relative overflow-hidden rounded-xl cursor-pointer 
         border border-white/5 transition-all duration-500 will-change-transform
