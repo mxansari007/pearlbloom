@@ -19,19 +19,8 @@ export default async function CollectionsPage() {
     new Set((allProducts.flatMap((p) => p.categories ?? []) as string[]))
   )
 
-  // picking a hero image: first product image or fallback
-  const heroImage =
-    allProducts.find((p) => p.images && p.images.length > 0)?.images?.[0] ??
-    '/images/hero-collections.jpg'
-
   return (
     <main className="container py-12">
-      <CollectionHero
-        title="Curated Collections"
-        subtitle="Timeless designs — handpicked for every story"
-        description="Explore our signature collections: engagement rings, pearl necklaces, statement earrings and modern everyday pieces. Each design is crafted with care and backed by lifetime polishing."
-        image={heroImage}
-      />
 
       <section className="mt-10">
         {/* The client-side browser will receive `allProducts` and categories */}

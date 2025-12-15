@@ -168,7 +168,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
           </div>
           <div className="flex gap-3">
             <a href="/contact" className="btn-cta">Book consultation</a>
-            <a href="/about" className="rounded-md px-4 py-2 border border-white/6 hover:bg-white/2 transition text-sm">Why Aurum</a>
+            <a href="/about" className="rounded-md px-4 py-2 border border-white/6 hover:bg-white/2 transition text-sm">Why Pearl Bloom</a>
           </div>
         </div>
       </div>

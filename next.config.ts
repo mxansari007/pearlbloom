@@ -2,6 +2,9 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  experimental: {
+    instrumentationHook: true,
+  },
   // appDir option is no longer supported in Next 16+; App Router behavior is implicit.
   reactStrictMode: true,
 
@@ -12,7 +15,7 @@ const nextConfig: NextConfig = {
       // Allow images from a specific CDN/host (https://images.example.com/*)
       {
         protocol: 'https',
-        hostname: 'images.example.com',
+        hostname: 'res.cloudinary.com',
         port: '',
         pathname: '/**',
       },
@@ -32,6 +35,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  
 
   // Add other top-level NextConfig options here if needed
   // e.g. experimental, headers, redirects, etc. (but check compatibility first)

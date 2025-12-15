@@ -4,24 +4,24 @@ import ContactForm from '../../components/ContactForm' // client component
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Contact — Aurum',
-  description: 'Contact Aurum — handcrafted jewelry. Reach out for orders, custom work, wholesale, or lifetime care.',
+  title: 'Contact — Pearl Bloom',
+  description: 'Contact Pearl Bloom — handcrafted jewelry. Reach out for orders, custom work, wholesale, or lifetime care.',
   openGraph: {
-    title: 'Contact — Aurum',
-    description: 'Contact Aurum — handcrafted jewelry. Reach out for orders, custom work, wholesale, or lifetime care.'
+    title: 'Contact — Pearl Bloom',
+    description: 'Contact Pearl Bloom — handcrafted jewelry. Reach out for orders, custom work, wholesale, or lifetime care.'
   }
 }
 
 export default function ContactPage(): ReactNode {
   // replace these placeholders in your copy when you want
   const business = {
-    name: 'Aurum',
-    email: 'hello@aurum.example',
+    name: 'Pearl Bloom',
+    email: 'hello@pearlbloom.in',
     phone: '+91 98765 43210',
     address: {
-      line1: 'Suite 204, Heritage Building',
-      line2: 'Sector 17, Chandigarh, India',
-      postal: '160017'
+      line1: '76, Delhi Road',
+      line2: 'Bulandshahr, India',
+      postal: '203001'
     },
     hours: [
       'Mon–Fri: 10:00 — 19:00',
@@ -44,7 +44,7 @@ export default function ContactPage(): ReactNode {
       '@type': 'PostalAddress',
       streetAddress: `${business.address.line1}, ${business.address.line2}`,
       postalCode: business.address.postal,
-      addressLocality: 'Chandigarh',
+      addressLocality: 'Bulandshahr',
       addressCountry: 'IN'
     },
     openingHours: business.hours.map((h) => h.replace(' — ', '')),
@@ -110,7 +110,7 @@ export default function ContactPage(): ReactNode {
           {/* Right column — business info + social + map */}
           <aside className="space-y-6">
             <div className="card p-5">
-              <h3 className="font-display text-lg">Aurum</h3>
+              <h3 className="font-display text-lg">Pearl Bloom</h3>
               <div className="text-sm text-muted mt-2">
                 <div>{business.address.line1}</div>
                 <div>{business.address.line2}</div>
@@ -142,7 +142,7 @@ export default function ContactPage(): ReactNode {
             <div className="card p-0 overflow-hidden">
               <iframe
                 title="Store location"
-                src="https://www.google.com/maps?q=Chandigarh,+India&output=embed"
+                src="https://www.google.com/maps?q=1,+54,+bhoot,+Nazimpura,+Yamunapuram,+Bulandshahr,+India&output=embed"
                 className="w-full h-48 border-0"
                 loading="lazy"
               />

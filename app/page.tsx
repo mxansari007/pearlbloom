@@ -1,34 +1,106 @@
-// src/app/page.tsx (or wherever your Home is)
-import Hero from '../components/Hero'
-import ProductGrid from '../components/ProductGrid'
-import CollectionCard from '../components/CollectionCard'
-import { getAllProducts } from '../libs/products'
-import SubscribeForm from '../components/SubscriptionForm' // <- add this import
+// src/app/page.tsx
+import Hero from "../components/Hero";
+import ProductGrid from "../components/ProductGrid";
+import CollectionCard from "../components/CollectionCard";
+import SubscribeForm from "../components/SubscriptionForm";
+import HomeAnalyticsTracker from "../components/HomeAnalyticsTracker";
+
+import { getHomepageSections } from "../libs/homepage";
+import { getProductsByIds } from "../libs/products";
+import { getCollectionsByIds } from "../libs/collections";
+
+import type { Product } from "../types/products";
 
 export default async function Home() {
-  const products = await getAllProducts()
-  const featured = products.slice(0, 4)
+  const sections = await getHomepageSections();
+
   return (
     <>
+      {/* Client-only analytics */}
+      <HomeAnalyticsTracker />
+
+      {/* Hero always on top */}
       <Hero />
 
-      {/* Featured pieces */}
-      <ProductGrid products={featured} />
+      {/* Dynamic homepage sections */}
+      {await Promise.all(
+        sections.map(async (section: any) => {
+          /* ---------------- Featured products ---------------- */
+          if (section.type === "featuredProducts") {
+            const products: Product[] = await getProductsByIds(
+              section.productIds ?? []
+            );
 
-      {/* Collections */}
-      <section id="collections" className="container mx-auto px-6 py-14">
-        <h2 className="text-2xl font-display mb-6">Collections</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <CollectionCard title="Engagement" image="https://images.unsplash.com/photo-1529519195486-16945f0fb37f?q=80&w=687&auto=format&fit=crop" />
-          <CollectionCard title="Necklaces" image="https://images.unsplash.com/photo-1721103418218-416182aca079?q=80&w=687&auto=format&fit=crop" />
-          <CollectionCard title="Earrings" image="https://images.unsplash.com/photo-1589128777073-263566ae5e4d?q=80&w=687&auto=format&fit=crop" />
-        </div>
-      </section>
+            if (products.length === 0) return null;
 
-      {/* Email subscription — subtle, full-width container */}
+            return (
+              <section
+                key={section.id}
+                className="container mx-auto px-6 pt-10"
+              >
+                <h2 className="text-3xl font-display ml-80 mb-0">
+                  {section.title}
+                </h2>
+                <ProductGrid products={products} />
+              </section>
+            );
+          }
+
+          /* ---------------- Collections row ---------------- */
+          if (section.type === "collectionsRow") {
+            if (!section.collectionIds?.length) return null;
+
+            const collections = await getCollectionsByIds(
+              section.collectionIds
+            );
+
+            if (collections.length === 0) return null;
+
+            return (
+              <section
+                key={section.id}
+                className="container mx-auto px-6 py-14"
+              >
+                <h2 className="text-2xl font-display mb-6">
+                  {section.title}
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {collections.map((c) => (
+                    <CollectionCard
+                      key={c.id}
+                      title={c.name}
+                      slug={c.slug}
+                      thumbnail={c.thumbnail}
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          }
+
+          /* ---------------- Banner ---------------- */
+          if (section.type === "banner") {
+            return (
+              <section
+                key={section.id}
+                className="container mx-auto px-6 py-14"
+              >
+                <h2 className=" text-2xl font-display">
+                  {section.title}
+                </h2>
+              </section>
+            );
+          }
+
+          return null;
+        })
+      )}
+
+      {/* Email subscription always last */}
       <section className="container mx-auto px-6 pb-14">
         <SubscribeForm />
       </section>
     </>
-  )
+  );
 }

@@ -1,67 +1,98 @@
 // src/app/products/[slug]/page.tsx
-import { notFound } from 'next/navigation'
-import type { Product } from '../../../types/products'
-import { getProductBySlug, getAllSlugs } from '../../../libs/products'
-import ProductGallery from '../../../components/ProductGallery'
-import RelatedProducts from '../../../components/RelatedProducts'
-import Reviews from '../../../components/Reviews'
-import ProductActions from '../../../components/ProductActions'
-
+import { notFound } from "next/navigation";
+import type { Product } from "../../../types/products";
+import { getProductBySlug, getAllSlugs } from "../../../libs/products";
+import ProductGallery from "../../../components/ProductGallery";
+import RelatedProducts from "../../../components/RelatedProducts";
+import Reviews from "../../../components/Reviews";
+import ProductActions from "../../../components/ProductActions";
+import ProductAnalyticsTracker from "../../../components/ProductAnalyticsTracker";
 
 // types
-type ParamsLike = { slug?: string } | Promise<{ slug?: string }>
+type ParamsLike = { slug?: string } | Promise<{ slug?: string }>;
 
-export async function generateMetadata({ params: paramsArg }: { params: ParamsLike }) {
+export async function generateStaticParams() {
+  const slugs = await getAllSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({
+  params: paramsArg,
+}: {
+  params: ParamsLike;
+}) {
   // always await params to handle both Promise and plain object
-  const { slug } = (await paramsArg) as { slug?: string }
+  const { slug } = (await paramsArg) as { slug?: string };
 
   // early fallback if missing slug
-  if (!slug) return { title: 'Product not found — Aurum' }
+  if (!slug) return { title: "Product not found — Aurum" };
 
-  const product = await getProductBySlug(slug)
-  if (!product) return { title: 'Product not found — Aurum' }
+  const product = await getProductBySlug(slug);
+  if (!product) return { title: "Product not found — Aurum" };
+
+  const images =
+    product.images && product.images.length
+      ? product.images
+      : ["/images/placeholder.png"];
 
   return {
     title: `${product.title} — Aurum`,
-    description: product.description ?? '',
+    description: product.description ?? "",
     openGraph: {
       title: product.title,
-      description: product.description ?? '',
-      images: product.images?.length ? product.images : undefined,
+      description: product.description ?? "",
+      images,
     },
-  }
+  };
 }
 
 export default async function ProductPage({ params }: { params: ParamsLike }) {
-  const { slug } = (await params) as { slug?: string }
-  if (!slug) notFound()
+  const { slug } = (await params) as { slug?: string };
+  if (!slug) notFound();
 
-  const product: Product | undefined = await getProductBySlug(slug)
-  if (!product) notFound()
+  const product: Product | undefined = await getProductBySlug(slug);
+  if (!product) notFound();
 
-  const images = product.images && product.images.length ? product.images : ['/images/placeholder.png']
+  const images =
+    product.images && product.images.length
+      ? product.images
+      : ["/images/placeholder.png"];
+
+  // derive SKU from attributes (dynamic) with fallback to id
+  const skuAttr =
+    product.attributes?.find(
+      (a) => a.key.toLowerCase() === "sku"
+    ) ?? null;
+  const sku = (skuAttr && skuAttr.value) || product.id;
 
   const jsonLd = {
-    '@context': 'https://schema.org/',
-    '@type': 'Product',
+    "@context": "https://schema.org/",
+    "@type": "Product",
     name: product.title,
-    description: product.description ?? '',
-    sku: product.sku ?? product.id,
+    description: product.description ?? "",
+    sku,
     image: images,
-    offers: (product.marketplaces)
+    offers: product.marketplaces
       ? Object.entries(product.marketplaces).map(([k, url]) => ({
-          '@type': 'Offer',
+          "@type": "Offer",
           url,
-          priceCurrency: 'INR',
-          price: product.price ?? '',
-          seller: { name: k.charAt(0).toUpperCase() + k.slice(1) }
+          priceCurrency: "INR",
+          price: product.price ?? "",
+          seller: { name: k.charAt(0).toUpperCase() + k.slice(1) },
         }))
-      : undefined
-  }
+      : undefined,
+  };
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {/* SEO structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      {/* Client-side analytics (PostHog) */}
+      <ProductAnalyticsTracker product={product} />
 
       <div className="container py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
@@ -74,53 +105,90 @@ export default async function ProductPage({ params }: { params: ParamsLike }) {
           <div className="space-y-6">
             {/* Title + brand */}
             <div>
-              {/* Reduced heading sizes to be professional and balanced */}
-              <h1 className="text-2xl md:text-3xl font-display leading-tight">{product.title}</h1>
-              {product.brand && <div className="text-sm text-muted mt-1">{product.brand}</div>}
+              <h1 className="text-2xl md:text-3xl font-display leading-tight">
+                {product.title}
+              </h1>
+              {product.brand && (
+                <div className="text-sm text-muted mt-1">{product.brand}</div>
+              )}
             </div>
 
             {/* Price */}
             <div>
               {product.price ? (
-                <div className="text-xl md:text-2xl font-semibold">₹{product.price.toLocaleString()}</div>
+                <div className="text-xl md:text-2xl font-semibold">
+                  ₹{product.price.toLocaleString()}
+                </div>
               ) : (
                 <div className="text-base text-muted">Price on request</div>
               )}
             </div>
 
             {/* Short description */}
-            {product.description && <p className="text-base text-muted max-w-xl">{product.description}</p>}
+            {product.description && (
+              <p className="text-base text-muted max-w-xl">
+                {product.description}
+              </p>
+            )}
 
             {/* Marketplace Buttons */}
             <div className="mt-4 flex flex-wrap gap-3 items-center">
               {product.marketplaces?.amazon && (
-                <a href={product.marketplaces.amazon} target="_blank" rel="noopener noreferrer" className="btn-cta inline-flex items-center gap-2">
+                <a
+                  href={product.marketplaces.amazon}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-cta inline-flex items-center gap-2"
+                >
                   Buy on Amazon
                 </a>
               )}
               {product.marketplaces?.flipkart && (
-                <a href={product.marketplaces.flipkart} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-md px-4 py-2 border border-white/6 hover:bg-white/2 transition text-sm">
+                <a
+                  href={product.marketplaces.flipkart}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-md px-4 py-2 border border-white/6 hover:bg-white/2 transition text-sm"
+                >
                   Buy on Flipkart
                 </a>
               )}
               {product.marketplaces?.meesho && (
-                <a href={product.marketplaces.meesho} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-md px-4 py-2 border border-white/6 hover:bg-white/2 transition text-sm">
+                <a
+                  href={product.marketplaces.meesho}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-md px-4 py-2 border border-white/6 hover:bg-white/2 transition text-sm"
+                >
                   Buy on Meesho
                 </a>
               )}
 
-              {!product.marketplaces && <div className="text-sm text-muted">Not listed on marketplaces yet — contact us for purchase options.</div>}
+              {!product.marketplaces && (
+                <div className="text-sm text-muted">
+                  Not listed on marketplaces yet — contact us for purchase
+                  options.
+                </div>
+              )}
             </div>
 
-{/* Quick actions (client) */}
-<ProductActions product={product} />
+            {/* Quick actions (client) */}
+            <ProductActions product={product} />
 
+            {/* Dynamic attributes */}
+            {product.attributes?.length > 0 && (
+              <div className="text-sm text-muted mt-4 space-y-1">
+                {product.attributes.map((attr) => (
+                  <div key={attr.key}>
+                    <strong>{attr.key}:</strong> {attr.value}
+                  </div>
+                ))}
+              </div>
+            )}
 
-            {/* Extra details (if present) */}
-            <div className="text-sm text-muted mt-4">
-              {product.metal && <div><strong>Metal:</strong> {product.metal}</div>}
-              {product.gemstone && <div className="mt-1"><strong>Gemstone:</strong> {product.gemstone}</div>}
-              <div className="mt-1"><strong>SKU:</strong> {product.sku ?? product.id}</div>
+            {/* Always show SKU line with fallback */}
+            <div className="text-sm text-muted mt-2">
+              <strong>SKU:</strong> {sku}
             </div>
           </div>
         </div>
@@ -130,17 +198,20 @@ export default async function ProductPage({ params }: { params: ParamsLike }) {
 
         {/* Reviews */}
         <section aria-labelledby="reviews-title" className="mb-12">
-          <h2 id="reviews-title" className="text-xl font-display mb-4">Customer reviews</h2>
+          <h2 id="reviews-title" className="text-xl font-display mb-4">
+            Customer reviews
+          </h2>
           <Reviews productId={product.id} />
         </section>
 
         {/* Related / suggested products */}
         <section aria-labelledby="you-may-like" className="mb-12">
-          <h2 id="you-may-like" className="text-xl font-display mb-6">You may also like</h2>
-          {/* RelatedProducts is server component that renders ProductCard list */}
+          <h2 id="you-may-like" className="text-xl font-display mb-6">
+            You may also like
+          </h2>
           <RelatedProducts currentSlug={product.slug} />
         </section>
       </div>
     </>
-  )
+  );
 }
