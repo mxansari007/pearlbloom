@@ -36,10 +36,10 @@ export async function generateMetadata({
       : ["/images/placeholder.png"];
 
   return {
-    title: `${product.title} — Pearl Bloom`,
+    title: `${product.name} — Pearl Bloom`,
     description: product.description ?? "",
     openGraph: {
-      title: product.title,
+      title: product.name,
       description: product.description ?? "",
       images,
     },
@@ -68,7 +68,7 @@ export default async function ProductPage({ params }: { params: ParamsLike }) {
   const jsonLd = {
     "@context": "https://schema.org/",
     "@type": "Product",
-    name: product.title,
+    name: product.name,
     description: product.description ?? "",
     sku,
     image: images,
@@ -97,7 +97,7 @@ export default async function ProductPage({ params }: { params: ParamsLike }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
           {/* Gallery left */}
           <div>
-            <ProductGallery images={images} alt={product.title} />
+            <ProductGallery images={images} alt={product.name} />
           </div>
 
           {/* Details right */}
@@ -105,7 +105,7 @@ export default async function ProductPage({ params }: { params: ParamsLike }) {
             {/* Title + brand */}
             <div>
               <h1 className="text-2xl md:text-3xl font-display leading-tight">
-                {product.title}
+                {product.name}
               </h1>
               {product.brand && (
                 <div className="text-sm text-muted mt-1">{product.brand}</div>

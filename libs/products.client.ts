@@ -21,25 +21,18 @@ import type {
 /* ---------------- Helpers ---------------- */
 
 function normalizeAttributes(data: any): ProductAttribute[] {
-  const attrs: ProductAttribute[] = Array.isArray(data.attributes)
-    ? [...data.attributes]
-    : [];
+  if (Array.isArray(data.attributes)) {
+    return data.attributes;
+  }
+  return [];
+}
 
-  const addIfMissing = (key: string, value?: string) => {
-    if (!value) return;
-    const exists = attrs.some(
-      (a) => a.key.toLowerCase() === key.toLowerCase()
-    );
-    if (!exists) {
-      attrs.push({ key, value });
-    }
+function normalizeMarketplaces(data: any): Marketplaces {
+  return {
+    amazon: data?.marketplaces?.amazon || "",
+    flipkart: data?.marketplaces?.flipkart || "",
+    meesho: data?.marketplaces?.meesho || "",
   };
-
-  addIfMissing("Metal", data.metal);
-  addIfMissing("Gemstone", data.gemstone);
-  addIfMissing("SKU", data.sku);
-
-  return attrs;
 }
 
 function mapProductDoc(
@@ -47,44 +40,41 @@ function mapProductDoc(
 ): Product {
   const data = docSnap.data();
 
-  const title: string = data.title ?? data.name ?? "";
-  const images: string[] = Array.isArray(data.images) ? data.images : [];
-  const attributes = normalizeAttributes(data);
-
-  const marketplaces: Marketplaces | undefined = data.marketplaces
-    ? {
-        amazon: data.marketplaces.amazon,
-        flipkart: data.marketplaces.flipkart,
-        meesho: data.marketplaces.meesho,
-      }
-    : undefined;
-
   return {
     id: docSnap.id,
-    title,
+
+    // Identity
+    name: data.name ?? "",
     slug: data.slug ?? "",
-    price: typeof data.price === "number" ? data.price : undefined,
+
+    // Pricing
+    price: typeof data.price === "number" ? data.price : 0,
     currency: data.currency ?? "INR",
 
-    description: data.description ?? data.fullDescription ?? "",
+    // Descriptions
     shortDescription: data.shortDescription ?? "",
+    description: data.description ?? "",
 
-    thumbnailUrl: data.thumbnailUrl ?? images[0],
-    images,
+    // Media
+    thumbnailUrl:
+      data.thumbnailUrl ??
+      (Array.isArray(data.images) ? data.images[0] : "") ??
+      "",
+    images: Array.isArray(data.images) ? data.images : [],
 
+    // Relations
     brand: data.brand ?? "",
     categories: Array.isArray(data.categories) ? data.categories : [],
     collectionId: data.collectionId ?? "",
+
+    // Flags
     isFeatured: Boolean(data.isFeatured),
 
-    attributes,
+    // Attributes
+    attributes: normalizeAttributes(data),
 
-    // legacy
-    metal: data.metal,
-    gemstone: data.gemstone,
-    sku: data.sku,
-
-    marketplaces,
+    // Marketplaces (ALWAYS PRESENT)
+    marketplaces: normalizeMarketplaces(data),
   };
 }
 
@@ -136,16 +126,13 @@ export async function getProductsByIds(
   );
 
   return snaps
-    .filter(Boolean)
-    .map((d) => mapProductDoc(d!));
+    .filter((d): d is QueryDocumentSnapshot<DocumentData> => Boolean(d))
+    .map(mapProductDoc);
 }
 
 export async function getAllSlugs(): Promise<string[]> {
-  const snap = await getDocs(
-    query(collection(dbClient, "products"))
-  );
-
+  const snap = await getDocs(collection(dbClient, "products"));
   return snap.docs
     .map((d) => d.data().slug)
-    .filter(Boolean);
+    .filter((s): s is string => Boolean(s));
 }

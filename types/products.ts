@@ -1,6 +1,4 @@
-// src/types/products.ts
-
-// Marketplace outbound links
+// External marketplace links
 export type Marketplaces = {
   amazon?: string;
   flipkart?: string;
@@ -9,44 +7,41 @@ export type Marketplaces = {
 
 // Flexible attribute key/value pair
 export type ProductAttribute = {
-  key: string;     // e.g., "Metal"
-  value: string;   // e.g., "18K White Gold"
+  key: string;
+  value: string;
 };
 
-// 🔥 Final Product model — matches Admin + Storefront
+// ✅ FINAL Product model — matches Admin form + Firestore + UI
 export type Product = {
   id: string;
-  title: string;
+
+  // Identity
+  name: string;
   slug: string;
 
   // Pricing
-  price?: number;
-  currency?: string; // default "INR"
+  price: number;
+  currency: string; // "INR"
 
-  // Description
-  description?: string;
-  shortDescription?: string;
+  // Descriptions
+  shortDescription: string;
+  description: string;
 
   // Media
-  thumbnailUrl?: string;
+  thumbnailUrl: string;
   images: string[];
 
-  // SEO / relations
-  brand?: string;
-  categories?: string[];
-  collectionId?: string;
+  // Relations
+  brand: string;
+  categories: string[];
+  collectionId: string;
 
-  // Featured flag
-  isFeatured?: boolean;
+  // Flags
+  isFeatured: boolean;
 
-  // Dynamic attributes (metal, gemstone, sku, purity, etc.)
-  attributes?: ProductAttribute[];
+  // Dynamic attributes
+  attributes: ProductAttribute[];
 
-  // Old fields kept for backward compatibility (will be migrated to attributes)
-  metal?: string;
-  gemstone?: string;
-  sku?: string;
-
-  // Marketplace outbound purchasing
-  marketplaces?: Marketplaces;
+  // Marketplaces
+  marketplaces: Marketplaces;
 };

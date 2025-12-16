@@ -1,59 +1,71 @@
-// src/components/ProductCard.tsx
-import Link from 'next/link'
-import type { Product } from '../types/products'
+import Link from "next/link";
+import type { Product } from "../types/products";
 
 export default function ProductCard({ product }: { product: Product }) {
-  const image = product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder.png'
+  const image =
+    product.thumbnailUrl ||
+    product.images?.[0] ||
+    "/images/placeholder.png";
+
+  const buyLink =
+    product.marketplaces.amazon ||
+    product.marketplaces.flipkart ||
+    product.marketplaces.meesho;
+
   return (
-    <article className="product-card card overflow-hidden rounded-2xl">
+    <article className="rounded-2xl overflow-hidden bg-neutral-900 border border-white/10 hover:border-yellow-500/40 transition">
       <Link href={`/products/${product.slug}`} className="block">
-        <div className="product-card__media">
-          <img src={image} alt={product.title} className="product-card__img" />
+        <div className="aspect-square overflow-hidden">
+          <img
+            src={image}
+            alt={product.name}
+            className="w-full h-full object-cover transition group-hover:scale-105"
+          />
         </div>
 
-        <div className="product-card__body p-4">
-          <h3 className="product-card__title">{product.title}</h3>
+        <div className="p-4">
+          <h3 className="text-lg font-display">{product.name}</h3>
 
-          <div className="mt-2 flex items-center justify-between gap-4">
-            <div>
-              {product.price ? (
-                <div className="product-card__price">₹{product.price.toLocaleString()}</div>
-              ) : (
-                <div className="product-card__price text-muted">Price on request</div>
-              )}
-            </div>
-
-            <div className="product-card__badges">
-              {/* potential badges (stock, bestseller) */}
-            </div>
+          <div className="mt-2 flex items-center justify-between">
+            {product.price > 0 ? (
+              <div className="text-base font-medium">
+                ₹{product.price.toLocaleString("en-IN")}
+              </div>
+            ) : (
+              <div className="text-sm text-neutral-400">
+                Price on request
+              </div>
+            )}
           </div>
         </div>
       </Link>
 
-      <div className="product-card__actions p-4 border-t border-white/6">
-        <div className="flex gap-3">
-          <Link href={`/products/${product.slug}`} className="inline-flex items-center gap-2 rounded-md px-3 py-2 border border-white/6 hover:bg-white/2 transition text-sm">
-            View
-          </Link>
+      <div className="p-4 border-t border-white/10 flex gap-3">
+        <Link
+          href={`/products/${product.slug}`}
+          className="px-4 py-2 text-sm rounded-md border border-white/10 hover:bg-white/5 transition"
+        >
+          View
+        </Link>
 
-          {/* Buy is external — will be rendered conditionally by marketplace link if you have one; fallback is disabled anchor */}
-          {product.marketplaces?.amazon || product.marketplaces?.flipkart || product.marketplaces?.meesho ? (
-            // prefer Amazon if available, fallback order Flipkart -> Meesho
-            <a
-              href={product.marketplaces?.amazon ?? product.marketplaces?.flipkart ?? product.marketplaces?.meesho}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-cta ml-auto"
-            >
-              Buy
-            </a>
-          ) : (
-            <Link href="/contact" className="btn-cta ml-auto">
-              Enquire
-            </Link>
-          )}
-        </div>
+        {buyLink ? (
+          <a
+            href={buyLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto px-4 py-2 text-sm rounded-md bg-yellow-500 text-black font-medium hover:opacity-90 transition"
+          >
+            Buy
+          </a>
+        ) : (
+          <Link
+            href="/contact"
+            className="ml-auto px-4 py-2 text-sm rounded-md bg-yellow-500 text-black font-medium"
+          >
+            Enquire
+          </Link>
+        )}
       </div>
     </article>
-  )
+  );
 }

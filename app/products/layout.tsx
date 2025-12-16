@@ -51,14 +51,14 @@ export default async function ProductLayout({
         </Link>
         <span>/</span>
         <span className="text-white/80 truncate max-w-[12rem] md:max-w-none">
-          {product.title}
+          {product.name}
         </span>
       </nav>
 
       {/* Page header */}
       <header className="space-y-1">
         <h1 className="text-2xl md:text-3xl font-display leading-tight">
-          {product.title}
+          {product.name}
         </h1>
         {product.brand && (
           <p className="text-sm text-muted">by {product.brand}</p>
