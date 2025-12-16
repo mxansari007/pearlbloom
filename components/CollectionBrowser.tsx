@@ -23,7 +23,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
 
     if (query.trim()) {
       const q = query.toLowerCase()
-      items = items.filter((p) => p.title.toLowerCase().includes(q) || (p.description ?? '').toLowerCase().includes(q))
+      items = items.filter((p) => p.name.toLowerCase().includes(q) || (p.description ?? '').toLowerCase().includes(q))
     }
     if (selectedCats.length) {
       items = items.filter((p) => (p.categories ?? []).some((c) => selectedCats.includes(c)))
