@@ -1,5 +1,5 @@
 // src/components/RelatedProducts.tsx
-import { getAllProducts } from '../libs/products'
+import { getAllProducts } from '../libs/products.server'
 import ProductCard from './ProductCard'
 import type { Product } from '../types/products'
 

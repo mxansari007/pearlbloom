@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Product } from "../../types/products";
-import { getProductBySlug } from "../../libs/products";
+import { getProductBySlug } from "../../libs/products.server";
 
 type ParamsLike = { slug?: string } | Promise<{ slug?: string }>;
 

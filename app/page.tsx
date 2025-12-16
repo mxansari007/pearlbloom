@@ -5,8 +5,8 @@ import CollectionCard from "../components/CollectionCard";
 import SubscribeForm from "../components/SubscriptionForm";
 
 import { getHomepageSections } from "../libs/homepage";
-import { getProductsByIds } from "../libs/products";
-import { getCollectionsByIds } from "../libs/collections";
+import { getProductsByIds } from "../libs/products.server";
+import { getCollectionsByIds } from "../libs/collections.server";
 
 import type { Product } from "../types/products";
 

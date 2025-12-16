@@ -1,6 +1,6 @@
 // src/app/collections/page.tsx
 import type { Metadata } from 'next'
-import { getAllProducts } from '../../libs/products'
+import { getAllProducts } from '../../libs/products.server'
 import CollectionHero from '../../components/CollectionHero'
 import CollectionBrowser from '../../components/CollectionBrowser'
 import type { Product } from '../../types/products'

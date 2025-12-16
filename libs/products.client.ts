@@ -1,14 +1,28 @@
 // src/lib/products.ts
-import { dbAdmin } from "./firebase-admin";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  query,
+  where,
+  DocumentData,
+  QueryDocumentSnapshot,
+} from "firebase/firestore";
+import { dbClient } from "./firebase-client";
+
 import type {
   Product,
   ProductAttribute,
   Marketplaces,
 } from "../types/products";
 
+/* ---------------- Helpers ---------------- */
+
 function normalizeAttributes(data: any): ProductAttribute[] {
   const attrs: ProductAttribute[] = Array.isArray(data.attributes)
-    ? data.attributes
+    ? [...data.attributes]
     : [];
 
   const addIfMissing = (key: string, value?: string) => {
@@ -21,7 +35,6 @@ function normalizeAttributes(data: any): ProductAttribute[] {
     }
   };
 
-  // migrate legacy fields into attributes if present
   addIfMissing("Metal", data.metal);
   addIfMissing("Gemstone", data.gemstone);
   addIfMissing("SKU", data.sku);
@@ -29,8 +42,10 @@ function normalizeAttributes(data: any): ProductAttribute[] {
   return attrs;
 }
 
-function mapProductDoc(doc: FirebaseFirestore.DocumentSnapshot): Product {
-  const data = doc.data() as any;
+function mapProductDoc(
+  docSnap: QueryDocumentSnapshot<DocumentData>
+): Product {
+  const data = docSnap.data();
 
   const title: string = data.title ?? data.name ?? "";
   const images: string[] = Array.isArray(data.images) ? data.images : [];
@@ -45,7 +60,7 @@ function mapProductDoc(doc: FirebaseFirestore.DocumentSnapshot): Product {
     : undefined;
 
   return {
-    id: doc.id,
+    id: docSnap.id,
     title,
     slug: data.slug ?? "",
     price: typeof data.price === "number" ? data.price : undefined,
@@ -60,11 +75,11 @@ function mapProductDoc(doc: FirebaseFirestore.DocumentSnapshot): Product {
     brand: data.brand ?? "",
     categories: Array.isArray(data.categories) ? data.categories : [],
     collectionId: data.collectionId ?? "",
-    isFeatured: !!data.isFeatured,
+    isFeatured: Boolean(data.isFeatured),
 
     attributes,
 
-    // legacy fields kept for backward compatibility
+    // legacy
     metal: data.metal,
     gemstone: data.gemstone,
     sku: data.sku,
@@ -73,37 +88,38 @@ function mapProductDoc(doc: FirebaseFirestore.DocumentSnapshot): Product {
   };
 }
 
-// ──────────────────────────
-// Public API
-// ──────────────────────────
+/* ---------------- Public API ---------------- */
 
 export async function getProductBySlug(
   slug: string
 ): Promise<Product | null> {
-  const snap = await dbAdmin
-    .collection("products")
-    .where("slug", "==", slug)
-    .limit(1)
-    .get();
+  const q = query(
+    collection(dbClient, "products"),
+    where("slug", "==", slug),
+    limit(1)
+  );
 
+  const snap = await getDocs(q);
   if (snap.empty) return null;
+
   return mapProductDoc(snap.docs[0]);
 }
 
 export async function getFeaturedProducts(
-  limit = 6
+  max = 6
 ): Promise<Product[]> {
-  const snap = await dbAdmin
-    .collection("products")
-    .where("isFeatured", "==", true)
-    .limit(limit)
-    .get();
+  const q = query(
+    collection(dbClient, "products"),
+    where("isFeatured", "==", true),
+    limit(max)
+  );
 
+  const snap = await getDocs(q);
   return snap.docs.map(mapProductDoc);
 }
 
 export async function getAllProducts(): Promise<Product[]> {
-  const snap = await dbAdmin.collection("products").get();
+  const snap = await getDocs(collection(dbClient, "products"));
   return snap.docs.map(mapProductDoc);
 }
 
@@ -111,15 +127,25 @@ export async function getProductsByIds(
   ids: string[]
 ): Promise<Product[]> {
   if (!ids.length) return [];
+
   const snaps = await Promise.all(
-    ids.map((id) => dbAdmin.collection("products").doc(id).get())
+    ids.map(async (id) => {
+      const d = await getDoc(doc(dbClient, "products", id));
+      return d.exists() ? d : null;
+    })
   );
-  return snaps.filter((d) => d.exists).map(mapProductDoc);
+
+  return snaps
+    .filter(Boolean)
+    .map((d) => mapProductDoc(d!));
 }
 
 export async function getAllSlugs(): Promise<string[]> {
-  const snap = await dbAdmin.collection("products").select("slug").get();
+  const snap = await getDocs(
+    query(collection(dbClient, "products"))
+  );
+
   return snap.docs
-    .map((d) => (d.data() as any).slug)
-    .filter(Boolean) as string[];
+    .map((d) => d.data().slug)
+    .filter(Boolean);
 }

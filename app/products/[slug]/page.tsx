@@ -1,7 +1,7 @@
 // src/app/products/[slug]/page.tsx
 import { notFound } from "next/navigation";
 import type { Product } from "../../../types/products";
-import { getProductBySlug, getAllSlugs } from "../../../libs/products";
+import { getProductBySlug, getAllSlugs } from "../../../libs/products.server";
 import ProductGallery from "../../../components/ProductGallery";
 import RelatedProducts from "../../../components/RelatedProducts";
 import Reviews from "../../../components/Reviews";
