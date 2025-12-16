@@ -3,6 +3,7 @@ import './globals.css'
 import type { ReactNode } from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import ChatWidget from '@/components/ChatWIdget'
 
 // next/font/google (App Router friendly)
 import { Playfair_Display, Inter } from 'next/font/google'
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
      
         <Header />
         <main>{children}</main>
+        <ChatWidget />
         <Footer />
       </body>
     </html>
