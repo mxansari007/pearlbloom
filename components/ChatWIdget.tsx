@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  collection,
   addDoc,
-  onSnapshot,
-  serverTimestamp,
+  collection,
   doc,
-  setDoc,
-  query,
-  orderBy,
   getDoc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 import { dbClient } from "../libs/firebase-client";
 
@@ -30,13 +30,14 @@ export default function ChatWidget() {
   const [started, setStarted] = useState(false);
 
   // ui
-  const [minimized, setMinimized] = useState(false);
+  const [minimized, setMinimized] = useState(true);
+  const [hasUnread, setHasUnread] = useState(false);
 
-  const initializedRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const firstLoadRef = useRef(true);
+  const initializedRef = useRef(false);
 
-
-  /* ---------------- Restore chat on load ---------------- */
+  /* ---------------- Restore chat ---------------- */
 
   useEffect(() => {
     if (initializedRef.current) return;
@@ -55,14 +56,7 @@ export default function ChatWidget() {
     });
   }, []);
 
-  /* ---------------- Auto scroll to bottom ---------------- */
-
-useEffect(() => {
-  bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-}, [messages]);
-
-
-  /* ---------------- Create chat ---------------- */
+  /* ---------------- Start chat ---------------- */
 
   const startChat = async () => {
     if (!name.trim() || !phone.trim()) return;
@@ -76,14 +70,17 @@ useEffect(() => {
       lastMessage: "",
       lastMessageAt: serverTimestamp(),
       lastSender: "user",
-      user: { name, phone },
+      user: {
+        name: name.trim(),
+        phone: phone.trim(),
+      },
     });
 
     setChatId(id);
     setStarted(true);
   };
 
-  /* ---------------- Realtime messages ---------------- */
+  /* ---------------- Messages listener ---------------- */
 
   useEffect(() => {
     if (!chatId) return;
@@ -94,11 +91,28 @@ useEffect(() => {
     );
 
     return onSnapshot(q, (snap) => {
-      setMessages(
-        snap.docs.map((d) => d.data() as Message)
-      );
+      const msgs = snap.docs.map((d) => d.data() as Message);
+      setMessages(msgs);
+
+      const last = msgs[msgs.length - 1];
+      if (last && last.sender === "admin" && minimized) {
+        setHasUnread(true);
+      }
     });
-  }, [chatId]);
+  }, [chatId, minimized]);
+
+  /* ---------------- Scroll handling ---------------- */
+
+  useEffect(() => {
+    if (!bottomRef.current) return;
+
+    if (firstLoadRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "auto" });
+      firstLoadRef.current = false;
+    } else {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   /* ---------------- Send message ---------------- */
 
@@ -107,6 +121,7 @@ useEffect(() => {
 
     const text = input.trim();
     setInput("");
+    setHasUnread(false);
 
     await addDoc(collection(dbClient, "chats", chatId, "messages"), {
       sender: "user",
@@ -119,41 +134,52 @@ useEffect(() => {
       {
         lastMessage: text,
         lastMessageAt: serverTimestamp(),
-        lastSender: "user", // 🔥 key for admin notification
+        lastSender: "user",
       },
       { merge: true }
     );
   };
 
-  /* ---------------- UI ---------------- */
-
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* MINIMIZED ICON */}
+      {/* ================= FLOATING ICON ================= */}
       {minimized && (
         <button
-          onClick={() => setMinimized(false)}
-          className="w-14 h-14 rounded-full bg-neutral-900 border border-yellow-500/40 flex items-center justify-center shadow-xl hover:scale-105 transition"
+          onClick={() => {
+            setMinimized(false);
+            setHasUnread(false);
+          }}
           aria-label="Open chat"
+          className="
+            relative w-14 h-14 rounded-full
+            bg-gradient-to-br from-yellow-400 to-yellow-500
+            flex items-center justify-center
+            shadow-[0_10px_30px_rgba(234,179,8,0.45)]
+            hover:scale-105 transition-transform
+          "
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.8}
-            stroke="rgb(234 179 8)"
-            className="w-6 h-6"
-          >
-            <path
+          <div className="w-11 h-11 rounded-full bg-neutral-900 flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="rgb(234 179 8)"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M8 10h8m-8 4h5m7-2a9 9 0 11-4.5-7.794L21 3v6h-6l2.293-2.293A8.963 8.963 0 0119 12z"
-            />
-          </svg>
+              className="w-5 h-5"
+            >
+              <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+            </svg>
+          </div>
+
+          {hasUnread && (
+            <span className="absolute top-1 right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-neutral-900 animate-pulse" />
+          )}
         </button>
       )}
 
-      {/* CHAT WIDGET */}
+      {/* ================= CHAT WINDOW ================= */}
       {!minimized && (
         <div className="w-80 bg-neutral-900 rounded-xl border border-white/10 shadow-xl overflow-hidden">
           {/* HEADER */}
@@ -162,18 +188,24 @@ useEffect(() => {
 
             <button
               onClick={() => setMinimized(true)}
-              className="text-neutral-400 hover:text-yellow-500 transition"
               aria-label="Minimize chat"
+              className="
+                w-8 h-8 flex items-center justify-center rounded-full
+                text-neutral-400 hover:text-yellow-500
+                hover:bg-neutral-800 transition
+              "
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={2}
+                fill="none"
                 stroke="currentColor"
-                className="w-5 h-5"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-4 h-4"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18 12H6" />
+                <path d="M5 12h14" />
               </svg>
             </button>
           </div>
@@ -200,41 +232,37 @@ useEffect(() => {
               >
                 Start chat
               </button>
-
-              <p className="text-xs text-neutral-400 text-center">
-                Our team usually replies within a few minutes.
-              </p>
             </div>
           ) : (
             <>
               {/* MESSAGES */}
               <div className="p-3 h-64 overflow-y-auto space-y-2 text-sm">
-{messages.map((m, i) => {
-  const isUser = m.sender === "user";
+                {messages.map((m, i) => {
+                  const isUser = m.sender === "user";
 
-  return (
-    <div
-      key={i}
-      className={`flex ${isUser ? "justify-end" : "justify-start"}`}
-    >
-      <div
-        className={`
-          max-w-[75%] px-3 py-2 text-sm rounded-2xl
-          ${
-            isUser
-              ? "bg-yellow-500 text-black rounded-br-sm"
-              : "bg-neutral-800 text-neutral-200 rounded-bl-sm"
-          }
-        `}
-      >
-        {m.text}
-      </div>
-    </div>
-  );
-})}
-  {/* 👇 scroll anchor */}
-  <div ref={bottomRef} />
-
+                  return (
+                    <div
+                      key={i}
+                      className={`flex ${
+                        isUser ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`
+                          max-w-[75%] px-3 py-2 rounded-2xl
+                          ${
+                            isUser
+                              ? "bg-yellow-500 text-black rounded-br-sm"
+                              : "bg-neutral-800 text-neutral-200 rounded-bl-sm"
+                          }
+                        `}
+                      >
+                        {m.text}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={bottomRef} />
               </div>
 
               {/* INPUT */}
@@ -257,8 +285,6 @@ useEffect(() => {
           )}
         </div>
       )}
-
-
     </div>
   );
 }
