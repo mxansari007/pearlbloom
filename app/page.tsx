@@ -33,15 +33,17 @@ export default async function Home() {
             return (
               <section
                 key={section.id}
-                className="container mx-auto px-6 pt-10"
+                className="container mx-auto px-6 py-14"
               >
-                <h2 className="text-3xl font-display ml-80 mb-0">
+                <h2 className="text-3xl font-display mb-6">
                   {section.title}
                 </h2>
+
                 <ProductGrid products={products} />
               </section>
             );
           }
+
 
           /* ---------------- Collections row ---------------- */
           if (section.type === "collectionsRow") {
