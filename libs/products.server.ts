@@ -95,3 +95,49 @@ export async function getAllSlugs(): Promise<string[]> {
     .map((d) => (d.data() as any).slug)
     .filter(Boolean);
 }
+
+
+const PAGE_SIZE = 8;
+
+export async function getProductsByCollectionId(
+  collectionId: string,
+  cursor?: string
+) {
+  try {
+    let query = dbAdmin
+      .collection("products")
+      .where("collectionId", "==", collectionId)
+      .orderBy("createdAt", "desc")
+      .limit(PAGE_SIZE);
+
+    if (cursor) {
+      const lastDoc = await dbAdmin.collection("products").doc(cursor).get();
+      if (lastDoc.exists) {
+        query = query.startAfter(lastDoc);
+      }
+    }
+
+    const snap = await query.get();
+
+    const products = snap.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as any),
+    }));
+
+    const nextCursor =
+      snap.docs.length === PAGE_SIZE
+        ? snap.docs[snap.docs.length - 1].id
+        : null;
+
+    return {
+      products: serializeFirestore(products),
+      nextCursor,
+    };
+  } catch (error) {
+    console.error("❌ getProductsByCollectionId failed:", error);
+    return {
+      products: [],
+      nextCursor: null,
+    };
+  }
+}

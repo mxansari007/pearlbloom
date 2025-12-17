@@ -42,3 +42,30 @@ export async function getCollectionsByIds(
       })
     );
 }
+
+
+export async function getCollectionBySlug(
+  slug: string
+): Promise<Collection | null> {
+
+    if (!slug) return null; // ✅ keep this
+
+  const snap = await dbAdmin
+    .collection("collections")
+    .where("slug", "==", slug)
+    .limit(1)
+    .get();
+
+    console.log(slug)
+
+  if (snap.empty) return null;
+
+  const doc = snap.docs[0];
+
+  const collection = {
+    id: doc.id,
+    ...(doc.data() as Omit<Collection, "id">),
+  };
+
+  return serializeFirestore(collection);
+}

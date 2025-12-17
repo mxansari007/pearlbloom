@@ -33,7 +33,7 @@ export default function Header() {
 
           <nav className="hidden md:flex items-center gap-8 text-sm">
             <Link href="/" className="text-slate-200/90 hover:text-white transition">Home</Link>
-            <Link href="/collection" className="text-slate-200/90 hover:text-white transition">Collections</Link>
+            <Link href="/products" className="text-slate-200/90 hover:text-white transition">Products</Link>
             <Link href="/craft" className="text-slate-200/70 hover:text-white transition">Our Craft</Link>
             <Link href="/contact" className="text-slate-200/70 hover:text-white transition">Contact</Link>
             <Link href="/search" className="ml-2">
