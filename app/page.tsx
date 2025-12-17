@@ -4,7 +4,7 @@ import ProductGrid from "../components/ProductGrid";
 import CollectionCard from "../components/CollectionCard";
 import SubscribeForm from "../components/SubscriptionForm";
 
-import { getHomepageSections } from "../libs/homepage";
+import { getHomepageSections } from "../libs/homepage.server";
 import { getProductsByIds } from "../libs/products.server";
 import { getCollectionsByIds } from "../libs/collections.server";
 

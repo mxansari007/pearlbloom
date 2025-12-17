@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getHeroData } from "../libs/hero";
+import { getHeroData } from "../libs/hero.server";
 
 export default async function Hero() {
   const hero = await getHeroData();
