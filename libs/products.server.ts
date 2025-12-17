@@ -1,10 +1,14 @@
 import { dbAdmin } from "./firebase-admin";
 import { serializeFirestore } from "./serialize";
 import type { Product } from "@/types/products";
-
+import { unstable_noStore as noStore } from "next/cache";
 /* ----------------------------------
    Get products by IDs
 ----------------------------------- */
+
+noStore();
+
+
 export async function getProductsByIds(
   ids: string[]
 ): Promise<Product[]> {

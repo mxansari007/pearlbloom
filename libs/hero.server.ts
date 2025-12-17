@@ -1,4 +1,8 @@
 import { dbAdmin } from "./firebase-admin";
+import { unstable_noStore as noStore } from "next/cache";
+
+
+noStore();
 
 export type HeroData = {
   title: string;
@@ -10,6 +14,8 @@ export type HeroData = {
     public_id: string;
   };
 };
+
+
 
 export async function getHeroData(): Promise<HeroData | null> {
   const snap = await dbAdmin

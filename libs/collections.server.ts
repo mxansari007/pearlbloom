@@ -1,3 +1,5 @@
+import { unstable_noStore as noStore } from "next/cache";
+
 import { dbAdmin } from "./firebase-admin";
 import { serializeFirestore } from "./serialize";
 import type { Collection } from "@/types/collections";
@@ -5,6 +7,9 @@ import type { Collection } from "@/types/collections";
 /* ----------------------------------
    Get all collections
 ----------------------------------- */
+
+noStore();
+
 export async function getAllCollections(): Promise<Collection[]> {
   const snap = await dbAdmin.collection("collections").get();
 

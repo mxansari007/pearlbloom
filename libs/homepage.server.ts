@@ -1,4 +1,9 @@
 import { dbAdmin } from "./firebase-admin";
+import { unstable_noStore as noStore } from "next/cache";
+
+
+noStore();
+
 
 export async function getHomepageSections() {
   const snap = await dbAdmin
