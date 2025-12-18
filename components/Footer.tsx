@@ -4,11 +4,20 @@ import { useEffect, useState } from 'react'
 import { doc, getDoc } from 'firebase/firestore'
 import Link from 'next/link'
 import { dbClient } from '../libs/firebase-client'
+import { Instagram,Facebook,Twitter,Linkedin} from 'lucide-react';
+
+
 
 type FooterLink = {
   label: string
   href: string
 }
+
+type SocialLink = {
+  platform: "instagram" | "facebook" | "twitter" | "youtube" | "linkedin";
+  url: string;
+};
+
 
 type SiteSettings = {
   siteName: string
@@ -18,6 +27,7 @@ type SiteSettings = {
     contactEmail: string
     contactPhone: string
     links?: FooterLink[]
+    socialLinks: SocialLink[]
   }
 }
 
@@ -85,20 +95,34 @@ export default function Footer() {
           </p>
 
           <div className="flex gap-3 mt-4">
-            <a
+            {footer.socialLinks?.find(link => link.platform === 'instagram') && <a
               aria-label="Instagram"
+              href={footer.socialLinks.find(link => link.platform === 'instagram')?.url || '#'}
+              className="w-9 h-9 rounded-full bg-white/4 flex items-center justify-center hover:bg-white/10 transition"
+            >
+              <Instagram size={16} />
+            </a>}
+            {footer.socialLinks?.find(link => link.platform === 'facebook') && <a
+              aria-label="Facebook"
+              href={footer.socialLinks.find(link => link.platform === 'facebook')?.url || '#'}
+              className="w-9 h-9 rounded-full bg-white/4 flex items-center justify-center hover:bg-white/10 transition"
+            >
+              <Facebook size={16} />
+            </a>}
+            {footer.socialLinks?.find(link => link.platform === 'twitter') && <a
+              aria-label="Twitter"
+              href={footer.socialLinks.find(link => link.platform === 'twitter')?.url || '#'}
+              className="w-9 h-9 rounded-full bg-white/4 flex items-center justify-center hover:bg-white/10 transition"
+            >
+              <Twitter size={16} />
+            </a>}
+            {footer.socialLinks?.find(link => link.platform === 'linkedin') && <a
+              aria-label="LinkedIn"
               href="#"
               className="w-9 h-9 rounded-full bg-white/4 flex items-center justify-center hover:bg-white/10 transition"
             >
-              ig
-            </a>
-            <a
-              aria-label="Pinterest"
-              href="#"
-              className="w-9 h-9 rounded-full bg-white/4 flex items-center justify-center hover:bg-white/10 transition"
-            >
-              pt
-            </a>
+              <Linkedin size={16} />
+            </a>}
           </div>
         </div>
       </div>

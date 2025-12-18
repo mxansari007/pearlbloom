@@ -13,6 +13,7 @@
     "firebase": "^12.6.0",
     "firebase-admin": "^13.6.0",
     "firebase-cli": "^1.2.0",
+    "lucide-react": "^0.561.0",
     "next": "^16.0.7",
     "postcss": "^8.5.6",
     "posthog-js": "^1.302.2",

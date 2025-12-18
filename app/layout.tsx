@@ -7,6 +7,7 @@ import ChatWidget from '@/components/ChatWIdget'
 
 // next/font/google (App Router friendly)
 import { Playfair_Display, Inter } from 'next/font/google'
+import RouteLoader from "./providers/route-loader";
 import SunriseOverlay from '../components/SunriseOverlay' // adjust path if needed
 // instrumentation-client.js
 import posthog from 'posthog-js'
@@ -44,7 +45,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     // apply both font variables on html so CSS can use them if needed
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body className="min-h-screen bg-[--background] text-[--foreground] font-sans">
-     
+     <RouteLoader />
         <Header />
         <main>{children}</main>
         <ChatWidget />
