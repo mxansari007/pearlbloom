@@ -1,8 +1,9 @@
 import { Suspense } from "react";
-import ProductGridClient from './ProductGridClient';
+import ProductGridClient from "./ProductGridClient";
+import { getCollectionBySlug } from "@/libs/collections.server";
+import { getProductsByCollectionId } from "@/libs/products.server";
 
-
-/* -------------------------------- Skeleton -------------------------------- */
+/* ---------------- Skeleton ---------------- */
 
 function ProductCardSkeleton() {
   return (
@@ -28,31 +29,26 @@ function GridSkeleton() {
   );
 }
 
-/* ----------------------------- Server Fetch ----------------------------- */
-
-async function fetchProducts(collectionSlug: string) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/collections/${collectionSlug}/products`,
-    { cache: "no-store" }
-  );
-
-  if (!res.ok) throw new Error("Failed to fetch products");
-
-  return res.json();
-}
-
-/* ----------------------------- Client Grid ----------------------------- */
-
-
-
-/* -------------------------- Streaming Wrapper -------------------------- */
+/* ---------------- Streaming Server Component ---------------- */
 
 async function ProductGridStream({
   collectionSlug,
 }: {
   collectionSlug: string;
 }) {
-  const data = await fetchProducts(collectionSlug);
+  const collection = await getCollectionBySlug(collectionSlug);
+
+  if (!collection) {
+    return (
+      <ProductGridClient
+        initialProducts={[]}
+        initialCursor={null}
+        collectionSlug={collectionSlug}
+      />
+    );
+  }
+
+  const data = await getProductsByCollectionId(collection.id);
 
   return (
     <ProductGridClient
@@ -63,7 +59,7 @@ async function ProductGridStream({
   );
 }
 
-/* ------------------------------- Export ------------------------------- */
+/* ---------------- Export ---------------- */
 
 export default function InfiniteProductGrid({
   collectionSlug,
