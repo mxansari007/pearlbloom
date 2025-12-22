@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Product } from "../types/products";
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -15,16 +16,23 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <article className="rounded-2xl bg-neutral-900/60 border border-white/5 hover:border-yellow-500/30 transition">
       <Link href={`/product/${product.slug}`} className="block">
-        <div className="aspect-square overflow-hidden">
-          <img
+        {/* Image */}
+        <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
+          <Image
             src={image}
             alt={product.name}
-            className="aspect-[3/4] object-cover rounded-xl"
+            fill
+            sizes="(max-width: 768px) 100vw, 25vw"
+            className="object-cover"
+            priority={false}
           />
         </div>
 
+        {/* Content */}
         <div className="p-4">
-          <h3 className="text-sm tracking-wide font-display">{product.name}</h3>
+          <h3 className="text-sm tracking-wide font-display">
+            {product.name}
+          </h3>
 
           <div className="mt-2 flex items-center justify-between">
             {product.price > 0 ? (
@@ -40,6 +48,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
 
+      {/* Actions */}
       <div className="p-4 border-t border-white/10 flex gap-3">
         <Link
           href={`/product/${product.slug}`}

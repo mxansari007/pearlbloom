@@ -1,4 +1,5 @@
 // src/app/products/[slug]/layout.tsx
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -7,21 +8,55 @@ import { getProductBySlug } from "../../libs/products.server";
 
 type ParamsLike = { slug?: string } | Promise<{ slug?: string }>;
 
-export default async function ProductLayout({
+/* ---------------------------------------------------------------- */
+/* Skeleton */
+/* ---------------------------------------------------------------- */
+
+function ProductLayoutSkeleton({ children }: { children: ReactNode }) {
+  return (
+    <div className="container py-8 space-y-6 animate-pulse">
+      {/* Breadcrumbs */}
+      <nav className="flex gap-2 text-xs">
+        <div className="h-3 w-12 bg-white/10 rounded" />
+        <span>/</span>
+        <div className="h-3 w-20 bg-white/10 rounded" />
+        <span>/</span>
+        <div className="h-3 w-32 bg-white/10 rounded" />
+      </nav>
+
+      {/* Header */}
+      <header className="space-y-2">
+        <div className="h-8 w-2/3 bg-white/10 rounded" />
+        <div className="h-4 w-32 bg-white/10 rounded" />
+      </header>
+
+      {/* Main shell */}
+      <section className="grid gap-6 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] items-start">
+        <div>{children}</div>
+
+        <aside className="rounded-2xl border border-white/6 bg-white/[0.02] px-5 py-5">
+          <div className="h-3 w-12 bg-white/10 rounded mb-3" />
+          <div className="h-6 w-24 bg-white/10 rounded" />
+        </aside>
+      </section>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* Async layout body (streams) */
+/* ---------------------------------------------------------------- */
+
+async function ProductLayoutStream({
   children,
   params,
 }: {
   children: ReactNode;
   params: ParamsLike;
 }) {
-  // Always await params (handles Promise or plain object)
   const { slug } = (await params) as { slug?: string };
 
-  // If slug is missing, don't hard 404; render a minimal shell
   if (!slug) {
-    console.warn(
-      "[ProductLayout] slug missing; rendering fallback layout until page resolves"
-    );
     return (
       <div className="container py-8">
         <main>{children}</main>
@@ -30,13 +65,7 @@ export default async function ProductLayout({
   }
 
   const product: Product | null = await getProductBySlug(slug);
-  if (!product) {
-    console.log(
-      "[ProductLayout] product not found for slug -> notFound():",
-      slug
-    );
-    notFound();
-  }
+  if (!product) notFound();
 
   return (
     <div className="container py-8 space-y-6">
@@ -55,7 +84,7 @@ export default async function ProductLayout({
         </span>
       </nav>
 
-      {/* Page header */}
+      {/* Header */}
       <header className="space-y-1">
         <h1 className="text-2xl md:text-3xl font-display leading-tight">
           {product.name}
@@ -65,7 +94,7 @@ export default async function ProductLayout({
         )}
       </header>
 
-      {/* Shell layout: main content + simple aside */}
+      {/* Shell */}
       <section className="grid gap-6 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] items-start">
         <div>{children}</div>
 
@@ -85,5 +114,23 @@ export default async function ProductLayout({
         </aside>
       </section>
     </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* Exported layout */
+/* ---------------------------------------------------------------- */
+
+export default function ProductLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: ParamsLike;
+}) {
+  return (
+    <Suspense fallback={<ProductLayoutSkeleton>{children}</ProductLayoutSkeleton>}>
+      <ProductLayoutStream params={params}>{children}</ProductLayoutStream>
+    </Suspense>
   );
 }

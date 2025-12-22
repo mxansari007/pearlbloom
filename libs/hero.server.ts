@@ -1,8 +1,5 @@
 import { dbAdmin } from "./firebase-admin";
-import { unstable_noStore as noStore } from "next/cache";
 
-
-noStore();
 
 export type HeroData = {
   title: string;
@@ -15,15 +12,16 @@ export type HeroData = {
   };
 };
 
+/* ----------------------------------
+   Get hero data (cached)
+----------------------------------- */
+export const getHeroData = async (): Promise<HeroData | null> => {
+    const snap = await dbAdmin
+      .collection("siteSettings")
+      .doc("main")
+      .get();
 
+    if (!snap.exists) return null;
 
-export async function getHeroData(): Promise<HeroData | null> {
-  const snap = await dbAdmin
-    .collection("siteSettings")
-    .doc("main")
-    .get();
-
-  if (!snap.exists) return null;
-
-  return snap.data()?.hero ?? null;
-}
+    return snap.data()?.hero ?? null;
+  }

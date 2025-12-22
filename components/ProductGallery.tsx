@@ -1,9 +1,14 @@
-// src/components/ProductGallery.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 
-export default function ProductGallery({ images = [], alt = '' }: { images?: string[]; alt?: string }) {
+type Props = {
+  images?: string[]
+  alt?: string
+}
+
+export default function ProductGallery({ images = [], alt = '' }: Props) {
   const [index, setIndex] = useState(0)
   const [open, setOpen] = useState(false)
 
@@ -18,7 +23,7 @@ export default function ProductGallery({ images = [], alt = '' }: { images?: str
     return () => window.removeEventListener('keydown', onKey)
   }, [open, images.length])
 
-  if (!images || images.length === 0) {
+  if (!images.length) {
     return (
       <div className="card p-4 flex items-center justify-center" aria-hidden>
         <div className="text-center text-muted">No images available</div>
@@ -34,6 +39,7 @@ export default function ProductGallery({ images = [], alt = '' }: { images?: str
   function next() {
     setIndex((i) => (i + 1) % images.length)
   }
+
   function prev() {
     setIndex((i) => (i - 1 + images.length) % images.length)
   }
@@ -46,14 +52,16 @@ export default function ProductGallery({ images = [], alt = '' }: { images?: str
           onClick={() => openAt(index)}
           aria-label="Open image in lightbox"
           className="w-full block"
-          style={{ display: 'block' }}
         >
-          <div className="img-wrap">
-            <img
+          <div className="relative w-full h-[520px]">
+            <Image
+              key={images[index]}               // ✅ IMPORTANT
               src={images[index]}
               alt={alt || `Product image ${index + 1}`}
-              className="w-full h-[520px] object-cover"
-              style={{ display: 'block' }}
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
             />
           </div>
         </button>
@@ -63,12 +71,20 @@ export default function ProductGallery({ images = [], alt = '' }: { images?: str
       <div className="mt-4 flex gap-3">
         {images.map((src, i) => (
           <button
-            key={i}
+            key={src}
             onClick={() => setIndex(i)}
-            className={`rounded-md overflow-hidden border ${i === index ? 'ring-2 ring-[rgba(212,175,55,0.2)]' : 'border-white/6'}`}
             aria-pressed={i === index}
+            className={`relative w-20 h-20 rounded-md overflow-hidden border
+              ${i === index ? 'ring-2 ring-[rgba(212,175,55,0.2)]' : 'border-white/6'}`}
           >
-            <img src={src} alt={alt || `Thumbnail ${i + 1}`} className="w-20 h-20 object-cover" />
+            <Image
+              key={src}                        // ✅ IMPORTANT
+              src={src}
+              alt={alt || `Thumbnail ${i + 1}`}
+              fill
+              sizes="80px"
+              className="object-cover"
+            />
           </button>
         ))}
       </div>
@@ -82,11 +98,20 @@ export default function ProductGallery({ images = [], alt = '' }: { images?: str
           onClick={() => setOpen(false)}
         >
           <div
-            className="max-w-[92vw] max-h-[92vh] relative"
+            className="relative max-w-[92vw] max-h-[92vh]"
             onClick={(e) => e.stopPropagation()}
-            aria-label="Image viewer"
           >
-            <img src={images[index]} alt={alt || `Product image ${index + 1}`} className="max-w-full max-h-[80vh] object-contain rounded-md" />
+            <div className="relative w-[80vw] h-[80vh]">
+              <Image
+                key={images[index]}           // ✅ IMPORTANT
+                src={images[index]}
+                alt={alt || `Product image ${index + 1}`}
+                fill
+                sizes="100vw"
+                className="object-contain rounded-md"
+              />
+            </div>
+
             <button
               onClick={() => setOpen(false)}
               aria-label="Close"

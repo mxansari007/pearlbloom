@@ -3,15 +3,18 @@
 
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useUIStore } from "@/store/ui-store";
 
 type Props = {
   open: boolean
   onClose: () => void
 }
 
+
 export default function MobileMenu({ open, onClose }: Props) {
   const panelRef = useRef<HTMLDivElement | null>(null)
   const firstLinkRef = useRef<HTMLAnchorElement | null>(null)
+  const startNavigation = useUIStore((s) => s.start);
 
   // lock body scroll when open
   useEffect(() => {
@@ -99,7 +102,7 @@ export default function MobileMenu({ open, onClose }: Props) {
                 <Link href="/" ref={firstLinkRef as any} className="block text-lg font-medium text-slate-100 hover:text-white transition" onClick={onClose}>Home</Link>
               </li>
               <li>
-                <Link href="/collection" className="block text-lg font-medium text-slate-100 hover:text-white transition" onClick={onClose}>Collections</Link>
+                <Link href="/products" className="block text-lg font-medium text-slate-100 hover:text-white transition" onClick={onClose}>Products</Link>
               </li>
               <li>
                 <Link href="/craft" className="block text-lg font-medium text-slate-100 hover:text-white transition" onClick={onClose}>Our Craft</Link>
@@ -113,10 +116,6 @@ export default function MobileMenu({ open, onClose }: Props) {
           {/* footer actions */}
           <div className="mt-auto pt-6">
             <a href="/products" className="btn-cta block text-center mb-4">Shop Now</a>
-            <div className="flex items-center justify-between text-sm text-muted">
-              <div>Call us</div>
-              <div>+91 98765 43210</div>
-            </div>
           </div>
         </div>
       </div>

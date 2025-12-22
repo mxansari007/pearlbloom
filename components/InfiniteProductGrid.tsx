@@ -1,86 +1,78 @@
-"use client";
+import { Suspense } from "react";
+import ProductGridClient from './ProductGridClient';
 
-import { useEffect, useRef, useState } from "react";
-import type { Product } from "@/types/products";
-import ProductCard from "./ProductCard";
+
+/* -------------------------------- Skeleton -------------------------------- */
+
+function ProductCardSkeleton() {
+  return (
+    <div className="rounded-2xl bg-neutral-900/60 border border-white/5 p-4 animate-pulse">
+      <div className="aspect-[3/4] rounded-xl bg-white/10" />
+      <div className="mt-4 h-4 w-3/4 bg-white/10 rounded" />
+      <div className="mt-2 h-4 w-1/3 bg-white/10 rounded" />
+      <div className="mt-4 flex gap-3">
+        <div className="h-9 w-20 bg-white/10 rounded" />
+        <div className="ml-auto h-9 w-24 bg-white/10 rounded" />
+      </div>
+    </div>
+  );
+}
+
+function GridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <ProductCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
+/* ----------------------------- Server Fetch ----------------------------- */
+
+async function fetchProducts(collectionSlug: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SITE_URL}/api/collections/${collectionSlug}/products`,
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) throw new Error("Failed to fetch products");
+
+  return res.json();
+}
+
+/* ----------------------------- Client Grid ----------------------------- */
+
+
+
+/* -------------------------- Streaming Wrapper -------------------------- */
+
+async function ProductGridStream({
+  collectionSlug,
+}: {
+  collectionSlug: string;
+}) {
+  const data = await fetchProducts(collectionSlug);
+
+  return (
+    <ProductGridClient
+      initialProducts={data.products}
+      initialCursor={data.nextCursor}
+      collectionSlug={collectionSlug}
+    />
+  );
+}
+
+/* ------------------------------- Export ------------------------------- */
 
 export default function InfiniteProductGrid({
   collectionSlug,
 }: {
   collectionSlug: string;
 }) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
-
-  // 🔒 prevents double initial fetch
-  const hasLoadedOnce = useRef(false);
-
-  /* ---------------- Reset when slug changes ---------------- */
-  useEffect(() => {
-    setProducts([]);
-    setCursor(null);
-    setDone(false);
-    hasLoadedOnce.current = false; // ⬅️ reset guard
-  }, [collectionSlug]);
-
-  /* ---------------- Fetch function ---------------- */
-  const loadMore = async () => {
-    if (loading || done) return;
-
-    setLoading(true);
-
-    const res = await fetch(
-      `/api/collections/${collectionSlug}/products${
-        cursor ? `?cursor=${cursor}` : ""
-      }`
-    );
-
-    const data = await res.json();
-
-    setProducts((prev) => {
-        const existingIds = new Set(prev.map((p) => p.id));
-        const uniqueNewProducts = data.products.filter(
-            (p: any) => !existingIds.has(p.id)
-        );
-
-        return [...prev, ...uniqueNewProducts];
-        });
-
-    setCursor(data.nextCursor);
-    setDone(!data.nextCursor);
-    setLoading(false);
-  };
-
-  /* ---------------- Initial load (SAFE) ---------------- */
-  useEffect(() => {
-    if (hasLoadedOnce.current) return;
-
-    hasLoadedOnce.current = true;
-    loadMore();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [collectionSlug]);
-
   return (
-    <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} />
-        ))}
-      </div>
-
-      {!done && (
-        <div className="mt-12 text-center">
-          <button
-            onClick={loadMore}
-            disabled={loading}
-            className="rounded-lg bg-yellow-500 text-black px-6 py-2"
-          >
-            {loading ? "Loading…" : "Load more"}
-          </button>
-        </div>
-      )}
-    </>
+    <Suspense fallback={<GridSkeleton />}>
+      <ProductGridStream collectionSlug={collectionSlug} />
+    </Suspense>
   );
 }

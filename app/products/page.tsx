@@ -1,4 +1,6 @@
 // src/app/collections/page.tsx
+export const revalidate = 60;
+
 import type { Metadata } from 'next'
 import { getAllProducts } from '../../libs/products.server'
 import CollectionHero from '../../components/CollectionHero'
@@ -10,7 +12,7 @@ export const metadata: Metadata = {
   description: 'Explore Aurum’s curated collections: rings, necklaces, earrings and more. Handcrafted, ethically sourced, heirloom quality.'
 }
 
-export default async function CollectionsPage() {
+export default async function Products() {
   // server-side fetch of all catalog products (fast local JSON)
   const allProducts: Product[] = await getAllProducts()
 

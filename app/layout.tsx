@@ -7,10 +7,11 @@ import ChatWidget from '@/components/ChatWIdget'
 
 // next/font/google (App Router friendly)
 import { Playfair_Display, Inter } from 'next/font/google'
-import RouteLoader from "./providers/route-loader";
 import SunriseOverlay from '../components/SunriseOverlay' // adjust path if needed
 // instrumentation-client.js
 import posthog from 'posthog-js'
+
+
 
 if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
@@ -40,14 +41,19 @@ export const metadata = {
   description: 'jewelry — rings, necklaces, earrings. Luxury designs and timeless pieces.'
 }
 
+
+
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     // apply both font variables on html so CSS can use them if needed
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body className="min-h-screen bg-[--background] text-[--foreground] font-sans">
-     <RouteLoader />
+
         <Header />
+
         <main>{children}</main>
+
         <ChatWidget />
         <Footer />
       </body>
