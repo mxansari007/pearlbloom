@@ -65,6 +65,8 @@ export default function InfiniteProductGrid({
   collectionSlug,
 }: {
   collectionSlug: string;
+  initialProducts: any[];
+  initialCursor: string | null;
 }) {
   return (
     <Suspense fallback={<GridSkeleton />}>
