@@ -27,7 +27,7 @@ function ProductGridClient({
   initialCursor,
   collectionSlug,
 }: {
-  initialProducts: Product[];
+  initialProducts:any[];
   initialCursor: string | null;
   collectionSlug: string;
 }) {
