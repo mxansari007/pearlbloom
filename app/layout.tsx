@@ -10,7 +10,9 @@ import { Playfair_Display, Inter } from 'next/font/google'
 import SunriseOverlay from '../components/SunriseOverlay' // adjust path if needed
 // instrumentation-client.js
 import posthog from 'posthog-js'
-
+import AuthProvider from '@/components/AuthProvider'
+import CartDrawer from "@/components/CartDrawer";
+import { ThemeApplier } from '@/components/ThemeApplier'
 
 
 if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
@@ -47,16 +49,18 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     // apply both font variables on html so CSS can use them if needed
+    <AuthProvider>
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body className="min-h-screen bg-[--background] text-[--foreground] font-sans">
-
+      <ThemeApplier />
         <Header />
 
         <main>{children}</main>
-
+        <CartDrawer />
         <ChatWidget />
         <Footer />
       </body>
     </html>
+    </AuthProvider>
   )
 }

@@ -13,6 +13,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { dbClient } from "../libs/firebase-client";
+import { useAuthStore } from "@/store/useAppStore";
 
 type Message = {
   sender: "user" | "admin";
@@ -20,70 +21,69 @@ type Message = {
 };
 
 export default function ChatWidget() {
-  const [chatId, setChatId] = useState<string | null>(null);
+  const { user, isAuthenticated, authInitialized } = useAuthStore();
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [chatReady, setChatReady] = useState(false);
 
-  // pre-chat
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [started, setStarted] = useState(false);
-
-  // ui
+  // UI
   const [minimized, setMinimized] = useState(true);
   const [hasUnread, setHasUnread] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const firstLoadRef = useRef(true);
-  const initializedRef = useRef(false);
+  const initRef = useRef(false);
 
-  /* ---------------- Restore chat ---------------- */
+  /* ---------------- Chat ID ---------------- */
+
+  const chatId =
+    isAuthenticated && user?.phone
+      ? `chat_${user.phone.replace(/\D/g, "")}`
+      : null;
+
+  /* ---------------- Auto-create chat ---------------- */
 
   useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
+    if (
+      !authInitialized ||
+      !isAuthenticated ||
+      !chatId ||
+      initRef.current
+    )
+      return;
 
-    const storedId = localStorage.getItem("chatId");
-    if (!storedId) return;
+    initRef.current = true;
 
-    getDoc(doc(dbClient, "chats", storedId)).then((snap) => {
-      if (snap.exists()) {
-        setChatId(storedId);
-        setStarted(true);
-      } else {
-        localStorage.removeItem("chatId");
+    const initChat = async () => {
+      const ref = doc(dbClient, "chats", chatId);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        await setDoc(ref, {
+          status: "open",
+          createdAt: serverTimestamp(),
+          lastMessage: "",
+          lastMessageAt: serverTimestamp(),
+          lastSender: "user",
+          user: {
+            firstName: user?.firstName,
+            lastName: user?.lastName,
+            phone: user?.phone,
+          },
+        });
       }
-    });
-  }, []);
 
-  /* ---------------- Start chat ---------------- */
+      setChatReady(true);
+    };
 
-  const startChat = async () => {
-    if (!name.trim() || !phone.trim()) return;
-
-    const id = crypto.randomUUID();
-    localStorage.setItem("chatId", id);
-
-    await setDoc(doc(dbClient, "chats", id), {
-      status: "open",
-      createdAt: serverTimestamp(),
-      lastMessage: "",
-      lastMessageAt: serverTimestamp(),
-      lastSender: "user",
-      user: {
-        name: name.trim(),
-        phone: phone.trim(),
-      },
-    });
-
-    setChatId(id);
-    setStarted(true);
-  };
+    initChat();
+  }, [authInitialized, isAuthenticated, chatId, user]);
 
   /* ---------------- Messages listener ---------------- */
 
   useEffect(() => {
-    if (!chatId) return;
+    if (!chatReady || !chatId) return;
 
     const q = query(
       collection(dbClient, "chats", chatId, "messages"),
@@ -95,29 +95,28 @@ export default function ChatWidget() {
       setMessages(msgs);
 
       const last = msgs[msgs.length - 1];
-      if (last && last.sender === "admin" && minimized) {
+      if (last?.sender === "admin" && minimized) {
         setHasUnread(true);
       }
     });
-  }, [chatId, minimized]);
+  }, [chatReady, chatId, minimized]);
 
-  /* ---------------- Scroll handling ---------------- */
+  /* ---------------- Scroll ---------------- */
 
   useEffect(() => {
     if (!bottomRef.current) return;
 
-    if (firstLoadRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "auto" });
-      firstLoadRef.current = false;
-    } else {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    bottomRef.current.scrollIntoView({
+      behavior: firstLoadRef.current ? "auto" : "smooth",
+    });
+
+    firstLoadRef.current = false;
   }, [messages]);
 
-  /* ---------------- Send message ---------------- */
+  /* ---------------- Send ---------------- */
 
   const send = async () => {
-    if (!input.trim() || !chatId) return;
+    if (!input.trim() || !chatId || !chatReady) return;
 
     const text = input.trim();
     setInput("");
@@ -140,143 +139,128 @@ export default function ChatWidget() {
     );
   };
 
+  /* ---------------- UI ---------------- */
+
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* ================= FLOATING ICON ================= */}
+
+      {/* Floating Button */}
       {minimized && (
         <button
           onClick={() => {
             setMinimized(false);
             setHasUnread(false);
           }}
-          aria-label="Open chat"
-          className="
-            relative w-14 h-14 rounded-full
-            bg-gradient-to-br from-yellow-400 to-yellow-500
-            flex items-center justify-center
-            shadow-[0_10px_30px_rgba(234,179,8,0.45)]
-            hover:scale-105 transition-transform
-          "
+          className="relative w-14 h-14 rounded-full
+                     bg-gradient-to-br from-yellow-400 to-yellow-500
+                     flex items-center justify-center shadow-lg"
         >
-          <div className="w-11 h-11 rounded-full bg-neutral-900 flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="rgb(234 179 8)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-5 h-5"
-            >
-              <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
-            </svg>
-          </div>
-
+          💬
           {hasUnread && (
-            <span className="absolute top-1 right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-neutral-900 animate-pulse" />
+            <span className="absolute top-1 right-1 h-3 w-3 rounded-full bg-red-500 animate-pulse" />
           )}
         </button>
       )}
 
-      {/* ================= CHAT WINDOW ================= */}
+      {/* Chat Window */}
       {!minimized && (
-        <div className="w-80 bg-neutral-900 rounded-xl border border-white/10 shadow-xl overflow-hidden">
-          {/* HEADER */}
-          <div className="p-3 border-b border-white/10 flex items-center justify-between">
+        <div
+          className="w-80 rounded-xl shadow-xl overflow-hidden"
+          style={{
+            background: "var(--chat-bg)",
+            border: "1px solid var(--chat-border)",
+            color: "var(--fg)",
+          }}
+        >
+          {/* Header */}
+          <div
+            className="p-3 flex justify-between items-center"
+            style={{
+              borderBottom: "1px solid var(--chat-border)",
+            }}
+          >
             <span className="font-medium">Chat with us</span>
-
             <button
               onClick={() => setMinimized(true)}
-              aria-label="Minimize chat"
-              className="
-                w-8 h-8 flex items-center justify-center rounded-full
-                text-neutral-400 hover:text-yellow-500
-                hover:bg-neutral-800 transition
-              "
+              style={{ color: "var(--chat-muted)" }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="w-4 h-4"
-              >
-                <path d="M5 12h14" />
-              </svg>
+              —
             </button>
           </div>
 
-          {/* PRE CHAT */}
-          {!started ? (
-            <div className="p-4 space-y-3">
-              <input
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-neutral-800 px-3 py-2 rounded text-sm"
-              />
-              <input
-                placeholder="Phone number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-neutral-800 px-3 py-2 rounded text-sm"
-              />
-
+          {/* AUTH / CONTENT */}
+          {!authInitialized ? (
+            <div className="p-4 text-sm" style={{ color: "var(--chat-muted)" }}>
+              Loading chat…
+            </div>
+          ) : !isAuthenticated ? (
+            <div className="p-4 space-y-3 text-sm">
+              <p>Please login to start chatting.</p>
               <button
-                onClick={startChat}
-                className="w-full bg-yellow-500 text-black py-2 rounded text-sm font-medium"
+                onClick={() => (window.location.href = "/login")}
+                className="w-full bg-yellow-500 text-black py-2 rounded font-medium"
               >
-                Start chat
+                Login
               </button>
+            </div>
+          ) : !chatReady ? (
+            <div className="p-4 text-sm" style={{ color: "var(--chat-muted)" }}>
+              Initializing chat…
             </div>
           ) : (
             <>
-              {/* MESSAGES */}
+              {/* Messages */}
               <div className="p-3 h-64 overflow-y-auto space-y-2 text-sm">
-                {messages.map((m, i) => {
-                  const isUser = m.sender === "user";
-
-                  return (
+                {messages.map((m, i) => (
+                  <div
+                    key={i}
+                    className={`flex ${
+                      m.sender === "user"
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
+                  >
                     <div
-                      key={i}
-                      className={`flex ${
-                        isUser ? "justify-end" : "justify-start"
-                      }`}
+                      className="px-3 py-2 rounded-2xl max-w-[75%]"
+                      style={{
+                        background:
+                          m.sender === "user"
+                            ? "rgb(234 179 8)" // yellow
+                            : "var(--chat-admin-bg)",
+                        color:
+                          m.sender === "user"
+                            ? "#000"
+                            : "var(--fg)",
+                      }}
                     >
-                      <div
-                        className={`
-                          max-w-[75%] px-3 py-2 rounded-2xl
-                          ${
-                            isUser
-                              ? "bg-yellow-500 text-black rounded-br-sm"
-                              : "bg-neutral-800 text-neutral-200 rounded-bl-sm"
-                          }
-                        `}
-                      >
-                        {m.text}
-                      </div>
+                      {m.text}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
                 <div ref={bottomRef} />
               </div>
 
-              {/* INPUT */}
-              <div className="p-3 flex gap-2 border-t border-white/10">
+              {/* Input */}
+              <div
+                className="p-3 flex gap-2"
+                style={{
+                  borderTop: "1px solid var(--chat-border)",
+                }}
+              >
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  className="flex-1 bg-neutral-800 px-2 py-1 rounded text-sm"
-                  placeholder="Type your message..."
                   onKeyDown={(e) => e.key === "Enter" && send()}
+                  placeholder="Type your message…"
+                  className="flex-1 px-2 py-1 rounded text-sm outline-none"
+                  style={{
+                    background: "var(--chat-input-bg)",
+                    color: "var(--fg)",
+                  }}
                 />
                 <button
                   onClick={send}
-                  className="bg-yellow-500 px-3 rounded text-sm font-medium"
+                  className="bg-yellow-500 px-3 rounded text-sm font-medium text-black"
                 >
                   Send
                 </button>

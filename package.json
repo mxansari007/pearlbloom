@@ -18,6 +18,7 @@
     "postcss": "^8.5.6",
     "posthog-js": "^1.302.2",
     "posthog-node": "^5.17.2",
+    "razorpay": "^2.9.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "swr": "^2.3.7",

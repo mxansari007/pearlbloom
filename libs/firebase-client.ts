@@ -1,9 +1,9 @@
 // src/lib/firebase-client.ts
 "use client";
-
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getAuth } from "firebase/auth";
 // auth only if you actually need it
 // import { getAuth } from "firebase/auth";
 
@@ -16,8 +16,10 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
 
 export const dbClient = getFirestore(app);
 export const storageClient = getStorage(app);
+export const auth = getAuth(app);
 // export const authClient = getAuth(app);

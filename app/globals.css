@@ -35,6 +35,68 @@ h1, h2, h3, h4 {
   letter-spacing: -0.02em;
 }
 
+
+/* ===============================
+   LIGHT THEME TOKENS
+   =============================== */
+
+:root[data-theme="light"] {
+  --bg: #fafafa;
+  --panel: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #6b6b6b;
+  --glass: rgba(0,0,0,0.04);
+
+  /* gold stays luxury but softer */
+  --gold-rgb: 212 175 55;
+}
+
+/* Apply background & text automatically */
+html[data-theme="light"],
+html[data-theme="light"] body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* Cards in light mode */
+html[data-theme="light"] .card,
+html[data-theme="light"] .product-card {
+  background: linear-gradient(180deg, rgba(0,0,0,0.02), transparent);
+  border-color: rgba(0,0,0,0.08);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+}
+
+/* Muted text fix */
+html[data-theme="light"] p,
+html[data-theme="light"] li {
+  color: rgba(0,0,0,0.78);
+}
+
+/* ===============================
+   HEADER THEME TOKENS (FIXED)
+   =============================== */
+
+/* DARK THEME — DEFAULT */
+:root {
+  --header-bg: rgba(6, 6, 6, 0.55);
+  --header-border: rgba(255, 255, 255, 0.08);
+  --header-text: rgba(255, 255, 255, 0.92);
+  --header-muted: rgba(255, 255, 255, 0.65);
+  --header-hover: rgba(255, 255, 255, 0.08);
+}
+
+/* LIGHT THEME */
+:root[data-theme="light"] {
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --header-border: rgba(0, 0, 0, 0.12);
+  --header-text: rgba(0, 0, 0, 0.9);
+  --header-muted: rgba(0, 0, 0, 0.6);
+  --header-hover: rgba(0, 0, 0, 0.06);
+}
+
+
+
+
 /* Polished card */
 .card {
   background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
@@ -462,3 +524,212 @@ a:focus {
 .card .kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .8rem; }
 .container { max-width: 1200px; margin-left:auto; margin-right:auto; padding-left:1.25rem; padding-right:1.25rem; }
 
+
+
+/* ===== Pearl Bloom Animated Luxury Background ===== */
+
+@keyframes floatSlow {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(60px, -80px) scale(1.05);
+  }
+  66% {
+    transform: translate(-40px, 60px) scale(0.95);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes floatSlower {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-80px, -60px) scale(1.08);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+.pearl-bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: -1;
+  background: radial-gradient(
+    ellipse at center,
+    #0b0b0b 0%,
+    #000000 70%
+  );
+}
+
+.pearl-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(120px);
+  opacity: 0.35;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.pearl-glow.gold-1 {
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, #f5c542 0%, transparent 70%);
+  top: -120px;
+  left: -120px;
+  animation: floatSlow 26s infinite;
+}
+
+.pearl-glow.gold-2 {
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, #e8b84a 0%, transparent 70%);
+  bottom: -100px;
+  right: -80px;
+  animation: floatSlower 32s infinite;
+}
+
+.pearl-glow.gold-3 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, #d6a73a 0%, transparent 70%);
+  top: 30%;
+  left: 60%;
+  animation: floatSlow 40s infinite;
+}
+
+.pearl-glow.soft {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #ffffff12 0%, transparent 65%);
+  top: 50%;
+  left: 10%;
+  animation: floatSlower 48s infinite;
+}
+
+
+/* ===== Luxury Golden Glow Background ===== */
+
+.glow-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.glow-orb {
+  position: absolute;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 215, 120, 0.35),   /* soft gold core */
+    rgba(255, 180, 70, 0.18),    /* warm gold fade */
+    transparent 70%
+  );
+  filter: blur(45px);
+  animation: floatOrb 22s ease-in-out infinite;
+}
+
+.glow-orb:nth-child(1) {
+  top: 8%;
+  left: 10%;
+  animation-duration: 26s;
+}
+
+.glow-orb:nth-child(2) {
+  top: 55%;
+  left: 65%;
+  animation-duration: 32s;
+}
+
+.glow-orb:nth-child(3) {
+  top: 30%;
+  left: 40%;
+  animation-duration: 36s;
+}
+
+@keyframes floatOrb {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(140px, -90px) scale(1.2);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* ===============================
+   DRAWER / PANEL THEME TOKENS
+   =============================== */
+
+/* Dark theme */
+:root {
+  --panel-bg: #0b0b0b;            /* SOLID background */
+  --panel-bg-soft: #111111;       /* inner cards */
+  --border-subtle: rgba(255,255,255,0.10);
+  --fg: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.6);
+  --overlay-bg: rgba(0,0,0,0.55);
+}
+
+/* Light theme */
+:root[data-theme="light"] {
+  --panel-bg: #ffffff;            /* SOLID background */
+  --panel-bg-soft: #f6f6f6;
+  --border-subtle: rgba(0,0,0,0.12);
+  --fg: rgba(0,0,0,0.9);
+  --muted: rgba(0,0,0,0.6);
+  --overlay-bg: rgba(0,0,0,0.35);
+}
+
+/* ===============================
+   PRODUCT CARD THEME TOKENS
+   =============================== */
+
+/* Dark */
+:root {
+  --card-bg: #0f0f0f;
+  --card-bg-soft: rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.10);
+  --card-border-hover: rgba(212,175,55,0.35);
+  --card-muted: rgba(255,255,255,0.6);
+}
+
+/* Light */
+:root[data-theme="light"] {
+  --card-bg: #ffffff;
+  --card-bg-soft: rgba(0,0,0,0.03);
+  --card-border: rgba(0,0,0,0.12);
+  --card-border-hover: rgba(212,175,55,0.45);
+  --card-muted: rgba(0,0,0,0.6);
+}
+
+/* ===============================
+   CHAT WIDGET THEME TOKENS
+   =============================== */
+
+/* Dark */
+:root {
+  --chat-bg: #0e0e0e;              /* darker, solid */
+  --chat-surface: #151515;         /* inner surface */
+  --chat-border: rgba(255,255,255,0.14);
+  --chat-muted: rgba(255,255,255,0.6);
+  --chat-shadow: 0 20px 60px rgba(0,0,0,0.65);
+}
+
+/* Light */
+:root[data-theme="light"] {
+  --chat-bg: #ffffff;
+  --chat-surface: #f4f4f4;
+  --chat-border: rgba(0,0,0,0.14);
+  --chat-muted: rgba(0,0,0,0.6);
+  --chat-shadow: 0 20px 60px rgba(0,0,0,0.18);
+}

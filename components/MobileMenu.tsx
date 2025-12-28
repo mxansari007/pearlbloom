@@ -1,124 +1,231 @@
-// src/components/MobileMenu.tsx
-'use client'
+"use client";
 
-import { useEffect, useRef } from 'react'
-import Link from 'next/link'
+import { useEffect, useRef } from "react";
+import Link from "next/link";
 import { useUIStore } from "@/store/ui-store";
+import { useAuthStore } from "@/store/useAppStore";
+import { logout } from "@/utils/logout";
 
 type Props = {
-  open: boolean
-  onClose: () => void
-}
-
+  open: boolean;
+  onClose: () => void;
+};
 
 export default function MobileMenu({ open, onClose }: Props) {
-  const panelRef = useRef<HTMLDivElement | null>(null)
-  const firstLinkRef = useRef<HTMLAnchorElement | null>(null)
-  const startNavigation = useUIStore((s) => s.start);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const firstLinkRef = useRef<HTMLAnchorElement | null>(null);
 
-  // lock body scroll when open
+  const startNavigation = useUIStore((s) => s.start);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  /* ---------- lock body scroll ---------- */
   useEffect(() => {
     if (open) {
-      document.documentElement.classList.add('no-scroll')
-      // focus first link when open
-      setTimeout(() => firstLinkRef.current?.focus(), 120)
+      document.documentElement.classList.add("no-scroll");
+      setTimeout(() => firstLinkRef.current?.focus(), 120);
     } else {
-      document.documentElement.classList.remove('no-scroll')
+      document.documentElement.classList.remove("no-scroll");
     }
-    return () => document.documentElement.classList.remove('no-scroll')
-  }, [open])
+    return () => document.documentElement.classList.remove("no-scroll");
+  }, [open]);
 
-  // close on escape, trap some keys
+  /* ---------- close on escape + focus trap ---------- */
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (!open) return
-      if (e.key === 'Escape') onClose()
-      if (e.key === 'Tab') {
-        // simple focus trap: keep focus inside panel
-        const panel = panelRef.current
-        if (!panel) return
+      if (!open) return;
+
+      if (e.key === "Escape") onClose();
+
+      if (e.key === "Tab") {
+        const panel = panelRef.current;
+        if (!panel) return;
+
         const focusable = panel.querySelectorAll<HTMLElement>(
-          'a, button, input, textarea, [tabindex]:not([tabindex="-1"])'
-        )
-        if (focusable.length === 0) return
-        const first = focusable[0]
-        const last = focusable[focusable.length - 1]
+          'a, button, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusable.length) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
         if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault()
-          last.focus()
+          e.preventDefault();
+          last.focus();
         } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault()
-          first.focus()
+          e.preventDefault();
+          first.focus();
         }
       }
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
 
-  // close when clicking backdrop
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  /* ---------- backdrop click ---------- */
   function onBackdropClick(e: React.MouseEvent) {
-    if (e.target === e.currentTarget) onClose()
+    if (e.target === e.currentTarget) onClose();
   }
 
   return (
-    // backdrop: fade in/out + blur
     <div
       aria-hidden={!open}
-      className={`menu-backdrop fixed inset-0 z-50 flex ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+      className={`fixed inset-0 z-50 flex transition-opacity ${
+        open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      }`}
       onMouseDown={onBackdropClick}
+      style={{
+        background: "rgba(0,0,0,0.45)",
+      }}
     >
-      {/* animated panel */}
+      {/* Panel */}
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label="Mobile menu"
-        className={`menu-panel ml-auto h-full w-full max-w-sm transform-gpu ${open ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`ml-auto h-full w-full max-w-sm transform-gpu transition-transform ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+        style={{
+          background: "var(--header-bg)",
+          borderLeft: "1px solid var(--header-border)",
+          color: "var(--header-text)",
+          backdropFilter: "blur(14px)",
+        }}
       >
-        <div className="h-full flex flex-col bg-gradient-to-b from-[rgba(255,255,255,0.02)] to-transparent backdrop-blur-sm px-6 py-6">
+        <div className="h-full flex flex-col px-6 py-6">
+
+          {/* Header */}
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3 text-lg font-display">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[linear-gradient(135deg,rgba(212,175,55,0.12),transparent)]">
+            <Link
+              href="/"
+              className="flex items-center gap-3 text-lg font-display"
+              onClick={onClose}
+            >
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(212,175,55,0.16), transparent)",
+                }}
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.77 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" fill="rgb(212,175,55)"/>
+                  <path
+                    d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.77 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"
+                    fill="rgb(212,175,55)"
+                  />
                 </svg>
               </div>
-              <span>Aurum</span>
+              <span>Pearl Bloom</span>
             </Link>
 
             <button
               aria-label="Close menu"
               onClick={onClose}
-              className="rounded-full p-2 text-slate-200/90 hover:bg-white/3 transition"
+              className="rounded-full p-2 transition"
+              style={{
+                color: "var(--header-text)",
+                background: "var(--header-hover)",
+              }}
             >
               ×
             </button>
           </div>
 
+          {/* Navigation */}
           <nav className="mt-8 flex-1">
             <ul className="space-y-4">
-              <li>
-                <Link href="/" ref={firstLinkRef as any} className="block text-lg font-medium text-slate-100 hover:text-white transition" onClick={onClose}>Home</Link>
-              </li>
-              <li>
-                <Link href="/products" className="block text-lg font-medium text-slate-100 hover:text-white transition" onClick={onClose}>Products</Link>
-              </li>
-              <li>
-                <Link href="/craft" className="block text-lg font-medium text-slate-100 hover:text-white transition" onClick={onClose}>Our Craft</Link>
-              </li>
-              <li>
-                <Link href="/contact" className="block text-lg font-medium text-slate-100 hover:text-white transition" onClick={onClose}>Contact</Link>
-              </li>
+              {[
+                ["Home", "/"],
+                ["Products", "/products"],
+                ["Contact", "/contact"],
+              ].map(([label, href], idx) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    ref={idx === 0 ? (firstLinkRef as any) : undefined}
+                    className="block text-lg font-medium transition"
+                    style={{
+                      color: "var(--header-text)",
+                    }}
+                    onClick={onClose}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+
+              {/* Divider */}
+              <li
+                className="pt-4"
+                style={{ borderTop: "1px solid var(--header-border)" }}
+              />
+
+              {/* Auth */}
+              {!isAuthenticated ? (
+                <li>
+                  <Link
+                    href="/login"
+                    className="block text-lg font-medium transition"
+                    style={{ color: "var(--header-text)" }}
+                    onClick={onClose}
+                  >
+                    Login
+                  </Link>
+                </li>
+              ) : (
+                <>
+                  {[
+                    ["Orders", "/orders"],
+                    ["Wishlist", "/wishlist"],
+                    ["Profile", "/profile"],
+                  ].map(([label, href]) => (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        className="block text-lg font-medium transition"
+                        style={{ color: "var(--header-text)" }}
+                        onClick={onClose}
+                      >
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+
+                  <li>
+                    <button
+                      onClick={() => {
+                        logout();
+                        onClose();
+                      }}
+                      className="w-full text-left text-lg font-medium transition"
+                      style={{ color: "#ef4444" }}
+                    >
+                      Logout
+                    </button>
+                  </li>
+                </>
+              )}
             </ul>
           </nav>
 
-          {/* footer actions */}
+          {/* Footer CTA */}
           <div className="mt-auto pt-6">
-            <a href="/products" className="btn-cta block text-center mb-4">Shop Now</a>
+            <Link
+              href="/products"
+              onClick={onClose}
+              className="block text-center rounded-xl px-5 py-3 font-medium transition"
+              style={{
+                background: "rgb(212,175,55)",
+                color: "#000",
+              }}
+            >
+              Shop Now
+            </Link>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
