@@ -17,7 +17,7 @@ import {
   resetRecaptcha,
 } from "@/utils/initRecaptcha";
 
-import { initAppCheck } from "@/utils/initAppCheck";
+// import { initAppCheck } from "@/utils/initAppCheck";
 
 type Step = "phone" | "otp" | "profile";
 
@@ -39,9 +39,9 @@ export default function LoginPage() {
 
   const setUser = useAuthStore((s) => s.setUser);
 
-  useEffect(() => {
-  initAppCheck();
-}, []);
+//   useEffect(() => {
+//   initAppCheck();
+// }, []);
 
 
 
