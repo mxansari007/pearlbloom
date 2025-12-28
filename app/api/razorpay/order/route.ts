@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     amount: amount * 100, // INR → paise
     currency: "INR",
     receipt,
-    payment_capture: 1,
+    payment_capture: true,
   });
 
   return NextResponse.json(order);

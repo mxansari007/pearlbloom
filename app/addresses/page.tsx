@@ -23,7 +23,7 @@ export default function AddressesPage() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect"); // 👈 NEW
 
-  const { user, loading } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -43,10 +43,10 @@ export default function AddressesPage() {
   /* ---------------- Protect route ---------------- */
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!user) {
       router.replace(`/login?redirect=/addresses${redirect ? `?redirect=${redirect}` : ""}`);
     }
-  }, [user, loading, router, redirect]);
+  }, [user, router, redirect]);
 
   /* ---------------- Load addresses ---------------- */
 
@@ -71,16 +71,16 @@ export default function AddressesPage() {
     loadAddresses();
   }, [user]);
 
-  if (loading) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--panel-bg)", color: "var(--muted)" }}
-      >
-        Loading addresses…
-      </div>
-    );
-  }
+//   if (loading) {
+//     return (
+//       <div
+//         className="min-h-screen flex items-center justify-center"
+//         style={{ background: "var(--panel-bg)", color: "var(--muted)" }}
+//       >
+//         Loading addresses…
+//       </div>
+//     );
+//   }
 
   if (!user) return null;
 

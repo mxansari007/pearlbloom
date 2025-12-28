@@ -134,10 +134,10 @@ export default function OrderDetailsPage() {
               </span>
 
               <button
-                onClick={() =>
-                  navigator.clipboard.writeText(order.displayId)
-                }
-                className="text-xs opacity-60 hover:opacity-100 transition"
+                onClick={() => {
+                  if (!order.displayId) return;
+                  navigator.clipboard.writeText(order.displayId);
+                }}
               >
                 Copy
               </button>

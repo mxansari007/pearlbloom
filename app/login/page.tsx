@@ -162,7 +162,8 @@ export default function LoginPage() {
         lastLoginAt: Date.now(),
       };
 
-      await updateDoc(userRef, appUser);
+      await setDoc(userRef, appUser, { merge: true });
+
       setUser(appUser);
       window.location.href = "/";
     } catch {

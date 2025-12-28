@@ -11,7 +11,7 @@ import { logout } from "@/utils/logout";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, loading, setUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -23,10 +23,10 @@ export default function ProfilePage() {
   /* ---------------- Protect route ---------------- */
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!user) {
       router.replace("/login?redirect=/profile");
     }
-  }, [user, loading, router]);
+  }, [user, router]);
 
   /* ---------------- Initialize form ---------------- */
 
@@ -37,16 +37,16 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  if (loading) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--panel-bg)", color: "var(--muted)" }}
-      >
-        Loading account…
-      </div>
-    );
-  }
+//   if (loading) {
+//     return (
+//       <div
+//         className="min-h-screen flex items-center justify-center"
+//         style={{ background: "var(--panel-bg)", color: "var(--muted)" }}
+//       >
+//         Loading account…
+//       </div>
+//     );
+//   }
 
   if (!user) return null;
 
@@ -72,7 +72,7 @@ export default function ProfilePage() {
       setUser({
         ...user,
         firstName: firstName.trim(),
-        lastName: lastName.trim() || null,
+        lastName: lastName.trim() || "",
       });
 
       setEditing(false);
