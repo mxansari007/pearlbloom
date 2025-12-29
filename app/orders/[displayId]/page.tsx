@@ -9,11 +9,15 @@ import {
   getDocs,
   query,
   where,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 
 import { dbClient } from "@/libs/firebase-client";
 import { useAuthStore } from "@/store/useAppStore";
-import type { Order } from "@/types/orders";
+import type { Order, OrderItem } from "@/types/orders";
+import type { Review } from "@/types/reviews";
+import WriteReviewModal from "@/components/WriteReviewModal";
 
 const STATUS_STEPS = [
   { key: "pending", label: "Order Placed", icon: "📦" },
@@ -32,6 +36,9 @@ export default function OrderDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
+  const [orderReviews, setOrderReviews] = useState<Review[]>([]);
 
   /* ---------------- Auth Guard ---------------- */
 
@@ -73,7 +80,26 @@ export default function OrderDetailsPage() {
         return;
       }
 
-      setOrder({ id: docSnap.id, ...data });
+      // Enrich items with slugs if missing (for older orders)
+      const enrichedItems = await Promise.all(
+        data.items.map(async (item) => {
+          if (item.slug) return item;
+
+          try {
+            const productRef = doc(dbClient, "products", item.productId);
+            const productSnap = await getDoc(productRef);
+            if (productSnap.exists()) {
+              const pData = productSnap.data();
+              return { ...item, slug: pData.slug };
+            }
+          } catch (e) {
+            console.error("Failed to fetch slug for product", item.productId);
+          }
+          return item;
+        })
+      );
+
+      setOrder({ id: docSnap.id, ...data, items: enrichedItems });
     } catch (err) {
       console.error("Failed to load order:", err);
       setError("Unable to load order details.");
@@ -100,6 +126,33 @@ export default function OrderDetailsPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleWriteReview = (item: OrderItem) => {
+    setSelectedItem(item);
+    setReviewModalOpen(true);
+  };
+
+  const handleReviewSuccess = () => {
+    // Refresh reviews to update UI
+    const fetchReviews = async () => {
+      if (!order?.id) return;
+      try {
+        const reviewsQ = query(
+          collection(dbClient, "reviews"),
+          where("orderId", "==", order.id)
+        );
+        const reviewsSnap = await getDocs(reviewsQ);
+        const loadedReviews = reviewsSnap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<Review, "id">),
+        }));
+        setOrderReviews(loadedReviews);
+      } catch (err) {
+        console.error("Failed to refresh reviews", err);
+      }
+    };
+    fetchReviews();
   };
 
   /* ---------------- States ---------------- */
@@ -235,25 +288,40 @@ export default function OrderDetailsPage() {
           </h2>
 
           <div className="order-page__items">
-            {order.items.map((item, idx) => (
-              <div key={idx} className="order-page__item">
-                <div className="order-page__item-image">
-                  <Image
-                    src={item.image || "/images/placeholder.svg"}
-                    alt={item.name}
-                    fill
-                    sizes="96px"
-                    className="object-cover"
-                  />
-                  {item.quantity > 1 && (
-                    <span className="order-page__item-qty-badge">×{item.quantity}</span>
-                  )}
-                </div>
+            {order.items.map((item, idx) => {
+              const itemReview = orderReviews.find(
+                (r) => r.productId === item.productId
+              );
 
-                <div className="order-page__item-details">
-                  <h3 className="order-page__item-name">{item.name}</h3>
+              return (
+                <div key={idx} className="order-page__item">
+                  <Link
+                    href={item.slug ? `/product/${item.slug}` : "#"}
+                    className={`order-page__item-image ${!item.slug ? "pointer-events-none" : ""}`}
+                  >
+                    <Image
+                      src={item.image || "/images/placeholder.svg"}
+                      alt={item.name}
+                      fill
+                      sizes="96px"
+                      className="object-cover"
+                    />
+                    {item.quantity > 1 && (
+                      <span className="order-page__item-qty-badge">
+                        ×{item.quantity}
+                      </span>
+                    )}
+                  </Link>
 
-                  {/* Variant Info */}
+                  <div className="order-page__item-details">
+                    <Link
+                      href={item.slug ? `/product/${item.slug}` : "#"}
+                      className={`order-page__item-name hover:text-[rgb(var(--gold-rgb))] transition-colors ${!item.slug ? "pointer-events-none" : ""}`}
+                    >
+                      {item.name}
+                    </Link>
+
+                    {/* Variant Info */}
                   {item.variantLabel && (
                     <div className="order-page__item-variant">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -277,13 +345,35 @@ export default function OrderDetailsPage() {
                     <span className="order-page__item-multiply">×</span>
                     <span className="order-page__item-quantity">{item.quantity}</span>
                   </div>
+                  
+                  {itemReview ? (
+                    <div className="text-xs font-medium text-green-400 mt-3 flex items-center gap-1.5">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Review Submitted
+                    </div>
+                  ) : (
+                    order.status === 'delivered' && (
+                      <button 
+                        onClick={() => handleWriteReview(item)}
+                        className="text-xs font-medium text-[rgb(var(--gold-rgb))] hover:text-yellow-400 mt-3 flex items-center gap-1.5 transition-colors"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                          <path d="M12 .587l3.668 7.431L24 9.748l-6 5.84 1.42 8.28L12 19.771 4.58 23.868 6 15.588 0 9.748l8.332-1.73z" />
+                        </svg>
+                        Write a Review
+                      </button>
+                    )
+                  )}
                 </div>
 
                 <div className="order-page__item-total">
                   ₹{(item.price * item.quantity).toLocaleString("en-IN")}
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
         </section>
 
@@ -362,6 +452,19 @@ export default function OrderDetailsPage() {
           </Link>
         </section>
       </div>
+
+      {selectedItem && (
+        <WriteReviewModal
+          isOpen={reviewModalOpen}
+          onClose={() => {
+            setReviewModalOpen(false);
+            setSelectedItem(null);
+          }}
+          onSuccess={handleReviewSuccess}
+          product={selectedItem}
+          orderId={order.id}
+        />
+      )}
     </div>
   );
 }

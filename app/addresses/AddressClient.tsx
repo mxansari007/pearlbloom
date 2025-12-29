@@ -204,7 +204,7 @@ export default function AddressClient() {
             className="text-sm"
             style={{ color: "rgb(212,175,55)" }}
           >
-            ← Back to {redirect === "/checkout" ? "Checkout" : "Profile"}
+            ← Back to {redirect?.includes("checkout") ? "Checkout" : "Profile"}
           </Link>
         </div>
 
@@ -231,12 +231,7 @@ export default function AddressClient() {
                 <input
                   key={field}
                   placeholder={field.replace(/^\w/, (c) => c.toUpperCase())}
-                  className="w-full rounded-lg px-4 py-2 outline-none"
-                  style={{
-                    background: "var(--panel-bg)",
-                    border: "1px solid var(--border-subtle)",
-                    color: "var(--fg)",
-                  }}
+                  className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
                   value={(form as any)[field]}
                   onChange={(e) =>
                     setForm({ ...form, [field]: e.target.value })

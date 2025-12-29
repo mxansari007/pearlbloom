@@ -174,23 +174,13 @@ export default function ProfilePage() {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="First name"
-                    className="w-full rounded-lg px-4 py-2 outline-none"
-                    style={{
-                      background: "var(--panel-bg)",
-                      border: "1px solid var(--border-subtle)",
-                      color: "var(--fg)",
-                    }}
+                    className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
                   />
                   <input
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Last name (optional)"
-                    className="w-full rounded-lg px-4 py-2 outline-none"
-                    style={{
-                      background: "var(--panel-bg)",
-                      border: "1px solid var(--border-subtle)",
-                      color: "var(--fg)",
-                    }}
+                    className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
                   />
                 </div>
               ) : (

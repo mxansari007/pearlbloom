@@ -11,6 +11,7 @@ export interface CartItem {
   image?: string;
   quantity: number;
   sku?: string;            // Variant SKU if available
+  slug?: string;           // Product slug
 }
 
 interface CartState {

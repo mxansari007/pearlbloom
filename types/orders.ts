@@ -15,6 +15,7 @@ export interface OrderItem {
   quantity: number;
   image?: string;
   sku?: string;
+  slug?: string;
 }
 
 export interface Order {

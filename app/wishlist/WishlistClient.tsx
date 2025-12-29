@@ -34,10 +34,10 @@ export default function WishlistClient({ allProducts }: { allProducts: Product[]
         style={{ background: "var(--bg)", color: "var(--fg)" }}
       >
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-16">
-          <div className="h-10 w-48 bg-white/5 rounded animate-pulse mb-12"></div>
+          <div className="h-10 w-48 bg-[var(--card-bg-soft)] rounded animate-pulse mb-12"></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
              {[1,2,3,4].map(i => (
-                <div key={i} className="aspect-[4/5] bg-white/5 rounded-xl animate-pulse"></div>
+                <div key={i} className="aspect-[4/5] bg-[var(--card-bg-soft)] rounded-xl animate-pulse"></div>
              ))}
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function WishlistClient({ allProducts }: { allProducts: Product[]
         {/* Content */}
         {items.length === 0 ? (
            <div className="flex flex-col items-center justify-center py-24 text-center">
-             <div className="w-20 h-20 rounded-full bg-[rgba(255,255,255,0.03)] flex items-center justify-center mb-6 border border-white/5">
+             <div className="w-20 h-20 rounded-full bg-[var(--input-bg)] flex items-center justify-center mb-6 border border-[var(--input-border)]">
                <span className="text-3xl">♡</span>
              </div>
             <h2 className="text-2xl font-display font-medium mb-3">Your wishlist is empty</h2>
@@ -140,9 +140,9 @@ export default function WishlistClient({ allProducts }: { allProducts: Product[]
                   <div className="mt-auto">
                     <Link 
                       href={item.slug ? `/product/${item.slug}` : '#'}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-white/10 hover:border-[rgb(212,175,55)] hover:bg-[rgba(212,175,55,0.05)] hover:text-[rgb(212,175,55)] transition-all text-sm font-medium bg-white/5"
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-[var(--input-border)] hover:border-[rgb(212,175,55)] hover:bg-[rgba(212,175,55,0.05)] hover:text-[rgb(212,175,55)] transition-all text-sm font-medium bg-[var(--input-bg)]"
                     >
-                      <ShoppingBag size={16} />
+                      <ArrowRight size={16} />
                       View Product
                     </Link>
                   </div>

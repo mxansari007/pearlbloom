@@ -111,6 +111,7 @@ const handlePlaceOrder = async () => {
         quantity: i.quantity || 1,
         image: i.image || "",                     // Firestore doesn't accept undefined
         sku: i.sku || "",                         // Firestore doesn't accept undefined
+        slug: i.slug || "",
       })),
       subtotal: total,
       shipping: 0,

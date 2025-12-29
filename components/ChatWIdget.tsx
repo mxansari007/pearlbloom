@@ -252,11 +252,7 @@ export default function ChatWidget() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && send()}
                   placeholder="Type your message…"
-                  className="flex-1 px-2 py-1 rounded text-sm outline-none"
-                  style={{
-                    background: "var(--chat-input-bg)",
-                    color: "var(--fg)",
-                  }}
+                  className="flex-1 px-3 py-2 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] text-sm focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
                 />
                 <button
                   onClick={send}

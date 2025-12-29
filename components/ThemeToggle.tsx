@@ -13,8 +13,8 @@ export default function ThemeToggle() {
       className="
         flex items-center justify-center
         w-10 h-10 rounded-full
-        bg-white/5 border border-white/10
-        hover:bg-white/10 transition
+        bg-[var(--input-bg)] border border-[var(--input-border)]
+        hover:bg-[var(--glass)] transition
       "
     >
       {theme === "dark" ? (

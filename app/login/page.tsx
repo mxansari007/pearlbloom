@@ -268,15 +268,16 @@ export default function LoginPage() {
             <label className="text-xs font-semibold uppercase tracking-wider opacity-50 ml-1">Phone number</label>
 
             <div 
-              className="flex mt-2 rounded-xl overflow-hidden transition-all duration-300 group focus-within:ring-2 focus-within:ring-[rgba(var(--gold-rgb),0.4)]"
+              className="flex mt-2 rounded-lg overflow-hidden transition-all duration-300 group focus-within:border-[rgb(var(--gold-rgb))] focus-within:ring-1 focus-within:ring-[rgb(var(--gold-rgb))]"
               style={{
-                background: "var(--card-bg-soft)",
-                border: "1px solid var(--card-border)"
+                background: "var(--input-bg)",
+                border: "1px solid var(--input-border)"
               }}
             >
-              <span className="px-4 py-3.5 text-sm opacity-70 font-medium flex items-center border-r border-[var(--card-border)]">+91</span>
+              <span className="px-4 py-3.5 text-sm font-medium flex items-center border-r" style={{ color: "var(--input-text)", borderColor: "var(--input-border)" }}>+91</span>
               <input
-                className="w-full px-4 py-3.5 outline-none bg-transparent placeholder:opacity-30"
+                className="w-full px-4 py-3.5 outline-none bg-transparent placeholder-[var(--input-placeholder)]"
+                style={{ color: "var(--input-text)" }}
                 placeholder="Enter phone number"
                 value={phone}
                 onChange={(e) =>
@@ -308,11 +309,7 @@ export default function LoginPage() {
             </p>
 
             <input
-              className="w-full rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] outline-none transition-all duration-300 focus:ring-2 focus:ring-[rgba(var(--gold-rgb),0.4)]"
-              style={{
-                background: "var(--card-bg-soft)",
-                border: "1px solid var(--card-border)"
-              }}
+              className="w-full px-4 py-4 text-center text-2xl tracking-[0.5em] bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
               maxLength={6}
               value={otp}
               onChange={(e) =>
@@ -363,11 +360,7 @@ export default function LoginPage() {
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider opacity-50 ml-1 mb-1.5 block">First Name</label>
                 <input
-                  className="w-full rounded-xl px-4 py-3.5 outline-none transition-all duration-300 focus:ring-2 focus:ring-[rgba(var(--gold-rgb),0.4)]"
-                  style={{
-                    background: "var(--card-bg-soft)",
-                    border: "1px solid var(--card-border)"
-                  }}
+                  className="w-full rounded-xl px-4 py-3.5 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] placeholder-[var(--input-placeholder)] outline-none transition-all duration-300 focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))]"
                   placeholder="e.g. Sarah"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
@@ -377,11 +370,7 @@ export default function LoginPage() {
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider opacity-50 ml-1 mb-1.5 block">Last Name <span className="opacity-50 normal-case font-normal">(Optional)</span></label>
                 <input
-                  className="w-full rounded-xl px-4 py-3.5 outline-none transition-all duration-300 focus:ring-2 focus:ring-[rgba(var(--gold-rgb),0.4)]"
-                  style={{
-                    background: "var(--card-bg-soft)",
-                    border: "1px solid var(--card-border)"
-                  }}
+                  className="w-full px-4 py-3.5 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
                   placeholder="e.g. Johnson"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}

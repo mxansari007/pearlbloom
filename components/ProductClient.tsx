@@ -6,11 +6,14 @@ import { isOutOfStock } from "../libs/pricing";
 import ProductVariantBlock from "./ProductVariantBlock";
 import ProductActions from "./ProductActions";
 import { useCartStore } from "@/store/useCartStore";
+import { useBuyNowStore } from "@/store/useBuyNowStore";
+import { useRouter } from "next/navigation";
 import { FaAmazon, FaShoppingBag } from "react-icons/fa";
 import { SiFlipkart } from "react-icons/si";
 import { useProductVariant } from "@/hooks/useProductVariant";
 
 export default function ProductClient({ product }: { product: Product }) {
+  const router = useRouter();
   const { selectedVariant, setVariant, initializeProduct } = useProductVariant();
   const [isAdding, setIsAdding] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -87,6 +90,7 @@ export default function ProductClient({ product }: { product: Product }) {
 
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.open);
+  const setBuyNowItem = useBuyNowStore((s) => s.setBuyNowItem);
 
   // Build cart item with variant info
   function buildCartItem() {
@@ -110,6 +114,7 @@ export default function ProductClient({ product }: { product: Product }) {
           (product.images?.[0] as string | undefined),
         quantity: 1,
         sku: activeVariant.sku,
+        slug: product.slug,
       };
     }
 
@@ -126,6 +131,7 @@ export default function ProductClient({ product }: { product: Product }) {
         (Array.isArray(product.images) ? product.images[0] : undefined),
       quantity: 1,
       sku: undefined,
+      slug: product.slug,
     };
   }
 
@@ -154,8 +160,10 @@ export default function ProductClient({ product }: { product: Product }) {
 
     if (outOfStock) return;
     const item = buildCartItem();
-    if (item) addItem(item);
-    openCart();
+    if (item) {
+      setBuyNowItem(item);
+      router.push("/checkout/buy-now");
+    }
   }
 
   return (

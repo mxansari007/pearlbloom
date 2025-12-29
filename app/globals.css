@@ -10,6 +10,12 @@
   --glass: rgba(255,255,255,0.03);
   --glass-hover: rgba(255,255,255,0.10);
   --footer-border: rgba(255, 255, 255, 0.12);
+  
+  /* Input Tokens (Dark Default) */
+  --input-bg: rgba(0, 0, 0, 0.2);
+  --input-border: rgba(255, 255, 255, 0.1);
+  --input-text: #ffffff;
+  --input-placeholder: rgba(255, 255, 255, 0.3);
 }
 
 /* Theme to use with Tailwind @theme inline if needed */
@@ -53,6 +59,12 @@ h1, h2, h3, h4 {
 
   /* gold stays luxury but softer */
   --gold-rgb: 212 175 55;
+
+  /* Input Tokens (Light) */
+  --input-bg: rgba(0, 0, 0, 0.04);
+  --input-border: rgba(0, 0, 0, 0.1);
+  --input-text: #1a1a1a;
+  --input-placeholder: rgba(0, 0, 0, 0.4);
 }
 
 /* Apply background & text automatically */
@@ -3151,4 +3163,131 @@ a:focus {
 
 :root[data-theme="light"] .orders-page__more-items {
   border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ===============================
+   PRODUCT DETAIL BUTTONS - SLEEK & PROFESSIONAL
+   =============================== */
+
+.product-detail__actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Primary Button (Buy Now) - Solid Gold */
+.product-detail__btn-primary {
+  flex: 1;
+  min-width: 160px;
+  background: linear-gradient(135deg, rgb(var(--gold-rgb)), #d4af37);
+  color: #000;
+  font-family: var(--typography-body);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-detail__btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+  filter: brightness(1.1);
+}
+
+.product-detail__btn-primary:active {
+  transform: translateY(0);
+}
+
+.product-detail__btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: grayscale(1);
+}
+
+/* Secondary Button (Add to Cart) - Glass/Outline with Gold Glow */
+.product-detail__btn-secondary {
+  flex: 1;
+  min-width: 160px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: rgb(var(--gold-rgb));
+  font-family: var(--typography-body);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-detail__btn-secondary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(212, 175, 55, 0.1);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: -1;
+}
+
+.product-detail__btn-secondary:hover {
+  border-color: rgb(var(--gold-rgb));
+  color: #fff;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+  transform: translateY(-2px);
+}
+
+.product-detail__btn-secondary:hover::before {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.product-detail__btn-secondary:active {
+  transform: translateY(0);
+}
+
+.product-detail__btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--muted);
+  box-shadow: none;
+}
+
+/* Light Theme Adjustments */
+:root[data-theme="light"] .product-detail__btn-secondary {
+  background: transparent;
+  border-color: #bfa15f; /* Darker gold border for visibility */
+  color: #5c4915; /* Dark bronze text for contrast */
+  font-weight: 700;
+}
+
+:root[data-theme="light"] .product-detail__btn-secondary:hover {
+  background: rgba(212, 175, 55, 0.1); /* Subtle tint, not solid */
+  border-color: #9e8445;
+  color: #3e3009;
 }

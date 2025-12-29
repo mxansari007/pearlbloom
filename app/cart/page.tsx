@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/useCartStore";
 import { useAuthStore } from "@/store/useAppStore";
+import { Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 
 export default function CartPage() {
   const router = useRouter();
 
-  const { items, removeItem } = useCartStore();
+  const { items, removeItem, updateQty, clear } = useCartStore();
   const { isAuthenticated, authInitialized } = useAuthStore();
 
   const total = items.reduce(
@@ -46,7 +47,18 @@ export default function CartPage() {
 
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
-          <h1 className="text-2xl font-semibold">Shopping Cart</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-semibold">Shopping Cart</h1>
+            {items.length > 0 && (
+              <button
+                onClick={clear}
+                className="text-xs text-red-400 hover:text-red-300 transition flex items-center gap-1 border border-red-400/20 px-3 py-1 rounded-full hover:bg-red-400/10"
+              >
+                <Trash2 size={12} />
+                Clear Cart
+              </button>
+            )}
+          </div>
           <Link
             href="/"
             className="text-sm transition"
@@ -58,17 +70,23 @@ export default function CartPage() {
 
         {/* Empty */}
         {items.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="mb-6" style={{ color: "var(--muted)" }}>
-              Your cart is empty.
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-20 h-20 rounded-full bg-[var(--input-bg)] flex items-center justify-center mb-6 text-muted">
+              <ShoppingBag size={32} strokeWidth={1.5} />
+            </div>
+            <h3 className="text-xl font-medium mb-3">Your cart is empty</h3>
+            <p className="text-muted mb-8 max-w-md mx-auto">
+              Looks like you haven&apos;t added any items to your cart yet.
+              Explore our collections to find your perfect piece.
             </p>
             <Link
-              href="/"
+              href="/products"
               className="inline-block rounded-xl
                          bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
-                         px-8 py-3 text-black font-medium"
+                         px-8 py-3 text-black font-medium
+                         hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-all"
             >
-              Shop Now
+              Start Shopping
             </Link>
           </div>
         ) : (
@@ -101,31 +119,55 @@ export default function CartPage() {
                     />
                   </div>
 
-                  <div className="flex-1">
-                    <p className="font-medium">{item.name}</p>
-                    {item.variantLabel && (
+                  <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <p className="font-medium text-lg">{item.name}</p>
+                      {item.variantLabel && (
+                        <p
+                          className="text-sm mt-1"
+                          style={{ color: "rgb(212,175,55)" }}
+                        >
+                          {item.variantLabel}
+                        </p>
+                      )}
                       <p
-                        className="text-xs mt-0.5"
-                        style={{ color: "rgb(212,175,55)" }}
+                        className="text-sm mt-2 font-medium"
                       >
-                        {item.variantLabel}
+                        ₹{item.price.toLocaleString("en-IN")}
                       </p>
-                    )}
-                    <p
-                      className="text-sm mt-1"
-                      style={{ color: "var(--muted)" }}
-                    >
-                      ₹{item.price} × {item.quantity}
-                    </p>
-                  </div>
+                    </div>
 
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="text-sm transition"
-                    style={{ color: "#ef4444" }}
-                  >
-                    Remove
-                  </button>
+                    <div className="flex items-center gap-6">
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-3 bg-[var(--input-bg)] rounded-lg px-3 py-1.5 border border-[var(--input-border)]">
+                        <button
+                          onClick={() => {
+                            if (item.quantity > 1) updateQty(item.id, item.quantity - 1);
+                            else removeItem(item.id);
+                          }}
+                          className="text-muted hover:text-foreground transition p-1"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="text-sm w-6 text-center font-medium">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQty(item.id, item.quantity + 1)}
+                          className="text-muted hover:text-foreground transition p-1"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="text-sm transition flex items-center gap-1 hover:text-red-400"
+                        style={{ color: "var(--muted)" }}
+                      >
+                        <Trash2 size={16} />
+                        <span className="hidden md:inline">Remove</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

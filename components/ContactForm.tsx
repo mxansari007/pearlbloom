@@ -83,23 +83,23 @@ export default function ContactForm({ contactEmail = 'hello@aurum.example' }: Pr
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="block">
           <span className="text-sm text-muted">Name</span>
-          <input value={form.name} onChange={(e) => update('name', e.target.value)} className="mt-1 block w-full rounded-md bg-transparent border border-white/6 p-2" />
+          <input value={form.name} onChange={(e) => update('name', e.target.value)} className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all" />
         </label>
 
         <label className="block">
           <span className="text-sm text-muted">Email</span>
-          <input value={form.email} onChange={(e) => update('email', e.target.value)} className="mt-1 block w-full rounded-md bg-transparent border border-white/6 p-2" />
+          <input value={form.email} onChange={(e) => update('email', e.target.value)} className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all" />
         </label>
       </div>
 
       <label className="block">
         <span className="text-sm text-muted">Subject</span>
-        <input value={form.subject} onChange={(e) => update('subject', e.target.value)} className="mt-1 block w-full rounded-md bg-transparent border border-white/6 p-2" />
+        <input value={form.subject} onChange={(e) => update('subject', e.target.value)} className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all" />
       </label>
 
       <label className="block">
         <span className="text-sm text-muted">Message</span>
-        <textarea value={form.message} onChange={(e) => update('message', e.target.value)} rows={6} className="mt-1 block w-full rounded-md bg-transparent border border-white/6 p-2" />
+        <textarea value={form.message} onChange={(e) => update('message', e.target.value)} rows={6} className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all" />
       </label>
 
       {error && <div className="text-sm text-red-400">{error}</div>}
@@ -109,7 +109,7 @@ export default function ContactForm({ contactEmail = 'hello@aurum.example' }: Pr
           {loading ? 'Sending…' : sent ? 'Check your email' : 'Send message'}
         </button>
 
-        <button type="button" onClick={() => { setForm({ name: '', email: '', subject: '', message: '' }); localStorage.removeItem(STORAGE_KEY); }} className="rounded-md px-3 py-2 border border-white/6">
+        <button type="button" onClick={() => { setForm({ name: '', email: '', subject: '', message: '' }); localStorage.removeItem(STORAGE_KEY); }} className="rounded-md px-3 py-2 border border-[var(--input-border)] hover:bg-[var(--glass)] transition-colors">
           Clear
         </button>
       </div>

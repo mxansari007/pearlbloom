@@ -31,8 +31,8 @@ export default function VariantSelector({
             className={`px-4 py-2 rounded-md border text-sm transition
               ${
                 selected.id === variant.id
-                  ? "border-white bg-white/10"
-                  : "border-white/10 hover:bg-white/5"
+                  ? "border-[rgb(var(--gold-rgb))] bg-[rgba(var(--gold-rgb),0.1)] text-[rgb(var(--gold-rgb))]"
+                  : "border-[var(--input-border)] bg-[var(--input-bg)] hover:bg-[var(--glass)]"
               }
               ${disabled ? "opacity-50 cursor-not-allowed" : ""}
             `}

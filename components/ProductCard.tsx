@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ArrowRight } from "lucide-react";
 import type { MouseEvent } from "react";
 import type { Product } from "../types/products";
 import { useWishlistStore } from "@/store/useWishlistStore";
@@ -186,27 +186,31 @@ export default function ProductCard({ product }: { product: Product }) {
             <button 
               className="w-full
                          flex items-center justify-center gap-2
-                         py-2.5 px-4
-                         rounded-lg
-                         text-white text-sm font-semibold
-                         transition-all duration-200
-                         active:scale-95"
+                         py-3 px-4
+                         rounded-xl
+                         text-black text-sm font-bold uppercase tracking-wider
+                         transition-all duration-300
+                         active:scale-95
+                         hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
+                background: 'rgba(255, 255, 255, 0.35)',
                 backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.6)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.5)';
+                e.currentTarget.style.borderColor = 'rgb(212, 175, 55)';
+                e.currentTarget.style.color = '#000';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.35)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+                e.currentTarget.style.color = '#000';
               }}
             >
-              <ShoppingBag size={16} />
-              <span>Quick View</span>
+              <ArrowRight size={18} />
+              <span>View Product</span>
             </button>
           </div>
         </div>

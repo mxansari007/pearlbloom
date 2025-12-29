@@ -70,7 +70,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search designs, metals, stones..."
-              className="mt-2 block w-full rounded-md bg-transparent border border-white/6 p-3"
+              className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
             />
           </label>
         </div>
@@ -86,7 +86,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
                 <button
                   key={c}
                   onClick={() => toggleCategory(c)}
-                  className={`w-full text-left rounded-md px-3 py-2 transition border flex items-center justify-between ${active ? 'bg-[rgba(212,175,55,0.08)] border-[rgba(212,175,55,0.14)]' : 'border-white/6'}`}
+                  className={`w-full text-left rounded-md px-3 py-2 transition border flex items-center justify-between ${active ? 'bg-[rgba(212,175,55,0.08)] border-[rgba(212,175,55,0.14)]' : 'border-[var(--input-border)] hover:bg-[var(--glass)]'}`}
                 >
                   <span>{c}</span>
                   <span className="text-sm text-muted">{countsByCategory.get(c) ?? 0}</span>
@@ -103,7 +103,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
               value={minPrice}
               onChange={(e) => setMinPrice(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder="Min"
-              className="w-1/2 rounded-md bg-transparent border border-white/6 p-2"
+              className="w-1/2 rounded-lg bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] placeholder-[var(--input-placeholder)] p-3 outline-none focus:border-[rgb(var(--gold-rgb))] transition-all"
             />
             <input
               value={maxPrice}
@@ -122,7 +122,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
               const value = e.target.value
               if (sortOptions.includes(value as SortOption)) setSort(value as SortOption)
             }}
-            className="w-full rounded-md bg-transparent border border-white/6 p-2"
+            className="w-full rounded-lg bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] p-3 outline-none focus:border-[rgb(var(--gold-rgb))] transition-all"
           >
             <option value="newest">Newest</option>
             <option value="featured">Featured</option>
@@ -149,7 +149,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
           <div className="flex items-center gap-4 text-sm text-muted">
             <div>View</div>
             <div className="flex gap-2">
-              <button onClick={() => setVisibleCount(9)} className="px-3 py-1 rounded-md border border-white/6">Grid</button>
+              <button onClick={() => setVisibleCount(9)} className="px-3 py-1 rounded-md border border-[var(--input-border)] hover:bg-[var(--glass)]">Grid</button>
               <button onClick={() => setVisibleCount(24)} className="px-3 py-1 rounded-md border border-white/6">List</button>
             </div>
           </div>
@@ -193,7 +193,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
           </div>
           <div className="flex gap-3">
             <a href="/contact" className="btn-cta">Book consultation</a>
-            <a href="/about" className="rounded-md px-4 py-2 border border-white/6 hover:bg-white/2 transition text-sm">Why Pearl Bloom</a>
+            <a href="/about" className="rounded-md px-4 py-2 border border-[var(--input-border)] hover:bg-[var(--glass)] transition text-sm">Why Pearl Bloom</a>
           </div>
         </div>
       </div>
