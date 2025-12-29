@@ -13,6 +13,14 @@ import { useProductVariant } from "@/hooks/useProductVariant";
 export default function ProductClient({ product }: { product: Product }) {
   const { selectedVariant, setVariant, initializeProduct } = useProductVariant();
   const [isAdding, setIsAdding] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
+  function showNotification(message: string) {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2500);
+  }
 
   useEffect(() => {
     initializeProduct(product);
@@ -122,6 +130,11 @@ export default function ProductClient({ product }: { product: Product }) {
   }
 
   async function handleAddToCart() {
+    if (variants.length > 1 && !variantSelected) {
+      showNotification("Please select a variant to continue");
+      return;
+    }
+
     if (outOfStock || isAdding) return;
     setIsAdding(true);
 
@@ -134,6 +147,11 @@ export default function ProductClient({ product }: { product: Product }) {
   }
 
   function handleBuyNow() {
+    if (variants.length > 1 && !variantSelected) {
+      showNotification("Please select a variant to continue");
+      return;
+    }
+
     if (outOfStock) return;
     const item = buildCartItem();
     if (item) addItem(item);
@@ -282,6 +300,24 @@ export default function ProductClient({ product }: { product: Product }) {
         product={product}
         selectedVariant={activeVariant ?? undefined}
       />
+
+      {/* Toast Notification */}
+      <div className={`toast ${showToast ? "toast--visible" : ""}`}>
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+        <span>{toastMessage}</span>
+      </div>
     </div>
   );
 }
