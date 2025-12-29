@@ -136,11 +136,13 @@ export default function ProductCard({ product }: { product: Product }) {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
-              e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)';
+              e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.8)';
+              e.currentTarget.style.boxShadow = '0 0 12px rgba(212, 175, 55, 0.4)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
               e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             <Heart
