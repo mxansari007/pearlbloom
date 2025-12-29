@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, ShoppingBag, Sparkles } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
 import type { Product } from "../types/products";
 import { useWishlistStore } from "@/store/useWishlistStore";
+import { getFinalPrice } from "@/libs/pricing";
 
 export default function ProductCard({ product }: { product: Product }) {
   const image =
     product.thumbnailUrl ||
     product.images?.[0] ||
-    "/images/placeholder.png";
+    "/images/placeholder.svg";
 
   const toggleWishlist = useWishlistStore((s) => s.toggle);
   const isWishlisted = useWishlistStore((s) =>
@@ -18,13 +19,77 @@ export default function ProductCard({ product }: { product: Product }) {
   );
 
   /* PRICING */
-  const discountPercent = product.inventory?.discountPercent ?? 0;
-  const hasDiscount = discountPercent > 0;
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  let startingOriginalPrice = 0;
+  let startingFinalPrice = 0;
+  let hasDiscount = false;
+  let discountPercent = 0;
 
-  const originalPrice = product.price;
-  const discountedPrice = hasDiscount
-    ? Math.round(originalPrice * (1 - discountPercent / 100))
-    : originalPrice;
+  if (variants.length > 0) {
+    const pricePairs = variants
+      .map((v) => {
+        const original = typeof v.price === "number" ? v.price : 0;
+        const maybeDiscountPrice = (v as any).discountPrice;
+        const maybeDiscountPercent = (v as any).discountPercent;
+        const final =
+          v.discount
+            ? getFinalPrice(v)
+            : typeof maybeDiscountPrice === "number"
+            ? maybeDiscountPrice
+            : typeof maybeDiscountPercent === "number"
+            ? Math.round(original * (1 - maybeDiscountPercent / 100))
+            : original;
+        return { original, final };
+      })
+      .filter((p) => p.original > 0);
+
+    if (pricePairs.length > 0) {
+      const minFinal = Math.min(...pricePairs.map((p) => p.final));
+      const match = pricePairs.find((p) => p.final === minFinal) ?? pricePairs[0];
+      startingOriginalPrice = match.original;
+      startingFinalPrice = match.final;
+      hasDiscount = startingFinalPrice < startingOriginalPrice;
+      discountPercent = hasDiscount
+        ? Math.round((1 - startingFinalPrice / startingOriginalPrice) * 100)
+        : 0;
+    } else {
+      startingOriginalPrice = 0;
+      startingFinalPrice = 0;
+      hasDiscount = false;
+      discountPercent = 0;
+    }
+  } else {
+    startingOriginalPrice = typeof product.price === "number" ? product.price : 0;
+    const maybeDiscountPrice = (product as any).discountPrice;
+    const maybeDiscountPercent =
+      (product as any).discountPercent ?? product.inventory?.discountPercent ?? 0;
+
+    if (typeof maybeDiscountPrice === "number" && startingOriginalPrice > 0) {
+      startingFinalPrice = maybeDiscountPrice;
+      hasDiscount = startingFinalPrice < startingOriginalPrice;
+      discountPercent = hasDiscount
+        ? Math.round((1 - startingFinalPrice / startingOriginalPrice) * 100)
+        : 0;
+    } else if (
+      typeof maybeDiscountPercent === "number" &&
+      maybeDiscountPercent > 0 &&
+      startingOriginalPrice > 0
+    ) {
+      discountPercent = maybeDiscountPercent;
+      hasDiscount = true;
+      startingFinalPrice = Math.round(
+        startingOriginalPrice * (1 - maybeDiscountPercent / 100)
+      );
+    } else {
+      startingFinalPrice = startingOriginalPrice;
+      hasDiscount = false;
+      discountPercent = 0;
+    }
+  }
+
+  const savingsAmount = hasDiscount
+    ? Math.max(0, startingOriginalPrice - startingFinalPrice)
+    : 0;
 
   function handleWishlist(e: React.MouseEvent) {
     e.preventDefault();
@@ -33,7 +98,7 @@ export default function ProductCard({ product }: { product: Product }) {
     toggleWishlist({
       id: product.id,
       name: product.name,
-      price: discountedPrice,
+      price: startingFinalPrice,
       image,
     });
   }
@@ -80,14 +145,8 @@ export default function ProductCard({ product }: { product: Product }) {
 
           {/* Discount Badge */}
           {hasDiscount && (
-            <div className="absolute top-3 left-3 z-20
-                          flex items-center gap-1.5
-                          px-2.5 py-1.5
-                          bg-gradient-to-br from-[rgb(212,175,55)] to-[rgb(180,145,40)]
-                          rounded-lg shadow-lg
-                          backdrop-blur-sm">
-              <Sparkles size={12} className="text-black/80" />
-              <span className="text-xs font-bold text-black tracking-wide">
+            <div className="product-card__discount-badge">
+              <span className="product-card__discount-badge-text">
                 {discountPercent}% OFF
               </span>
             </div>
@@ -145,46 +204,36 @@ export default function ProductCard({ product }: { product: Product }) {
             {product.name}
           </h3>
 
-          {/* Category or Brand (optional) */}
-          {product.category && (
-            <p className="text-xs uppercase tracking-wider mt-1 mb-3"
-               style={{ color: 'var(--muted)' }}>
-              {product.category}
+          {/* Short description */}
+          {product.shortDescription && (
+            <p
+              className="mt-1 mb-3 text-xs line-clamp-2"
+              style={{ color: 'var(--muted)' }}
+            >
+              {product.shortDescription}
             </p>
           )}
 
           {/* PRICING */}
           <div className="mt-auto pt-2">
-            <div className="flex items-baseline gap-2 flex-wrap">
+            <div className="product-card__price-row">
               {/* Discounted Price */}
               <span className="product-card__price text-xl">
-                ₹{discountedPrice.toLocaleString("en-IN")}
+                ₹{startingFinalPrice.toLocaleString("en-IN")}
               </span>
 
               {/* Original Price */}
               {hasDiscount && (
-                <span className="text-sm line-through"
-                      style={{ color: 'var(--muted)' }}>
-                  ₹{originalPrice.toLocaleString("en-IN")}
-                </span>
+                <>
+                  <span className="product-card__price-original">
+                    ₹{startingOriginalPrice.toLocaleString("en-IN")}
+                  </span>
+                  <span className="product-card__save-chip">
+                    Save ₹{savingsAmount.toLocaleString("en-IN")}
+                  </span>
+                </>
               )}
             </div>
-
-            {/* Savings Badge */}
-            {hasDiscount && (
-              <div className="mt-2 inline-flex items-center gap-1
-                            px-2 py-1
-                            rounded-md"
-                   style={{
-                     background: 'rgba(34, 197, 94, 0.1)',
-                     border: '1px solid rgba(34, 197, 94, 0.2)',
-                   }}>
-                <span className="text-xs font-semibold"
-                      style={{ color: '#22c55e' }}>
-                  Save ₹{(originalPrice - discountedPrice).toLocaleString("en-IN")}
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </article>

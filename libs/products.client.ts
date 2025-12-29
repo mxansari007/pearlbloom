@@ -14,20 +14,23 @@ import { dbClient } from "./firebase-client";
 
 import type {
   Product,
-  ProductAttribute,
-  Marketplaces,
+  Attribute,
 } from "../types/products";
 
 /* ---------------- Helpers ---------------- */
 
-function normalizeAttributes(data: any): ProductAttribute[] {
+function normalizeAttributes(data: any): Attribute[] {
   if (Array.isArray(data.attributes)) {
     return data.attributes;
   }
   return [];
 }
 
-function normalizeMarketplaces(data: any): Marketplaces {
+function normalizeMarketplaces(data: any): {
+  amazon?: string;
+  flipkart?: string;
+  meesho?: string;
+} {
   return {
     amazon: data?.marketplaces?.amazon || "",
     flipkart: data?.marketplaces?.flipkart || "",
@@ -62,19 +65,39 @@ function mapProductDoc(
       "",
     images: Array.isArray(data.images) ? data.images : [],
 
-    // Relations
-    brand: data.brand ?? "",
-    categories: Array.isArray(data.categories) ? data.categories : [],
-    collectionId: data.collectionId ?? "",
+  // Relations
+  brand: data.brand ?? "",
+  categories: Array.isArray(data.categories) ? data.categories : [],
 
-    // Flags
-    isFeatured: Boolean(data.isFeatured),
+  // Flags
+  isFeatured: Boolean(data.isFeatured),
 
-    // Attributes
-    attributes: normalizeAttributes(data),
+  // Attributes
+  attributes: normalizeAttributes(data),
 
-    // Marketplaces (ALWAYS PRESENT)
-    marketplaces: normalizeMarketplaces(data),
+  // Marketplaces (ALWAYS PRESENT)
+  marketplaces: normalizeMarketplaces(data),
+
+  // Inventory policy (defaults)
+  inventoryPolicy: {
+    trackStock: Boolean(data?.inventoryPolicy?.trackStock),
+    allowBackorder: Boolean(data?.inventoryPolicy?.allowBackorder),
+  },
+
+  inventory: data.inventory ? {
+    discountPercent: typeof data.inventory.discountPercent === "number" ? data.inventory.discountPercent : 0,
+  } : undefined,
+
+  // Variants (ensure array)
+  variants: Array.isArray(data?.variants) ? data.variants : [],
+
+  // Timestamps
+  createdAt: typeof data?.createdAt === "string"
+    ? data.createdAt
+    : new Date().toISOString(),
+  updatedAt: typeof data?.updatedAt === "string"
+    ? data.updatedAt
+    : new Date().toISOString(),
   };
 }
 

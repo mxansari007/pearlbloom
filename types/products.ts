@@ -51,6 +51,10 @@ export type Product = {
     allowBackorder: boolean;
   };
 
+  inventory?: {
+    discountPercent?: number;
+  };
+
   marketplaces?: {
     amazon?: string;
     flipkart?: string;

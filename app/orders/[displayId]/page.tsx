@@ -239,7 +239,7 @@ export default function OrderDetailsPage() {
               <div key={idx} className="order-page__item">
                 <div className="order-page__item-image">
                   <Image
-                    src={item.image || "/images/placeholder.png"}
+                    src={item.image || "/images/placeholder.svg"}
                     alt={item.name}
                     fill
                     sizes="96px"

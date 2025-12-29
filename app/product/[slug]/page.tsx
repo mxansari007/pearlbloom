@@ -39,7 +39,7 @@ export async function generateMetadata({
   const images =
     product.images?.length
       ? product.images
-      : ["/images/placeholder.png"];
+      : ["/images/placeholder.svg"];
 
   return {
     title: `${product.name} — Pearl Bloom`,
@@ -68,7 +68,7 @@ export default async function ProductPage({
   const images =
     product.images?.length
       ? product.images
-      : ["/images/placeholder.png"];
+      : ["/images/placeholder.svg"];
 
   const skuAttr =
     product.attributes?.find(
