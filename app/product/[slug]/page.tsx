@@ -136,7 +136,6 @@ export default async function ProductPage({
 
       {/* Reviews Section */}
       <section className="product-page__reviews">
-        <h2 className="product-page__heading">Customer Reviews</h2>
         <Reviews productId={product.id} />
       </section>
 
