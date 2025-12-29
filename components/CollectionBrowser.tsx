@@ -163,9 +163,22 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
           </div>
         </div>
 
-        <div className="flex items-center justify-center">
+        <div className="collection-page__load-more">
           {hasMore ? (
-            <button onClick={() => setVisibleCount((c) => c + 12)} className="rounded-md px-6 py-3 border border-white/6 btn-cta">
+            <button onClick={() => setVisibleCount((c) => c + 12)} className="collection-page__load-btn">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
               Load more
             </button>
           ) : (

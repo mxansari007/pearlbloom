@@ -52,7 +52,7 @@ export default function Footer() {
   const { siteName, footer } = settings
 
   return (
-    <footer className="border-t border-white/6 mt-16">
+    <footer className="border-t mt-16" style={{ borderColor: 'var(--footer-border)' }}>
       <div className="container py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Brand */}
         <div>
@@ -98,28 +98,28 @@ export default function Footer() {
             {footer.socialLinks?.find(link => link.platform === 'instagram') && <a
               aria-label="Instagram"
               href={footer.socialLinks.find(link => link.platform === 'instagram')?.url || '#'}
-              className="w-9 h-9 rounded-full bg-white/4 flex items-center justify-center hover:bg-white/10 transition"
+              className="w-9 h-9 rounded-full btn-glass flex items-center justify-center transition"
             >
               <Instagram size={16} />
             </a>}
             {footer.socialLinks?.find(link => link.platform === 'facebook') && <a
               aria-label="Facebook"
               href={footer.socialLinks.find(link => link.platform === 'facebook')?.url || '#'}
-              className="w-9 h-9 rounded-full bg-white/4 flex items-center justify-center hover:bg-white/10 transition"
+              className="w-9 h-9 rounded-full btn-glass flex items-center justify-center transition"
             >
               <Facebook size={16} />
             </a>}
             {footer.socialLinks?.find(link => link.platform === 'twitter') && <a
               aria-label="Twitter"
               href={footer.socialLinks.find(link => link.platform === 'twitter')?.url || '#'}
-              className="w-9 h-9 rounded-full bg-white/4 flex items-center justify-center hover:bg-white/10 transition"
+              className="w-9 h-9 rounded-full btn-glass flex items-center justify-center transition"
             >
               <Twitter size={16} />
             </a>}
             {footer.socialLinks?.find(link => link.platform === 'linkedin') && <a
               aria-label="LinkedIn"
               href="#"
-              className="w-9 h-9 rounded-full bg-white/4 flex items-center justify-center hover:bg-white/10 transition"
+              className="w-9 h-9 rounded-full btn-glass flex items-center justify-center transition"
             >
               <Linkedin size={16} />
             </a>}
@@ -127,7 +127,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/4 py-6 text-center text-sm text-muted">
+      <div className="border-t py-6 text-center text-sm text-muted" style={{ borderColor: 'var(--footer-border)' }}>
         © {new Date().getFullYear()} {siteName}. All rights reserved.
       </div>
     </footer>

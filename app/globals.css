@@ -8,6 +8,8 @@
   --fg: #efece8;
   --gold-rgb: 212 175 55;
   --glass: rgba(255,255,255,0.03);
+  --glass-hover: rgba(255,255,255,0.10);
+  --footer-border: rgba(255, 255, 255, 0.12);
 }
 
 /* Theme to use with Tailwind @theme inline if needed */
@@ -46,6 +48,8 @@ h1, h2, h3, h4 {
   --fg: #1a1a1a;
   --muted: #6b6b6b;
   --glass: rgba(0,0,0,0.04);
+  --glass-hover: rgba(0,0,0,0.08);
+  --footer-border: rgba(0, 0, 0, 0.12);
 
   /* gold stays luxury but softer */
   --gold-rgb: 212 175 55;
@@ -116,6 +120,14 @@ html[data-theme="light"] li {
 }
 .btn-cta:active { transform: translateY(1px); }
 .btn-cta:hover { box-shadow: 0 10px 30px rgba(212,175,55,0.12); }
+
+.btn-glass {
+  background: var(--glass);
+  transition: background 0.2s;
+}
+.btn-glass:hover {
+  background: var(--glass-hover);
+}
 
 /* Link focus */
 a:focus {
@@ -1937,6 +1949,49 @@ a:focus {
   opacity: 0.5;
 }
 
+/* Load More */
+.collection-page__load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 3rem;
+  padding-bottom: 2rem;
+}
+
+.collection-page__load-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--fg);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+}
+
+.collection-page__load-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(var(--gold-rgb), 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.collection-page__load-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.collection-page__load-btn svg {
+  color: rgb(var(--gold-rgb));
+}
+
+
 .collection-page__empty p {
   font-size: 1rem;
   color: var(--muted);
@@ -2472,6 +2527,14 @@ a:focus {
 :root[data-theme="light"] .order-page__status-line {
   background: rgba(0, 0, 0, 0.1);
 }
+
+
+
+
+:root[data-theme="light"] .order-page__status-dot {
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
 
 :root[data-theme="light"] .order-page__status-dot {
   border-color: rgba(0, 0, 0, 0.15);

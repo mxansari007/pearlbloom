@@ -17,13 +17,13 @@ import {
   resetRecaptcha,
 } from "@/utils/initRecaptcha";
 
+
 type Step = "phone" | "otp" | "profile";
 
 const RESEND_DELAY = 60; // seconds
 
 export default function LoginPage() {
   const [step, setStep] = useState<Step>("phone");
-
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [confirmation, setConfirmation] =
@@ -239,21 +239,44 @@ export default function LoginPage() {
   /* ================= UI ================= */
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-3xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold">Pearl Bloom</h1>
-          <p className="mt-2 text-sm">Elegance that Blooms</p>
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Background Glow Effects */}  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[rgba(var(--gold-rgb),0.08)] rounded-full blur-[120px] pointer-events-none" />
+      
+      <div 
+        className="relative z-10 w-full max-w-md rounded-3xl p-8 sm:p-10 shadow-2xl transition-all duration-300"
+        style={{
+          background: "var(--card-bg)",
+          border: "1px solid var(--card-border)",
+          boxShadow: "0 20px 50px -10px rgba(0,0,0,0.3), 0 0 0 1px rgba(var(--gold-rgb), 0.1)"
+        }}
+      >
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6 shadow-lg"
+             style={{
+               background: "linear-gradient(135deg, rgba(var(--gold-rgb), 0.2), rgba(var(--gold-rgb), 0.05))",
+               border: "1px solid rgba(var(--gold-rgb), 0.2)"
+             }}
+          >
+             <span className="text-3xl">✨</span>
+          </div>
+          <h1 className="text-3xl font-bold font-display tracking-tight mb-2">Pearl Bloom</h1>
+          <p className="text-sm opacity-60 font-medium tracking-wide uppercase">Elegance that Blooms</p>
         </div>
 
         {step === "phone" && (
-          <>
-            <label className="text-xs">Phone number</label>
+          <div className="animate-fade-in">
+            <label className="text-xs font-semibold uppercase tracking-wider opacity-50 ml-1">Phone number</label>
 
-            <div className="flex mt-2 rounded-xl overflow-hidden border">
-              <span className="px-4 py-3 text-sm">+91</span>
+            <div 
+              className="flex mt-2 rounded-xl overflow-hidden transition-all duration-300 group focus-within:ring-2 focus-within:ring-[rgba(var(--gold-rgb),0.4)]"
+              style={{
+                background: "var(--card-bg-soft)",
+                border: "1px solid var(--card-border)"
+              }}
+            >
+              <span className="px-4 py-3.5 text-sm opacity-70 font-medium flex items-center border-r border-[var(--card-border)]">+91</span>
               <input
-                className="w-full px-4 py-3 outline-none"
+                className="w-full px-4 py-3.5 outline-none bg-transparent placeholder:opacity-30"
                 placeholder="Enter phone number"
                 value={phone}
                 onChange={(e) =>
@@ -267,26 +290,35 @@ export default function LoginPage() {
             <button
               onClick={sendOtp}
               disabled={loading}
-              className="mt-6 w-full rounded-xl bg-yellow-500 py-3 font-medium"
+              className="mt-8 w-full rounded-xl py-3.5 font-bold text-[#0a0a0a] transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: "linear-gradient(135deg, rgb(var(--gold-rgb)), #f8e7b0)",
+                boxShadow: "0 4px 20px rgba(var(--gold-rgb), 0.25)"
+              }}
             >
               {loading ? "Sending OTP…" : "Continue"}
             </button>
-          </>
+          </div>
         )}
 
         {step === "otp" && (
-          <>
-            <p className="text-xs mb-4">
-              Enter the code sent to +91 {phone}
+          <div className="animate-fade-in">
+            <p className="text-sm text-center opacity-70 mb-6">
+              Enter the code sent to <span className="font-semibold text-[rgb(var(--gold-rgb))]">+91 {phone}</span>
             </p>
 
             <input
-              className="w-full rounded-xl px-4 py-3 text-center tracking-[0.35em] border"
+              className="w-full rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] outline-none transition-all duration-300 focus:ring-2 focus:ring-[rgba(var(--gold-rgb),0.4)]"
+              style={{
+                background: "var(--card-bg-soft)",
+                border: "1px solid var(--card-border)"
+              }}
               maxLength={6}
               value={otp}
               onChange={(e) =>
                 setOtp(e.target.value.replace(/\D/g, ""))
               }
+              placeholder="••••••"
             />
 
             {error && <ErrorBox message={error} />}
@@ -294,55 +326,83 @@ export default function LoginPage() {
             <button
               onClick={verifyOtp}
               disabled={loading}
-              className="mt-6 w-full rounded-xl bg-yellow-500 py-3 font-medium"
+              className="mt-8 w-full rounded-xl py-3.5 font-bold text-[#0a0a0a] transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: "linear-gradient(135deg, rgb(var(--gold-rgb)), #f8e7b0)",
+                boxShadow: "0 4px 20px rgba(var(--gold-rgb), 0.25)"
+              }}
             >
-              {loading ? "Verifying…" : "Verify"}
+              {loading ? "Verifying…" : "Verify Code"}
             </button>
 
-            <div className="mt-4 text-center text-sm">
+            <div className="mt-6 text-center text-sm">
               {!canResend ? (
-                <span>Resend OTP in {resendTimer}s</span>
+                <span className="opacity-50">Resend OTP in {resendTimer}s</span>
               ) : (
                 <button
                   onClick={resendOtp}
                   disabled={loading}
-                  className="underline text-yellow-500"
+                  className="font-medium hover:underline transition-all"
+                  style={{ color: "rgb(var(--gold-rgb))" }}
                 >
                   Resend OTP
                 </button>
               )}
             </div>
-          </>
+          </div>
         )}
 
         {step === "profile" && (
-          <>
-            <p className="text-sm mb-4">Let’s get to know you</p>
+          <div className="animate-fade-in">
+            <div className="text-center mb-6">
+               <h3 className="text-lg font-semibold">Welcome to Pearl Bloom</h3>
+               <p className="text-sm opacity-60 mt-1">Let’s get to know you</p>
+            </div>
 
-            <input
-              className="w-full rounded-xl px-4 py-3 mb-3 border"
-              placeholder="First name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-            />
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider opacity-50 ml-1 mb-1.5 block">First Name</label>
+                <input
+                  className="w-full rounded-xl px-4 py-3.5 outline-none transition-all duration-300 focus:ring-2 focus:ring-[rgba(var(--gold-rgb),0.4)]"
+                  style={{
+                    background: "var(--card-bg-soft)",
+                    border: "1px solid var(--card-border)"
+                  }}
+                  placeholder="e.g. Sarah"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+              </div>
 
-            <input
-              className="w-full rounded-xl px-4 py-3 border"
-              placeholder="Last name (optional)"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-            />
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider opacity-50 ml-1 mb-1.5 block">Last Name <span className="opacity-50 normal-case font-normal">(Optional)</span></label>
+                <input
+                  className="w-full rounded-xl px-4 py-3.5 outline-none transition-all duration-300 focus:ring-2 focus:ring-[rgba(var(--gold-rgb),0.4)]"
+                  style={{
+                    background: "var(--card-bg-soft)",
+                    border: "1px solid var(--card-border)"
+                  }}
+                  placeholder="e.g. Johnson"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </div>
+            </div>
 
             {error && <ErrorBox message={error} />}
 
             <button
               onClick={saveProfile}
               disabled={loading}
-              className="mt-6 w-full rounded-xl bg-yellow-500 py-3 font-medium"
+              className="mt-8 w-full rounded-xl py-3.5 font-bold text-[#0a0a0a] transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: "linear-gradient(135deg, rgb(var(--gold-rgb)), #f8e7b0)",
+                boxShadow: "0 4px 20px rgba(var(--gold-rgb), 0.25)"
+              }}
             >
-              {loading ? "Saving…" : "Continue"}
+              {loading ? "Creating Account…" : "Complete Profile"}
             </button>
-          </>
+          </div>
         )}
       </div>
 
@@ -353,14 +413,24 @@ export default function LoginPage() {
 
 function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="mt-3 rounded-lg px-4 py-2 text-sm bg-red-100 text-red-600">
-      {message}
-      <button
-        className="block mt-2 underline"
-        onClick={() => window.location.reload()}
-      >
-        Reload page
-      </button>
+    <div 
+      className="mt-4 rounded-xl px-4 py-3 text-sm flex items-start gap-3 animate-shake"
+      style={{
+        background: "rgba(239, 68, 68, 0.1)",
+        border: "1px solid rgba(239, 68, 68, 0.2)",
+        color: "#ef4444"
+      }}
+    >
+      <span className="text-lg leading-none mt-0.5">!</span>
+      <div className="flex-1">
+        {message}
+        <button
+          className="block mt-1 font-semibold underline opacity-80 hover:opacity-100"
+          onClick={() => window.location.reload()}
+        >
+          Reload page
+        </button>
+      </div>
     </div>
   );
 }
