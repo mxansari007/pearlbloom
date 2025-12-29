@@ -98,15 +98,19 @@ const handlePlaceOrder = async () => {
     const now = Date.now();
 
     // 1️⃣ Create order in Firestore (pending)
+    // Note: Firestore doesn't accept undefined values, so we use empty strings as fallbacks
     const orderId = await placeOrder({
       userId: user.uid,
-      phone: user.phone,
+      phone: user.phone || "",
       items: items.map((i) => ({
-        productId: i.id,
-        name: i.name,
-        price: i.price,
-        quantity: i.quantity,
-        image: i.image,
+        productId: i.productId || i.id,
+        variantId: i.variantId || i.id,
+        name: i.name || "",
+        variantLabel: i.variantLabel || "",
+        price: i.price || 0,
+        quantity: i.quantity || 1,
+        image: i.image || "",                     // Firestore doesn't accept undefined
+        sku: i.sku || "",                         // Firestore doesn't accept undefined
       })),
       subtotal: total,
       shipping: 0,
@@ -130,7 +134,18 @@ const handlePlaceOrder = async () => {
       }),
     });
 
+    if (!res.ok) {
+      const errorData = await res.json();
+      console.error("Razorpay order creation failed:", errorData);
+      throw new Error(errorData.error || "Failed to create payment order");
+    }
+
     const razorpayOrder = await res.json();
+
+    if (!razorpayOrder.id) {
+      console.error("Invalid Razorpay order response:", razorpayOrder);
+      throw new Error("Invalid payment order response");
+    }
 
     // 4️⃣ Open Razorpay Checkout
     const options = {
@@ -173,7 +188,9 @@ const handlePlaceOrder = async () => {
     paymentObject.open();
 
   } catch (err) {
-    alert("Payment failed. Please try again.");
+    console.error("❌ Payment error:", err);
+    const message = err instanceof Error ? err.message : "Payment failed";
+    alert(`${message}. Please try again.`);
   } finally {
     setLoading(false);
   }
@@ -276,6 +293,14 @@ const handlePlaceOrder = async () => {
 
                   <div className="flex-1">
                     <p className="font-medium">{item.name}</p>
+                    {item.variantLabel && (
+                      <p
+                        className="text-xs"
+                        style={{ color: "var(--muted)" }}
+                      >
+                        {item.variantLabel}
+                      </p>
+                    )}
                     <p
                       className="text-sm"
                       style={{ color: "var(--muted)" }}

@@ -96,6 +96,14 @@ export default function CartDrawer() {
 
                   <div className="flex-1">
                     <p className="text-sm font-medium">{item.name}</p>
+                    {item.variantLabel && (
+                      <p
+                        className="text-xs"
+                        style={{ color: "rgb(212,175,55)" }}
+                      >
+                        {item.variantLabel}
+                      </p>
+                    )}
                     <p
                       className="text-xs"
                       style={{ color: "var(--muted)" }}

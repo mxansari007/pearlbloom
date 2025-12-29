@@ -2,135 +2,192 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { Heart, ShoppingBag, Sparkles } from "lucide-react";
 import type { Product } from "../types/products";
-import { useCartStore } from "../store/useCartStore";
-import { ShoppingCart } from "lucide-react";
-import { useThemeStore } from "@/store/useThemeStore";
+import { useWishlistStore } from "@/store/useWishlistStore";
+
 export default function ProductCard({ product }: { product: Product }) {
   const image =
     product.thumbnailUrl ||
     product.images?.[0] ||
     "/images/placeholder.png";
 
-  const buyLink =
-    product.marketplaces.amazon ||
-    product.marketplaces.flipkart ||
-    product.marketplaces.meesho;
+  const toggleWishlist = useWishlistStore((s) => s.toggle);
+  const isWishlisted = useWishlistStore((s) =>
+    s.items.some((i) => i.id === product.id)
+  );
 
-  const addItem = useCartStore((s) => s.addItem);
-  const openCart = useCartStore((s) => s.open);
-  const theme = useThemeStore((s) => s.theme);
+  /* PRICING */
+  const discountPercent = product.inventory?.discountPercent ?? 0;
+  const hasDiscount = discountPercent > 0;
 
-  function handleAddToCart(e: React.MouseEvent) {
+  const originalPrice = product.price;
+  const discountedPrice = hasDiscount
+    ? Math.round(originalPrice * (1 - discountPercent / 100))
+    : originalPrice;
+
+  function handleWishlist(e: React.MouseEvent) {
     e.preventDefault();
+    e.stopPropagation();
 
-    addItem({
+    toggleWishlist({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: discountedPrice,
       image,
-      quantity: 1,
     });
-
-    openCart();
   }
 
   return (
-    <article
-      className="rounded-2xl transition"
-      style={{
-        background: "var(--card-bg)",
-        border: "1px solid var(--card-border)",
-      }}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.borderColor =
-          "var(--card-border-hover)")
-      }
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.borderColor =
-          "var(--card-border)")
-      }
-    >
-      <Link href={`/product/${product.slug}`} className="block">
-        {/* Image */}
-        <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
+    <Link href={`/product/${product.slug}`} className="block group">
+      <article className="product-card">
+        {/* IMAGE CONTAINER */}
+        <div className="product-card__media">
+          {/* Wishlist Button */}
+          <button
+            onClick={handleWishlist}
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            className="absolute top-3 right-3 z-20
+                       w-10 h-10 rounded-full
+                       flex items-center justify-center
+                       transition-all duration-300
+                       hover:scale-110
+                       active:scale-95"
+            style={{
+              background: 'rgba(0, 0, 0, 0.6)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
+              e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            }}
+          >
+            <Heart
+              size={18}
+              strokeWidth={2}
+              className={`transition-all duration-300 ${
+                isWishlisted
+                  ? "fill-red-500 stroke-red-500"
+                  : "stroke-white/90"
+              }`}
+            />
+          </button>
+
+          {/* Discount Badge */}
+          {hasDiscount && (
+            <div className="absolute top-3 left-3 z-20
+                          flex items-center gap-1.5
+                          px-2.5 py-1.5
+                          bg-gradient-to-br from-[rgb(212,175,55)] to-[rgb(180,145,40)]
+                          rounded-lg shadow-lg
+                          backdrop-blur-sm">
+              <Sparkles size={12} className="text-black/80" />
+              <span className="text-xs font-bold text-black tracking-wide">
+                {discountPercent}% OFF
+              </span>
+            </div>
+          )}
+
+          {/* Product Image */}
           <Image
             src={image}
             alt={product.name}
             fill
-            sizes="(max-width: 768px) 100vw, 25vw"
-            className="object-cover"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="product-card__img"
           />
+
+          {/* Quick Add Overlay */}
+          <div className="absolute inset-x-0 bottom-0 z-10
+                        p-3
+                        opacity-0 group-hover:opacity-100
+                        transition-opacity duration-300"
+               style={{
+                 background: 'linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4), transparent)',
+               }}>
+            <button 
+              className="w-full
+                         flex items-center justify-center gap-2
+                         py-2.5 px-4
+                         rounded-lg
+                         text-white text-sm font-semibold
+                         transition-all duration-200
+                         active:scale-95"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              }}
+            >
+              <ShoppingBag size={16} />
+              <span>Quick View</span>
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="p-4">
-          <h3
-            className="text-sm tracking-wide font-display truncate"
-            title={product.name}
-          >
+        {/* CARD BODY */}
+        <div className="product-card__body">
+          {/* Product Name */}
+          <h3 className="product-card__title line-clamp-2">
             {product.name}
           </h3>
 
-          <div className="mt-2 flex items-center justify-between">
-            {product.price > 0 ? (
-              <div className="text-base font-medium">
-                ₹{product.price.toLocaleString("en-IN")}
-              </div>
-            ) : (
-              <div
-                className="text-sm mt-1"
-                style={{ color: "var(--card-muted)" }}
-              >
-                Price on request
+          {/* Category or Brand (optional) */}
+          {product.category && (
+            <p className="text-xs uppercase tracking-wider mt-1 mb-3"
+               style={{ color: 'var(--muted)' }}>
+              {product.category}
+            </p>
+          )}
+
+          {/* PRICING */}
+          <div className="mt-auto pt-2">
+            <div className="flex items-baseline gap-2 flex-wrap">
+              {/* Discounted Price */}
+              <span className="product-card__price text-xl">
+                ₹{discountedPrice.toLocaleString("en-IN")}
+              </span>
+
+              {/* Original Price */}
+              {hasDiscount && (
+                <span className="text-sm line-through"
+                      style={{ color: 'var(--muted)' }}>
+                  ₹{originalPrice.toLocaleString("en-IN")}
+                </span>
+              )}
+            </div>
+
+            {/* Savings Badge */}
+            {hasDiscount && (
+              <div className="mt-2 inline-flex items-center gap-1
+                            px-2 py-1
+                            rounded-md"
+                   style={{
+                     background: 'rgba(34, 197, 94, 0.1)',
+                     border: '1px solid rgba(34, 197, 94, 0.2)',
+                   }}>
+                <span className="text-xs font-semibold"
+                      style={{ color: '#22c55e' }}>
+                  Save ₹{(originalPrice - discountedPrice).toLocaleString("en-IN")}
+                </span>
               </div>
             )}
           </div>
         </div>
-      </Link>
-
-      {/* Actions */}
-      <div
-        className="p-4 flex gap-3"
-        style={{
-          borderTop: "1px solid var(--card-border)",
-          background: "var(--card-bg-soft)",
-        }}
-      >
-        <Link
-          href={`/product/${product.slug}`}
-          className="px-4 py-2 text-sm rounded-md transition"
-          style={{
-            border: "1px solid var(--card-border)",
-          }}
-        >
-          View
-        </Link>
-
-        {buyLink ? (
-          <a
-            href={buyLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto px-4 py-2 text-sm rounded-md
-                       bg-yellow-500 text-black font-medium
-                       hover:opacity-90 transition"
-          >
-            Buy
-          </a>
-        ) : (
-          <button
-            onClick={handleAddToCart}
-            aria-label="Add to cart"
-            className="ml-auto flex items-center justify-center
-                       h-10 w-10 rounded-md
-                       bg-yellow-500 text-white
-                       hover:bg-yellow-400 transition"
-          >
-          <ShoppingCart size={18} strokeWidth={2} color={theme === "dark" ? "white" : "black"} />
-          </button>
-        )}
-      </div>
-    </article>
+      </article>
+    </Link>
   );
 }

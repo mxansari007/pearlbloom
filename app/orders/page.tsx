@@ -58,158 +58,201 @@ export default function OrdersPage() {
     setLoading(false);
   };
 
+  /* ---------------- Status Helpers ---------------- */
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "delivered":
+        return "#22c55e";
+      case "shipped":
+        return "#3b82f6";
+      case "paid":
+        return "#22c55e";
+      case "pending":
+        return "#eab308";
+      default:
+        return "#ef4444";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "delivered":
+        return "Delivered";
+      case "shipped":
+        return "Shipped";
+      case "paid":
+        return "Confirmed";
+      case "pending":
+        return "Processing";
+      default:
+        return status;
+    }
+  };
+
   /* ---------------- UI States ---------------- */
 
   if (!authInitialized || loading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--panel-bg)", color: "var(--muted)" }}
-      >
-        Loading your orders…
+      <div className="orders-page">
+        <div className="orders-page__loading">
+          <div className="orders-page__spinner" />
+          <p>Loading your orders…</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen px-6 py-12"
-      style={{ background: "var(--panel-bg)", color: "var(--fg)" }}
-    >
-      <div className="max-w-5xl mx-auto">
+    <div className="orders-page">
+      <div className="orders-page__container">
 
         {/* HEADER */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-semibold">My Orders</h1>
-          <Link
-            href="/"
-            className="text-sm"
-            style={{ color: "rgb(212,175,55)" }}
-          >
-            Continue Shopping →
+        <header className="orders-page__header">
+          <div>
+            <h1 className="orders-page__title">My Orders</h1>
+            <p className="orders-page__subtitle">Track and manage your purchases</p>
+          </div>
+          <Link href="/" className="orders-page__shop-link">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            Continue Shopping
           </Link>
-        </div>
+        </header>
 
         {/* EMPTY STATE */}
         {orders.length === 0 ? (
-          <div
-            className="rounded-2xl p-10 text-center"
-            style={{
-              background: "var(--panel-bg-soft)",
-              border: "1px solid var(--border-subtle)",
-            }}
-          >
-            <p className="mb-4" style={{ color: "var(--muted)" }}>
-              You haven’t placed any orders yet.
+          <div className="orders-page__empty">
+            <svg className="w-16 h-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <h2 className="orders-page__empty-title">No orders yet</h2>
+            <p className="orders-page__empty-text">
+              Looks like you haven&apos;t placed any orders. Start shopping to see your orders here.
             </p>
-            <Link
-              href="/"
-              className="inline-block rounded-xl
-                         bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
-                         px-6 py-3 text-black font-medium"
-            >
-              Shop Now
+            <Link href="/" className="orders-page__cta">
+              Browse Products
             </Link>
           </div>
         ) : (
-          <div className="space-y-6">
-            {orders.map((order) => (
-              <div
-                key={order.id}
-                className="rounded-2xl p-6"
-                style={{
-                  background: "var(--panel-bg-soft)",
-                  border: "1px solid var(--border-subtle)",
-                }}
-              >
-                {/* ORDER HEADER */}
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <p className="text-sm font-medium">
-                      Order #{order.displayId}
-                    </p>
-                    <p className="text-xs" style={{ color: "var(--muted)" }}>
-                      {new Date(order.createdAt).toLocaleString()}
-                    </p>
-                  </div>
+          <>
+            {/* Stats */}
+            <div className="orders-page__stats">
+              <div className="orders-page__stat">
+                <span className="orders-page__stat-value">{orders.length}</span>
+                <span className="orders-page__stat-label">Total Orders</span>
+              </div>
+              <div className="orders-page__stat">
+                <span className="orders-page__stat-value">
+                  {orders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0)}
+                </span>
+                <span className="orders-page__stat-label">Items Purchased</span>
+              </div>
+              <div className="orders-page__stat orders-page__stat--highlight">
+                <span className="orders-page__stat-value">
+                  ₹{orders.reduce((sum, o) => sum + o.total, 0).toLocaleString("en-IN")}
+                </span>
+                <span className="orders-page__stat-label">Total Spent</span>
+              </div>
+            </div>
 
-                  <span
-                    className="text-xs font-medium capitalize"
-                    style={{
-                      color:
-                        order.status === "paid"
-                          ? "rgb(34,197,94)"
-                          : order.status === "pending"
-                          ? "rgb(234,179,8)"
-                          : "rgb(239,68,68)",
-                    }}
-                  >
-                    {order.status}
-                  </span>
-                </div>
-
-                {/* ITEMS */}
-                <div className="space-y-3">
-                  {order.items.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex gap-4 items-center"
-                    >
+            {/* Orders List */}
+            <div className="orders-page__list">
+              {orders.map((order) => {
+                const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
+                return (
+                  <div key={order.id} className="orders-page__card">
+                    {/* Card Header */}
+                    <div className="orders-page__card-header">
+                      <div className="orders-page__card-id">
+                        <span className="orders-page__card-label">Order</span>
+                        <span className="font-mono">{order.displayId}</span>
+                      </div>
                       <div
-                        className="relative w-16 h-16 rounded-xl overflow-hidden"
-                        style={{
-                          background: "var(--panel-bg)",
-                          border: "1px solid var(--border-subtle)",
-                        }}
+                        className="orders-page__status"
+                        style={{ background: `${getStatusColor(order.status)}15`, color: getStatusColor(order.status) }}
                       >
-                        <Image
-                          src={item.image || ""}
-                          alt={item.name}
-                          fill
-                          sizes="64px"
-                          className="object-cover"
-                        />
-                      </div>
-
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{item.name}</p>
-                        <p
-                          className="text-xs"
-                          style={{ color: "var(--muted)" }}
-                        >
-                          ₹{item.price} × {item.quantity}
-                        </p>
-                      </div>
-
-                      <div className="text-sm font-medium">
-                        ₹{item.price * item.quantity}
+                        <span className="orders-page__status-dot" style={{ background: getStatusColor(order.status) }} />
+                        {getStatusLabel(order.status)}
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                {/* FOOTER */}
-                <div
-                  className="flex justify-between items-center mt-6 pt-4"
-                  style={{
-                    borderTop: "1px solid var(--border-subtle)",
-                  }}
-                >
-                  <span className="text-sm">
-                    Total: <strong>₹{order.total}</strong>
-                  </span>
+                    {/* Card Meta */}
+                    <div className="orders-page__card-meta">
+                      <span>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric"
+                        })}
+                      </span>
+                      <span>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        {itemCount} {itemCount === 1 ? "item" : "items"}
+                      </span>
+                    </div>
 
-                    <button
-                onClick={() => router.push(`/orders/${order.displayId}`)}
-                className="text-sm font-medium transition"
-                style={{ color: "rgb(212,175,55)" }}
-                >
-                View Details →
-                </button>   
-                </div>
-              </div>
-            ))}
-          </div>
+                    {/* Items Preview */}
+                    <div className="orders-page__items">
+                      {order.items.slice(0, 3).map((item, idx) => (
+                        <div key={idx} className="orders-page__item">
+                          <div className="orders-page__item-image">
+                            <Image
+                              src={item.image || "/images/placeholder.png"}
+                              alt={item.name}
+                              fill
+                              sizes="56px"
+                              className="object-cover"
+                            />
+                            {item.quantity > 1 && (
+                              <span className="orders-page__item-qty">×{item.quantity}</span>
+                            )}
+                          </div>
+                          <div className="orders-page__item-info">
+                            <p className="orders-page__item-name">{item.name}</p>
+                            {item.variantLabel && (
+                              <p className="orders-page__item-variant">{item.variantLabel}</p>
+                            )}
+                            <p className="orders-page__item-price">
+                              ₹{item.price.toLocaleString("en-IN")}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                      {order.items.length > 3 && (
+                        <div className="orders-page__more-items">
+                          +{order.items.length - 3} more
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Card Footer */}
+                    <div className="orders-page__card-footer">
+                      <div className="orders-page__total">
+                        <span className="orders-page__total-label">Total</span>
+                        <span className="orders-page__total-value">₹{order.total.toLocaleString("en-IN")}</span>
+                      </div>
+                      <button
+                        onClick={() => router.push(`/orders/${order.displayId}`)}
+                        className="orders-page__view-btn"
+                      >
+                        View Details
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>

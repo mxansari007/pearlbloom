@@ -1,47 +1,63 @@
-// External marketplace links
-export type Marketplaces = {
-  amazon?: string;
-  flipkart?: string;
-  meesho?: string;
-};
+// types/products.ts
 
-// Flexible attribute key/value pair
-export type ProductAttribute = {
+export type Attribute = {
   key: string;
   value: string;
 };
 
-// ✅ FINAL Product model — matches Admin form + Firestore + UI
+export type Discount = {
+  type: "PERCENT" | "FLAT";
+  value: number;
+};
+
+export type Stock = {
+  quantity: number;
+  track: boolean;
+  lowStockThreshold?: number;
+};
+
+export type Variant = {
+  id: string;
+  attributes: Attribute[];
+  price: number;
+  discount?: Discount;
+  stock: Stock;
+  sku?: string;
+  images?: string[];
+  isActive: boolean;
+};
+
 export type Product = {
   id: string;
-
-  // Identity
-  name: string;
   slug: string;
+  name: string;
+  brand?: string;
 
-  // Pricing
-  price: number;
-  currency: string; // "INR"
+  description?: string;
+  shortDescription?: string;
 
-  // Descriptions
-  shortDescription: string;
-  description: string;
+  categories?: string[];
+  attributes?: Attribute[];
 
-  // Media
-  thumbnailUrl: string;
-  images: string[];
+  images?: string[];
+  thumbnailUrl?: string;
 
-  // Relations
-  brand: string;
-  categories: string[];
-  collectionId: string;
+  currency: "INR";
 
-  // Flags
-  isFeatured: boolean;
+  inventoryPolicy: {
+    trackStock: boolean;
+    allowBackorder: boolean;
+  };
 
-  // Dynamic attributes
-  attributes: ProductAttribute[];
+  marketplaces?: {
+    amazon?: string;
+    flipkart?: string;
+    meesho?: string;
+  };
 
-  // Marketplaces
-  marketplaces: Marketplaces;
+  variants: Variant[];
+
+  isFeatured?: boolean;
+  createdAt: string;
+  updatedAt: string;
 };

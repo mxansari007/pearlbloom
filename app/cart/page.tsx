@@ -103,6 +103,14 @@ export default function CartPage() {
 
                   <div className="flex-1">
                     <p className="font-medium">{item.name}</p>
+                    {item.variantLabel && (
+                      <p
+                        className="text-xs mt-0.5"
+                        style={{ color: "rgb(212,175,55)" }}
+                      >
+                        {item.variantLabel}
+                      </p>
+                    )}
                     <p
                       className="text-sm mt-1"
                       style={{ color: "var(--muted)" }}

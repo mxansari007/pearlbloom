@@ -16,10 +16,10 @@ import { useAuthStore } from "@/store/useAppStore";
 import type { Order } from "@/types/orders";
 
 const STATUS_STEPS = [
-  { key: "pending", label: "Order Placed" },
-  { key: "paid", label: "Payment Confirmed" },
-  { key: "shipped", label: "Shipped" },
-  { key: "delivered", label: "Delivered" },
+  { key: "pending", label: "Order Placed", icon: "📦" },
+  { key: "paid", label: "Payment Confirmed", icon: "✓" },
+  { key: "shipped", label: "Shipped", icon: "🚚" },
+  { key: "delivered", label: "Delivered", icon: "🎉" },
 ];
 
 export default function OrderDetailsPage() {
@@ -31,6 +31,7 @@ export default function OrderDetailsPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   /* ---------------- Auth Guard ---------------- */
 
@@ -81,199 +82,284 @@ export default function OrderDetailsPage() {
     }
   };
 
+  /* ---------------- Helpers ---------------- */
+
+  const copyOrderId = () => {
+    if (!order?.displayId) return;
+    navigator.clipboard.writeText(order.displayId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString("en-IN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   /* ---------------- States ---------------- */
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
-        Loading order details…
+      <div className="order-page">
+        <div className="order-page__loading">
+          <div className="order-page__spinner" />
+          <p>Loading order details…</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-sm text-red-500">{error}</p>
-        <button
-          onClick={() => router.replace("/orders")}
-          className="text-[rgb(212,175,55)] text-sm"
-        >
-          Go back to orders
-        </button>
+      <div className="order-page">
+        <div className="order-page__error">
+          <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <p>{error}</p>
+          <Link href="/orders" className="order-page__error-link">
+            Go back to orders
+          </Link>
+        </div>
       </div>
     );
   }
 
   if (!order) return null;
 
-  /* ---------------- Helpers ---------------- */
-
-  const currentIndex = STATUS_STEPS.findIndex(
-    (s) => s.key === order.status
-  );
+  const currentIndex = STATUS_STEPS.findIndex((s) => s.key === order.status);
+  const itemCount = order.items.reduce((sum, i) => sum + i.quantity, 0);
 
   /* ---------------- UI ---------------- */
 
   return (
-    <div className="min-h-screen px-6 py-12 bg-[var(--panel-bg)] text-[var(--fg)]">
-      <div className="max-w-5xl mx-auto space-y-10">
+    <div className="order-page">
+      <div className="order-page__container">
 
         {/* HEADER */}
-        <header className="flex items-start justify-between gap-4">
-          <div className="space-y-2 max-w-full">
-            <h1 className="text-3xl font-semibold">Order</h1>
+        <header className="order-page__header">
+          <div className="order-page__header-left">
+            <Link href="/orders" className="order-page__back">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Orders
+            </Link>
 
-            <div className="inline-flex items-center gap-3 rounded-xl px-4 py-2 bg-black/5 border border-black/10">
-              <span className="text-sm text-muted-foreground">
-                Order ID
-              </span>
+            <h1 className="order-page__title">Order Details</h1>
 
-              <span className="font-mono text-sm tracking-wide whitespace-nowrap">
-                {order.displayId}
-              </span>
-
-              <button
-                onClick={() => {
-                  if (!order.displayId) return;
-                  navigator.clipboard.writeText(order.displayId);
-                }}
-              >
-                Copy
-              </button>
+            <div className="order-page__id-block">
+              <span className="order-page__id-label">Order ID</span>
+              <div className="order-page__id-value">
+                <span className="font-mono">{order.displayId}</span>
+                <button onClick={copyOrderId} className="order-page__copy-btn">
+                  {copied ? (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
-            <p className="text-sm text-muted-foreground">
-              Placed on{" "}
-              {new Date(order.createdAt).toLocaleString()}
+            <p className="order-page__date">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {formatDate(order.createdAt)}
             </p>
           </div>
 
-          <Link
-            href="/orders"
-            className="text-sm text-[rgb(212,175,55)] whitespace-nowrap"
-          >
-            ← Back to Orders
-          </Link>
+          {/* Quick Stats */}
+          <div className="order-page__stats">
+            <div className="order-page__stat">
+              <span className="order-page__stat-value">{itemCount}</span>
+              <span className="order-page__stat-label">{itemCount === 1 ? "Item" : "Items"}</span>
+            </div>
+            <div className="order-page__stat order-page__stat--highlight">
+              <span className="order-page__stat-value">₹{order.total.toLocaleString("en-IN")}</span>
+              <span className="order-page__stat-label">Total</span>
+            </div>
+          </div>
         </header>
 
-        {/* STATUS */}
-        <section className="rounded-2xl p-6 bg-[var(--panel-bg-soft)] border border-[var(--border-subtle)]">
-          <h2 className="text-lg font-medium mb-6">Order Status</h2>
+        {/* STATUS TRACKER */}
+        <section className="order-page__section">
+          <h2 className="order-page__section-title">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            Order Status
+          </h2>
 
-          <div className="flex items-center justify-between relative">
+          <div className="order-page__status-tracker">
             {STATUS_STEPS.map((step, idx) => {
               const isDone = idx <= currentIndex;
               const isActive = idx === currentIndex;
 
               return (
-                <div key={step.key} className="flex-1 text-center relative">
+                <div
+                  key={step.key}
+                  className={`order-page__status-step ${isDone ? "order-page__status-step--done" : ""} ${isActive ? "order-page__status-step--active" : ""}`}
+                >
                   {idx !== 0 && (
-                    <div
-                      className="absolute top-4 left-0 w-full h-[2px]"
-                      style={{
-                        background: isDone
-                          ? "rgb(34,197,94)"
-                          : "var(--border-subtle)",
-                      }}
-                    />
+                    <div className={`order-page__status-line ${isDone ? "order-page__status-line--done" : ""}`} />
                   )}
-
-                  <div
-                    className="relative z-10 mx-auto w-8 h-8 rounded-full flex items-center justify-center text-sm"
-                    style={{
-                      background: isDone
-                        ? "rgb(34,197,94)"
-                        : "var(--panel-bg)",
-                      color: isDone ? "#fff" : "var(--muted)",
-                      border: isActive
-                        ? "2px solid rgb(34,197,94)"
-                        : "1px solid var(--border-subtle)",
-                    }}
-                  >
+                  <div className="order-page__status-dot">
                     {isDone ? "✓" : idx + 1}
                   </div>
-
-                  <p
-                    className="mt-3 text-xs"
-                    style={{
-                      color: isActive
-                        ? "rgb(34,197,94)"
-                        : "var(--muted)",
-                    }}
-                  >
-                    {step.label}
-                  </p>
+                  <p className="order-page__status-label">{step.label}</p>
                 </div>
               );
             })}
           </div>
         </section>
 
-        {/* ADDRESS */}
-        <section className="rounded-2xl p-6 bg-[var(--panel-bg-soft)] border border-[var(--border-subtle)]">
-          <h2 className="text-lg font-medium mb-3">Delivery Address</h2>
-          <p className="font-medium">{order.address.fullName}</p>
-          <p className="text-sm">{order.address.phone}</p>
-          <p className="text-sm">
-            {order.address.line1}, {order.address.city},{" "}
-            {order.address.state} {order.address.postalCode}
-          </p>
-          <p className="text-sm">{order.address.country}</p>
-        </section>
-
         {/* ITEMS */}
-        <section className="rounded-2xl p-6 bg-[var(--panel-bg-soft)] border border-[var(--border-subtle)]">
-          <h2 className="text-lg font-medium mb-4">Items</h2>
+        <section className="order-page__section">
+          <h2 className="order-page__section-title">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            Order Items ({itemCount})
+          </h2>
 
-          <div className="space-y-4">
+          <div className="order-page__items">
             {order.items.map((item, idx) => (
-              <div key={idx} className="flex gap-4 items-center">
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-[var(--border-subtle)]">
+              <div key={idx} className="order-page__item">
+                <div className="order-page__item-image">
                   <Image
-                    src={item.image || ""}
+                    src={item.image || "/images/placeholder.png"}
                     alt={item.name}
                     fill
-                    sizes="80px"
+                    sizes="96px"
                     className="object-cover"
                   />
+                  {item.quantity > 1 && (
+                    <span className="order-page__item-qty-badge">×{item.quantity}</span>
+                  )}
                 </div>
 
-                <div className="flex-1">
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    ₹{item.price} × {item.quantity}
-                  </p>
+                <div className="order-page__item-details">
+                  <h3 className="order-page__item-name">{item.name}</h3>
+
+                  {/* Variant Info */}
+                  {item.variantLabel && (
+                    <div className="order-page__item-variant">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                      <span>{item.variantLabel}</span>
+                    </div>
+                  )}
+
+                  {/* SKU */}
+                  {item.sku && (
+                    <div className="order-page__item-sku">
+                      <span>SKU:</span>
+                      <span className="font-mono">{item.sku}</span>
+                    </div>
+                  )}
+
+                  {/* Price breakdown */}
+                  <div className="order-page__item-price-row">
+                    <span className="order-page__item-unit-price">₹{item.price.toLocaleString("en-IN")}</span>
+                    <span className="order-page__item-multiply">×</span>
+                    <span className="order-page__item-quantity">{item.quantity}</span>
+                  </div>
                 </div>
 
-                <div className="font-medium">
-                  ₹{item.price * item.quantity}
+                <div className="order-page__item-total">
+                  ₹{(item.price * item.quantity).toLocaleString("en-IN")}
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* SUMMARY */}
-        <section className="rounded-2xl p-6 bg-[var(--panel-bg-soft)] border border-[var(--border-subtle)]">
-          <h2 className="text-lg font-medium mb-4">Order Summary</h2>
+        <div className="order-page__grid">
+          {/* ADDRESS */}
+          <section className="order-page__section">
+            <h2 className="order-page__section-title">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Delivery Address
+            </h2>
 
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>₹{order.subtotal}</span>
+            <div className="order-page__address">
+              <p className="order-page__address-name">{order.address.fullName}</p>
+              <p className="order-page__address-phone">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                {order.address.phone}
+              </p>
+              <p className="order-page__address-line">
+                {order.address.line1}
+              </p>
+              <p className="order-page__address-line">
+                {order.address.city}, {order.address.state} {order.address.postalCode}
+              </p>
+              <p className="order-page__address-country">{order.address.country}</p>
             </div>
+          </section>
 
-            <div className="flex justify-between">
-              <span>Shipping</span>
-              <span className="text-[rgb(212,175,55)]">Free</span>
-            </div>
+          {/* SUMMARY */}
+          <section className="order-page__section">
+            <h2 className="order-page__section-title">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Payment Summary
+            </h2>
 
-            <div className="flex justify-between pt-3 mt-3 border-t border-[var(--border-subtle)]">
-              <span className="font-medium">Total</span>
-              <span className="font-medium">₹{order.total}</span>
+            <div className="order-page__summary">
+              <div className="order-page__summary-row">
+                <span>Subtotal ({itemCount} items)</span>
+                <span>₹{order.subtotal.toLocaleString("en-IN")}</span>
+              </div>
+
+              <div className="order-page__summary-row">
+                <span>Shipping</span>
+                <span className="order-page__summary-free">Free</span>
+              </div>
+
+              <div className="order-page__summary-row order-page__summary-row--total">
+                <span>Total Paid</span>
+                <span>₹{order.total.toLocaleString("en-IN")}</span>
+              </div>
+
+              {order.payment?.razorpayPaymentId && (
+                <div className="order-page__payment-info">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Payment ID: </span>
+                  <span className="font-mono text-xs">{order.payment.razorpayPaymentId}</span>
+                </div>
+              )}
             </div>
-          </div>
+          </section>
+        </div>
+
+        {/* HELP */}
+        <section className="order-page__help">
+          <p>Need help with your order?</p>
+          <Link href="/contact" className="order-page__help-link">
+            Contact Support →
+          </Link>
         </section>
       </div>
     </div>

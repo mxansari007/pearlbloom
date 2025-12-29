@@ -2,11 +2,15 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
+  id: string;              // Unique cart item ID (variantId or productId-variantId)
+  productId: string;       // Product document ID
+  variantId: string;       // Variant ID
+  name: string;            // Product name
+  variantLabel: string;    // e.g. "Red / Large"
+  price: number;           // Final price after discount
   image?: string;
   quantity: number;
+  sku?: string;            // Variant SKU if available
 }
 
 interface CartState {
@@ -20,6 +24,10 @@ interface CartState {
   removeItem: (id: string) => void;
   updateQty: (id: string, qty: number) => void;
   clear: () => void;
+
+  // Helper to get total
+  getTotal: () => number;
+  getItemCount: () => number;
 }
 
 export const useCartStore = create<CartState>()(
@@ -34,15 +42,16 @@ export const useCartStore = create<CartState>()(
       addItem: (item) =>
         set({
           items: (() => {
-            const existing = get().items.find((i) => i.id === item.id);
+            // Match by variantId for proper variant tracking
+            const existing = get().items.find((i) => i.variantId === item.variantId);
             if (existing) {
               return get().items.map((i) =>
-                i.id === item.id
+                i.variantId === item.variantId
                   ? { ...i, quantity: i.quantity + item.quantity }
                   : i
               );
             }
-            return [...get().items, item];
+            return [...get().items, { ...item, id: item.variantId }];
           })(),
         }),
 
@@ -59,6 +68,12 @@ export const useCartStore = create<CartState>()(
         }),
 
       clear: () => set({ items: [] }),
+
+      getTotal: () =>
+        get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+
+      getItemCount: () =>
+        get().items.reduce((sum, i) => sum + i.quantity, 0),
     }),
     {
       name: "pearlbloom-cart",
