@@ -107,6 +107,8 @@ export default function LoginPage() {
         setError(`Configuration error: Domain "${hostname}" is not authorized. Check Firebase Console.`);
       } else if (err.code === 'auth/too-many-requests') {
         setError("Too many requests. Please try again later.");
+      } else if (err.message && err.message.includes('CAPTCHA_CHECK_FAILED')) {
+        setError(`Domain "${hostname}" is not authorized for reCAPTCHA. Please add it to Firebase Console.`);
       } else {
         setError(
           "Security check failed. Please click Continue again or reload the page."
