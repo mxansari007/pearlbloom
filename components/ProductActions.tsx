@@ -46,6 +46,7 @@ export default function ProductActions({
         selectedVariant?.images?.[0] ??
         product.thumbnailUrl ??
         product.images?.[0],
+      slug: product.slug,
     })
 
     showNotification(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist')
