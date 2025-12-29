@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/useAppStore";
 import { logout } from "../utils/logout";
 import { useCartStore } from "@/store/useCartStore";
 import ThemeToggle from "./ThemeToggle";
+import { ShoppingBag, User, Heart, Menu } from "lucide-react";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -94,19 +95,34 @@ export default function Header() {
             </Link>
 
             {/* Actions */}
-            <div className="ml-4 flex items-center gap-4">
+            <div className="ml-4 flex items-center gap-3">
 
               <ThemeToggle />
+
+              {/* Wishlist */}
+              <Link href="/wishlist">
+                <button
+                  className="rounded-full p-2 border transition hover:bg-[var(--header-hover)]"
+                  style={{
+                    borderColor: "var(--header-border)",
+                    color: "var(--header-text)",
+                  }}
+                  aria-label="Wishlist"
+                >
+                  <Heart size={20} />
+                </button>
+              </Link>
 
               {/* Cart */}
               <button
                 onClick={openCart}
-                className="relative rounded-full p-2 border transition"
+                className="relative rounded-full p-2 border transition hover:bg-[var(--header-hover)]"
                 style={{
                   borderColor: "var(--header-border)",
+                  color: "var(--header-text)",
                 }}
               >
-                🛒
+                <ShoppingBag size={20} />
                 {cartCount > 0 && (
                   <span
                     className="absolute -top-1 -right-1 min-w-[18px] h-[18px]
@@ -124,12 +140,13 @@ export default function Header() {
                 <div className="relative" ref={menuRef}>
                   <button
                     onClick={() => setUserMenuOpen((v) => !v)}
-                    className="rounded-full p-2 border transition"
+                    className="rounded-full p-2 border transition hover:bg-[var(--header-hover)]"
                     style={{
                       borderColor: "var(--header-border)",
+                      color: "var(--header-text)",
                     }}
                   >
-                    👤
+                    <User size={20} />
                   </button>
 
                   {userMenuOpen && (

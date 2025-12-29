@@ -111,6 +111,7 @@ export default function ProductCard({ product }: { product: Product }) {
       name: product.name,
       price: startingFinalPrice,
       image,
+      slug: product.slug,
     });
   }
 

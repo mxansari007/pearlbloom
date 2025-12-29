@@ -6,12 +6,14 @@ type WishlistItem = {
   name: string;
   price: number;
   image?: string;
+  slug: string;
 };
 
 type WishlistState = {
   items: WishlistItem[];
 
   add: (item: WishlistItem) => void;
+  update: (id: string, updates: Partial<WishlistItem>) => void;
   remove: (id: string) => void;
   toggle: (item: WishlistItem) => void;
   clear: () => void;
@@ -29,6 +31,13 @@ export const useWishlistStore = create<WishlistState>()(
           }
           return { items: [...state.items, item] };
         }),
+
+      update: (id, updates) =>
+        set((state) => ({
+          items: state.items.map((i) =>
+            i.id === id ? { ...i, ...updates } : i
+          ),
+        })),
 
       remove: (id) =>
         set((state) => ({

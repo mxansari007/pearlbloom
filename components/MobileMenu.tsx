@@ -146,6 +146,7 @@ export default function MobileMenu({ open, onClose }: Props) {
               {[
                 ["Home", "/"],
                 ["Products", "/products"],
+                ["Wishlist", "/wishlist"],
                 ["Contact", "/contact"],
               ].map(([label, href]) => (
                 <li key={href}>
@@ -184,7 +185,6 @@ export default function MobileMenu({ open, onClose }: Props) {
                 <>
                   {[
                     ["Orders", "/orders"],
-                    ["Wishlist", "/wishlist"],
                     ["Profile", "/profile"],
                   ].map(([label, href]) => (
                     <li key={href}>
