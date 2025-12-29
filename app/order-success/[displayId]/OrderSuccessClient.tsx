@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCartStore } from "@/store/useCartStore";
 
 export default function OrderSuccessClient({
@@ -10,11 +11,16 @@ export default function OrderSuccessClient({
   displayId: string;
 }) {
   const clearCart = useCartStore((s) => s.clear);
+  const searchParams = useSearchParams();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    clearCart();
-  }, [clearCart]);
+    // Only clear main cart if NOT from "Buy Now" (which sets clearCart=false)
+    const shouldClear = searchParams.get("clearCart") !== "false";
+    if (shouldClear) {
+      clearCart();
+    }
+  }, [clearCart, searchParams]);
 
   const copyOrderId = () => {
     navigator.clipboard.writeText(displayId);

@@ -20,6 +20,7 @@ export default function CheckoutPage() {
 
   const [address, setAddress] = useState<Address | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
 
   const total = items.reduce(
     (sum, i) => sum + i.price * i.quantity,
@@ -36,13 +37,13 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (items.length === 0) {
+    if (items.length === 0 && !isOrderPlaced) {
       router.replace("/cart");
       return;
     }
 
     loadPrimaryAddress();
-  }, [authInitialized, isAuthenticated, items]);
+  }, [authInitialized, isAuthenticated, items, isOrderPlaced]);
 
   /* ---------------- Load Primary Address ---------------- */
 
@@ -171,8 +172,7 @@ const handlePlaceOrder = async () => {
         const date = new Date().toISOString().split("T")[0];
         const displayId = `PB-${date}-${orderId.slice(-6).toUpperCase()}`;
 
-       router.push(`/order-success/${displayId}`);
-
+        router.push(`/order-success/${displayId}`);
       },
 
       prefill: {
@@ -183,9 +183,42 @@ const handlePlaceOrder = async () => {
       theme: {
         color: "#d4af37",
       },
+
+      modal: {
+        ondismiss: () => {
+             // Only redirect if NOT currently verifying a success response
+             // See similar logic in buy-now/page.tsx
+             if (!isOrderPlaced) {
+                setIsOrderPlaced(true); // Prevent guard from redirecting to cart
+                setTimeout(() => {
+                    const clearCart = useCartStore.getState().clear;
+                    clearCart();
+                    
+                    // Construct displayId manually
+                    const date = new Date().toISOString().split("T")[0];
+                    const displayId = `PB-${date}-${orderId.slice(-6).toUpperCase()}`;
+                    router.replace(`/orders/${displayId}`);
+                }, 200);
+             }
+        },
+      },
     };
 
     const paymentObject = new (window as any).Razorpay(options);
+    
+    // Handle explicit payment failures
+    paymentObject.on('payment.failed', function (response: any){
+        console.error("Payment failed:", response.error);
+        
+        setIsOrderPlaced(true); // Prevent guard from redirecting to cart
+        const clearCart = useCartStore.getState().clear;
+        clearCart();
+        
+        const date = new Date().toISOString().split("T")[0];
+        const displayId = `PB-${date}-${orderId.slice(-6).toUpperCase()}`;
+        router.replace(`/orders/${displayId}`);
+    });
+
     paymentObject.open();
 
   } catch (err) {

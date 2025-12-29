@@ -27,7 +27,13 @@ export async function POST(req: Request) {
     }
 
     // ✅ Payment verified → mark order paid using Admin SDK
-    await dbAdmin.collection("orders").doc(orderId).update({
+    const orderRef = dbAdmin.collection("orders").doc(orderId);
+    
+    // Fetch order to get displayId
+    const orderSnap = await orderRef.get();
+    const displayId = orderSnap.exists ? orderSnap.data()?.displayId : null;
+
+    await orderRef.update({
       status: "paid",
       payment: {
         razorpayOrderId: razorpay_order_id,
@@ -37,7 +43,7 @@ export async function POST(req: Request) {
       updatedAt: Date.now(),
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, displayId });
   } catch (error) {
     console.error("❌ Payment verification failed:", error);
     return NextResponse.json(

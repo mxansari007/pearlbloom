@@ -9,7 +9,7 @@ import { Plus, Minus } from "lucide-react";
 import { useBuyNowStore } from "@/store/useBuyNowStore";
 import { useAuthStore } from "@/store/useAppStore";
 import { dbClient } from "@/libs/firebase-client";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query } from "firebase/firestore";
 import type { Address } from "@/types/user";
 import { placeOrder } from "@/utils/placeorder";
 
@@ -23,6 +23,7 @@ export default function BuyNowCheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
 
   /* ---------------- Auth Guard ---------------- */
 
@@ -37,10 +38,10 @@ export default function BuyNowCheckoutPage() {
 
   /* ---------------- Item Guard ---------------- */
   useEffect(() => {
-    if (authInitialized && !item) {
+    if (authInitialized && !item && !isOrderPlaced) {
         router.replace("/");
     }
-  }, [authInitialized, item, router]);
+  }, [authInitialized, item, router, isOrderPlaced]);
 
   /* ---------------- Load Addresses ---------------- */
 
@@ -163,8 +164,11 @@ export default function BuyNowCheckoutPage() {
 
             if (verifyData.success) {
               // Success!
+              setIsOrderPlaced(true);
               clearBuyNowItem();
-              router.replace(`/order-success/${verifyData.displayId}`);
+              
+              const finalDisplayId = verifyData.displayId || `PB-${new Date(now).toISOString().split("T")[0]}-${orderId.slice(-6).toUpperCase()}`;
+              router.replace(`/order-success/${finalDisplayId}?clearCart=false`);
             } else {
               alert("Payment verification failed. Please contact support.");
               setVerifying(false);
@@ -185,13 +189,39 @@ export default function BuyNowCheckoutPage() {
         },
         modal: {
           ondismiss: () => {
-            setLoading(false);
+             // Only redirect if NOT currently verifying a success response
+             if (!isOrderPlaced) {
+                 setIsOrderPlaced(true); // Prevent guard from redirecting to home
+                 setTimeout(() => {
+                    const clearBuyNowItem = useBuyNowStore.getState().clearBuyNowItem;
+                    clearBuyNowItem();
+                    
+                    // Construct displayId manually
+                    const date = new Date().toISOString().split("T")[0];
+                    const displayId = `PB-${date}-${orderId.slice(-6).toUpperCase()}`;
+                    router.replace(`/orders/${displayId}`);
+                 }, 200);
+             }
           },
         },
       };
 
-      const rzp1 = new (window as any).Razorpay(options);
-      rzp1.open();
+      const paymentObject = new (window as any).Razorpay(options);
+      
+      // Handle explicit payment failures
+      paymentObject.on('payment.failed', function (response: any){
+          console.error("Payment failed:", response.error);
+          
+          setIsOrderPlaced(true); // Prevent guard from redirecting to home
+          const clearBuyNowItem = useBuyNowStore.getState().clearBuyNowItem;
+          clearBuyNowItem();
+          
+          const date = new Date().toISOString().split("T")[0];
+          const displayId = `PB-${date}-${orderId.slice(-6).toUpperCase()}`;
+          router.replace(`/orders/${displayId}`);
+      });
+
+      paymentObject.open();
     } catch (err: any) {
       console.error("Checkout error:", err);
       alert(err.message || "Something went wrong. Please try again.");

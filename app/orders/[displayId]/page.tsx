@@ -11,6 +11,7 @@ import {
   where,
   doc,
   getDoc,
+  deleteDoc,
 } from "firebase/firestore";
 
 import { dbClient } from "@/libs/firebase-client";
@@ -39,6 +40,10 @@ export default function OrderDetailsPage() {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
   const [orderReviews, setOrderReviews] = useState<Review[]>([]);
+  
+  // Timer & Retry State
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
   /* ---------------- Auth Guard ---------------- */
 
@@ -105,6 +110,129 @@ export default function OrderDetailsPage() {
       setError("Unable to load order details.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  /* ---------------- Timer & Expiry Logic ---------------- */
+
+  useEffect(() => {
+    if (!order || order.status !== "pending") return;
+
+    // 5 minutes in milliseconds
+    const EXPIRY_DURATION = 5 * 60 * 1000;
+    const expiresAt = order.createdAt + EXPIRY_DURATION;
+
+    const checkTimer = () => {
+      const now = Date.now();
+      const diff = expiresAt - now;
+
+      if (diff <= 0) {
+        handleDeleteOrder();
+      } else {
+        setTimeLeft(diff);
+      }
+    };
+
+    // Initial check
+    checkTimer();
+
+    // Interval
+    const timerId = setInterval(checkTimer, 1000);
+
+    return () => clearInterval(timerId);
+  }, [order]);
+
+  const handleDeleteOrder = async () => {
+    if (!order || !order.id) return;
+    try {
+      await deleteDoc(doc(dbClient, "orders", order.id));
+      router.replace("/orders");
+    } catch (err) {
+      console.error("Failed to delete expired order", err);
+    }
+  };
+
+  /* ---------------- Retry Payment Logic ---------------- */
+
+  const loadRazorpay = () =>
+    new Promise((resolve) => {
+      if ((window as any).Razorpay) return resolve(true);
+
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      document.body.appendChild(script);
+    });
+
+  const handleRetryPayment = async () => {
+    if (!order || !order.id) return;
+    setRetrying(true);
+
+    try {
+      await loadRazorpay();
+
+      // Create new Razorpay order
+      const res = await fetch("/api/razorpay/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: order.total,
+          receipt: order.id,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to create payment order");
+      const razorpayOrder = await res.json();
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: razorpayOrder.amount,
+        currency: "INR",
+        name: "Pearl Boom",
+        description: "Retry Order Payment",
+        order_id: razorpayOrder.id,
+        handler: async function (response: any) {
+          // Verify
+          await fetch("/api/razorpay/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId: order.id,
+              ...response,
+            }),
+          });
+          
+          // Reload order to update status
+          loadOrder();
+        },
+        prefill: {
+          name: order.address.fullName,
+          email: user?.email || "",
+          contact: order.phone || "",
+        },
+        theme: {
+          color: "#d4af37",
+        },
+        modal: {
+            ondismiss: () => {
+                setRetrying(false);
+            }
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+         console.error("Payment failed", response.error);
+         alert("Payment failed. Please try again.");
+         setRetrying(false);
+      });
+      
+      rzp.open();
+
+    } catch (err) {
+      console.error("Retry payment error:", err);
+      alert("Failed to initiate payment. Please try again.");
+      setRetrying(false);
     }
   };
 
@@ -277,6 +405,36 @@ export default function OrderDetailsPage() {
             })}
           </div>
         </section>
+
+        {/* PAYMENT TIMER & RETRY */}
+        {order.status === "pending" && timeLeft !== null && (
+          <section className="order-page__section border border-red-200 bg-red-50 p-4 rounded-lg">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 text-red-700">
+                <svg className="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <h3 className="font-semibold text-lg">Payment Pending</h3>
+                  <p className="text-sm opacity-90">
+                    Order expires in <span className="font-mono font-bold text-lg">
+                      {Math.floor(timeLeft / 60000)}:
+                      {String(Math.floor((timeLeft % 60000) / 1000)).padStart(2, '0')}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleRetryPayment}
+                disabled={retrying}
+                className="px-6 py-2 bg-red-600 text-white font-semibold rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 transition-all"
+              >
+                {retrying ? "Processing..." : "Pay Now"}
+              </button>
+            </div>
+          </section>
+        )}
 
         {/* ITEMS */}
         <section className="order-page__section">
