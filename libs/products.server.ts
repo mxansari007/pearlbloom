@@ -100,7 +100,7 @@ export const getAllSlugs = async (): Promise<string[]> => {
 export async function getProductsByCollectionId(
   collectionId: string,
   cursor?: string
-) {
+): Promise<{ products: Product[]; nextCursor: string | null }> {
   // ⛔ pagination should stay dynamic
   // This is OK — not used on initial navigation
   try {
@@ -119,7 +119,7 @@ export async function getProductsByCollectionId(
 
     const products = snap.docs.map((doc) => ({
       id: doc.id,
-      ...(doc.data() as Record<string, unknown>),
+      ...(doc.data() as Omit<Product, "id">),
     }));
 
     const nextCursor =
