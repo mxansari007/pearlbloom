@@ -19,14 +19,14 @@ import type {
 
 /* ---------------- Helpers ---------------- */
 
-function normalizeAttributes(data: any): Attribute[] {
+function normalizeAttributes(data: DocumentData): Attribute[] {
   if (Array.isArray(data.attributes)) {
     return data.attributes;
   }
   return [];
 }
 
-function normalizeMarketplaces(data: any): {
+function normalizeMarketplaces(data: DocumentData): {
   amazon?: string;
   flipkart?: string;
   meesho?: string;

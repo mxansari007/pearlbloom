@@ -57,6 +57,15 @@ export default function LoginPage() {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
+  /* ================= EFFECTS ================= */
+
+  // Cleanup reCAPTCHA on unmount to prevent stale widget references
+  useEffect(() => {
+    return () => {
+      resetRecaptcha();
+    };
+  }, []);
+
   /* ================= SEND OTP ================= */
 
   const sendOtp = async () => {
@@ -85,12 +94,24 @@ export default function LoginPage() {
       setStep("otp");
       setResendTimer(RESEND_DELAY);
       setCanResend(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       resetRecaptcha();
-      setError(
-        "Security check failed. Please click Continue again or reload the page."
-      );
+      
+      // Detailed debugging for the user
+      const hostname = window.location.hostname;
+      console.error(`[Auth Debug] Current hostname: "${hostname}"`);
+      console.error(`[Auth Debug] If this hostname is not in Firebase Console > Auth > Settings > Authorized Domains, phone auth will fail.`);
+
+      if (err.code === 'auth/invalid-app-credential') {
+        setError(`Configuration error: Domain "${hostname}" is not authorized. Check Firebase Console.`);
+      } else if (err.code === 'auth/too-many-requests') {
+        setError("Too many requests. Please try again later.");
+      } else {
+        setError(
+          "Security check failed. Please click Continue again or reload the page."
+        );
+      }
     } finally {
       setLoading(false);
     }

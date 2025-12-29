@@ -18,7 +18,7 @@ export default function ProductClient({ product }: { product: Product }) {
     initializeProduct(product);
   }, [initializeProduct, product]);
 
-  const variants = Array.isArray((product as any).variants) ? (product as any).variants : [];
+  const variants = Array.isArray(product.variants) ? product.variants : [];
   const singleVariant = variants.length === 1 ? variants[0] : null;
   const activeVariant = selectedVariant ?? singleVariant;
   const variantSelected = !!activeVariant;
@@ -37,7 +37,7 @@ export default function ProductClient({ product }: { product: Product }) {
     const byFlat = typeof mv.discountPrice === "number" ? mv.discountPrice : undefined;
     const byPercent =
       typeof mv.discountPercent === "number"
-        ? Math.round(original * (1 - (mv.discountPercent as number) / 100))
+        ? Math.round(original * (1 - mv.discountPercent / 100))
         : undefined;
     const final = byFlat ?? byPercent ?? original;
     const discountPercent =
@@ -51,16 +51,16 @@ export default function ProductClient({ product }: { product: Product }) {
 
   function getProductPriceInfo(p: Product) {
     const mp = p as MaybeDiscountProduct;
-    const original = typeof (mp as any).price === "number" ? (mp as any).price : 0;
+    const original = typeof mp.price === "number" ? mp.price : 0;
     const byFlat = typeof mp.discountPrice === "number" ? mp.discountPrice : undefined;
     const byPercent =
       typeof mp.inventory?.discountPercent === "number"
-        ? Math.round(original * (1 - (mp.inventory!.discountPercent as number) / 100))
+        ? Math.round(original * (1 - mp.inventory.discountPercent / 100))
         : undefined;
     const final = byFlat ?? byPercent ?? original;
     const discountPercent =
       typeof mp.inventory?.discountPercent === "number"
-        ? mp.inventory!.discountPercent
+        ? mp.inventory.discountPercent
         : byFlat !== undefined
         ? Math.round((1 - final / original) * 100)
         : undefined;
@@ -84,7 +84,7 @@ export default function ProductClient({ product }: { product: Product }) {
   function buildCartItem() {
     if (activeVariant) {
       const variantLabel = (activeVariant.attributes ?? [])
-        .map((a: any) => a.value)
+        .map((a) => a.value)
         .join(" / ");
       const price =
         getVariantPriceInfo(activeVariant)?.final ?? activeVariant.price;

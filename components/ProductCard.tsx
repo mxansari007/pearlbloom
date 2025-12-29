@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Heart, ShoppingBag } from "lucide-react";
+import type { MouseEvent } from "react";
 import type { Product } from "../types/products";
 import { useWishlistStore } from "@/store/useWishlistStore";
 import { getFinalPrice } from "@/libs/pricing";
@@ -20,6 +21,14 @@ export default function ProductCard({ product }: { product: Product }) {
 
   /* PRICING */
   const variants = Array.isArray(product.variants) ? product.variants : [];
+  type VariantLegacyDiscount = Product["variants"][number] & {
+    discountPrice?: number;
+    discountPercent?: number;
+  };
+  type ProductLegacyDiscount = Product & {
+    discountPrice?: number;
+    discountPercent?: number;
+  };
   let startingOriginalPrice = 0;
   let startingFinalPrice = 0;
   let hasDiscount = false;
@@ -28,9 +37,10 @@ export default function ProductCard({ product }: { product: Product }) {
   if (variants.length > 0) {
     const pricePairs = variants
       .map((v) => {
+        const dv = v as VariantLegacyDiscount;
         const original = typeof v.price === "number" ? v.price : 0;
-        const maybeDiscountPrice = (v as any).discountPrice;
-        const maybeDiscountPercent = (v as any).discountPercent;
+        const maybeDiscountPrice = dv.discountPrice;
+        const maybeDiscountPercent = dv.discountPercent;
         const final =
           v.discount
             ? getFinalPrice(v)
@@ -59,10 +69,11 @@ export default function ProductCard({ product }: { product: Product }) {
       discountPercent = 0;
     }
   } else {
+    const dp = product as ProductLegacyDiscount;
     startingOriginalPrice = typeof product.price === "number" ? product.price : 0;
-    const maybeDiscountPrice = (product as any).discountPrice;
+    const maybeDiscountPrice = dp.discountPrice;
     const maybeDiscountPercent =
-      (product as any).discountPercent ?? product.inventory?.discountPercent ?? 0;
+      dp.discountPercent ?? product.inventory?.discountPercent ?? 0;
 
     if (typeof maybeDiscountPrice === "number" && startingOriginalPrice > 0) {
       startingFinalPrice = maybeDiscountPrice;
@@ -91,7 +102,7 @@ export default function ProductCard({ product }: { product: Product }) {
     ? Math.max(0, startingOriginalPrice - startingFinalPrice)
     : 0;
 
-  function handleWishlist(e: React.MouseEvent) {
+  function handleWishlist(e: MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     e.stopPropagation();
 

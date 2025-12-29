@@ -85,8 +85,11 @@ export const getAllSlugs = async (): Promise<string[]> => {
       .get();
 
     return snap.docs
-      .map((d) => (d.data() as any).slug)
-      .filter(Boolean);
+      .map((d) => {
+        const data = d.data() as { slug?: unknown };
+        return typeof data.slug === "string" ? data.slug : null;
+      })
+      .filter((s): s is string => Boolean(s));
   }
 
 
@@ -116,7 +119,7 @@ export async function getProductsByCollectionId(
 
     const products = snap.docs.map((doc) => ({
       id: doc.id,
-      ...(doc.data() as any),
+      ...(doc.data() as Record<string, unknown>),
     }));
 
     const nextCursor =

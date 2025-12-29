@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { MouseEvent } from "react";
 import Link from "next/link";
 import { useUIStore } from "@/store/ui-store";
 import { useAuthStore } from "@/store/useAppStore";
@@ -13,7 +14,6 @@ type Props = {
 
 export default function MobileMenu({ open, onClose }: Props) {
   const panelRef = useRef<HTMLDivElement | null>(null);
-  const firstLinkRef = useRef<HTMLAnchorElement | null>(null);
 
   const startNavigation = useUIStore((s) => s.start);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -22,7 +22,12 @@ export default function MobileMenu({ open, onClose }: Props) {
   useEffect(() => {
     if (open) {
       document.documentElement.classList.add("no-scroll");
-      setTimeout(() => firstLinkRef.current?.focus(), 120);
+      setTimeout(() => {
+        const firstFocusable = panelRef.current?.querySelector<HTMLElement>(
+          'a, button, [tabindex]:not([tabindex="-1"])'
+        );
+        firstFocusable?.focus();
+      }, 120);
     } else {
       document.documentElement.classList.remove("no-scroll");
     }
@@ -63,7 +68,7 @@ export default function MobileMenu({ open, onClose }: Props) {
   }, [open, onClose]);
 
   /* ---------- backdrop click ---------- */
-  function onBackdropClick(e: React.MouseEvent) {
+  function onBackdropClick(e: MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose();
   }
 
@@ -140,11 +145,10 @@ export default function MobileMenu({ open, onClose }: Props) {
                 ["Home", "/"],
                 ["Products", "/products"],
                 ["Contact", "/contact"],
-              ].map(([label, href], idx) => (
+              ].map(([label, href]) => (
                 <li key={href}>
                   <Link
                     href={href}
-                    ref={idx === 0 ? (firstLinkRef as any) : undefined}
                     className="block text-lg font-medium transition"
                     style={{
                       color: "var(--header-text)",

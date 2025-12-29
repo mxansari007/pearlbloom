@@ -13,7 +13,9 @@ type Props = {
 export default function CollectionBrowser({ initialProducts, categories = [] }: Props) {
   const [query, setQuery] = useState('')
   const [selectedCats, setSelectedCats] = useState<string[]>([])
-  const [sort, setSort] = useState<'featured' | 'price-asc' | 'price-desc' | 'newest'>('newest')
+  const sortOptions = ['featured', 'price-asc', 'price-desc', 'newest'] as const
+  type SortOption = typeof sortOptions[number]
+  const [sort, setSort] = useState<SortOption>('newest')
   const [minPrice, setMinPrice] = useState<number | ''>('')
   const [maxPrice, setMaxPrice] = useState<number | ''>('')
   const [visibleCount, setVisibleCount] = useState(9) // show 9 initially for balanced grid
@@ -37,7 +39,10 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
     return items
   }, [initialProducts, query, selectedCats, minPrice, maxPrice, sort])
 
-  useEffect(() => { setVisibleCount(9) }, [query, selectedCats, minPrice, maxPrice, sort])
+  useEffect(() => {
+    const t = setTimeout(() => setVisibleCount(9), 0)
+    return () => clearTimeout(t)
+  }, [query, selectedCats, minPrice, maxPrice, sort])
 
   const countsByCategory = useMemo(() => {
     const map = new Map<string, number>()
@@ -111,7 +116,14 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
 
         <div className="card p-4">
           <div className="mb-2 text-sm font-medium">Sort</div>
-          <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="w-full rounded-md bg-transparent border border-white/6 p-2">
+          <select
+            value={sort}
+            onChange={(e) => {
+              const value = e.target.value
+              if (sortOptions.includes(value as SortOption)) setSort(value as SortOption)
+            }}
+            className="w-full rounded-md bg-transparent border border-white/6 p-2"
+          >
             <option value="newest">Newest</option>
             <option value="featured">Featured</option>
             <option value="price-asc">Price: Low → High</option>

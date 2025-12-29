@@ -1,7 +1,7 @@
 // src/components/SubscribeForm.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 
 const STORAGE_KEY = 'aurum:subscribed:v1'
 
@@ -23,7 +23,7 @@ export default function SubscribeForm() {
     return /^\S+@\S+\.\S+$/.test(e)
   }
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
 
@@ -87,7 +87,7 @@ export default function SubscribeForm() {
   if (done) {
     return (
       <div className="card p-6 text-center">
-        <h3 className="font-display text-lg">You're subscribed</h3>
+        <h3 className="font-display text-lg">You&apos;re subscribed</h3>
         <p className="text-sm text-muted mt-2">Thank you — we’ll keep you posted on new collections and exclusive previews.</p>
       </div>
     )

@@ -1325,7 +1325,8 @@ a:focus {
 .gallery__thumbs {
   display: flex;
   gap: 0.75rem;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  overflow-x: hidden;
   padding: 0.25rem;
   scrollbar-width: none;
 }

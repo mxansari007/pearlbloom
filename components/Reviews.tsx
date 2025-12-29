@@ -1,7 +1,7 @@
 // src/components/Reviews.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 
 type Review = {
   id: string
@@ -29,16 +29,22 @@ export default function Reviews({ productId }: { productId: string }) {
     const raw = localStorage.getItem(storageKey)
     if (raw) {
       try {
-        setReviews(JSON.parse(raw))
+        const parsed = JSON.parse(raw) as Review[]
+        setTimeout(() => setReviews(parsed), 0)
         return
       } catch {}
     }
-    // seed with sample reviews only if none exist
-    localStorage.setItem(storageKey, JSON.stringify(sampleReviews()))
-    setReviews(sampleReviews())
+    const seeded = sampleReviews()
+    localStorage.setItem(storageKey, JSON.stringify(seeded))
+    setTimeout(() => setReviews(seeded), 0)
   }, [storageKey])
 
-  function saveReview(e: React.FormEvent) {
+  useEffect(() => {
+    if (!reviews.length) return
+    localStorage.setItem(storageKey, JSON.stringify(reviews))
+  }, [storageKey, reviews])
+
+  function saveReview(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!name || !text) {
       alert('Please add your name and review')
@@ -47,7 +53,6 @@ export default function Reviews({ productId }: { productId: string }) {
     const r: Review = { id: `${Date.now()}`, name, rating, text, date: new Date().toISOString() }
     const next = [r, ...reviews]
     setReviews(next)
-    localStorage.setItem(storageKey, JSON.stringify(next))
     setName(''); setText(''); setRating(5)
   }
 

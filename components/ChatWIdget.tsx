@@ -33,7 +33,7 @@ export default function ChatWidget() {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const firstLoadRef = useRef(true);
-  const initRef = useRef(false);
+  const initializedChatIdRef = useRef<string | null>(null);
 
   /* ---------------- Chat ID ---------------- */
 
@@ -49,11 +49,11 @@ export default function ChatWidget() {
       !authInitialized ||
       !isAuthenticated ||
       !chatId ||
-      initRef.current
+      initializedChatIdRef.current === chatId
     )
       return;
 
-    initRef.current = true;
+    initializedChatIdRef.current = chatId;
 
     const initChat = async () => {
       const ref = doc(dbClient, "chats", chatId);
