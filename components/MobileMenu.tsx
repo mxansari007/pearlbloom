@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { MouseEvent } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useUIStore } from "@/store/ui-store";
 import { useAuthStore } from "@/store/useAppStore";
 import { logout } from "@/utils/logout";
@@ -109,18 +110,19 @@ export default function MobileMenu({ open, onClose }: Props) {
               onClick={onClose}
             >
               <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center"
+                className="w-10 h-10 rounded-lg flex items-center justify-center relative overflow-hidden"
                 style={{
                   background:
                     "linear-gradient(135deg, rgba(212,175,55,0.16), transparent)",
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.77 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"
-                    fill="rgb(212,175,55)"
-                  />
-                </svg>
+                <Image 
+                  src="/logo.svg" 
+                  alt="Pearl Bloom Logo" 
+                  width={20} 
+                  height={20} 
+                  className="object-contain"
+                />
               </div>
               <span>Pearl Bloom</span>
             </Link>

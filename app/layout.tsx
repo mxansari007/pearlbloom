@@ -40,7 +40,10 @@ const inter = Inter({
 
 export const metadata = {
   title: 'Pearl Bloom — Exquisite Jewelry',
-  description: 'jewelry — rings, necklaces, earrings. Luxury designs and timeless pieces.'
+  description: 'jewelry — rings, necklaces, earrings. Luxury designs and timeless pieces.',
+  icons: {
+    icon: '/logo.svg',
+  },
 }
 
 

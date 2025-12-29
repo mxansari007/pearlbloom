@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import MobileMenu from "./MobileMenu";
 import { useAuthStore } from "@/store/useAppStore";
@@ -61,18 +62,19 @@ export default function Header() {
           {/* Brand */}
           <Link href="/" className="flex items-center gap-3">
             <div
-              className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm"
+              className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm relative overflow-hidden"
               style={{
                 background:
                   "linear-gradient(135deg, rgba(212,175,55,0.16), transparent)",
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.77 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"
-                  fill="rgb(212,175,55)"
-                />
-              </svg>
+              <Image 
+                src="/logo.svg" 
+                alt="Pearl Bloom Logo" 
+                width={24} 
+                height={24} 
+                className="object-contain"
+              />
             </div>
             <span className="text-lg font-display tracking-tight">
               Pearl Bloom
