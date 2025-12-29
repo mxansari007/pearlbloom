@@ -3,6 +3,7 @@
 import "../globals.css";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   signInWithPhoneNumber,
   ConfirmationResult,
@@ -257,7 +258,13 @@ export default function LoginPage() {
                border: "1px solid rgba(var(--gold-rgb), 0.2)"
              }}
           >
-             <span className="text-3xl">✨</span>
+             <Image 
+               src="/logo.svg" 
+               alt="Logo" 
+               width={32} 
+               height={32}
+               className="w-8 h-8 object-contain"
+             />
           </div>
           <h1 className="text-3xl font-bold font-display tracking-tight mb-2">Pearl Bloom</h1>
           <p className="text-sm opacity-60 font-medium tracking-wide uppercase">Elegance that Blooms</p>
