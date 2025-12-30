@@ -15,6 +15,10 @@ export const metadata: Metadata = {
 export default async function Products() {
   // server-side fetch of all catalog products (fast local JSON)
   const allProducts: Product[] = await getAllProducts()
+  allProducts.sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )
 
   // derive categories for filters (unique)
   const categories = Array.from(

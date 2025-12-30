@@ -1,6 +1,12 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
 import { track } from "@/utils/analytics";
+
+const noopStorage: StateStorage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+};
 
 type WishlistItem = {
   id: string;
@@ -12,18 +18,21 @@ type WishlistItem = {
 
 type WishlistState = {
   items: WishlistItem[];
+  hasHydrated: boolean;
 
   add: (item: WishlistItem) => void;
   update: (id: string, updates: Partial<WishlistItem>) => void;
   remove: (id: string) => void;
   toggle: (item: WishlistItem) => void;
   clear: () => void;
+  setHasHydrated: (value: boolean) => void;
 };
 
 export const useWishlistStore = create<WishlistState>()(
   persist(
     (set, get) => ({
       items: [],
+      hasHydrated: false,
 
       add: (item) =>
         set((state) => {
@@ -88,9 +97,17 @@ export const useWishlistStore = create<WishlistState>()(
         set({ items: [] });
         track("wishlist_cleared", { wishlist_count: prevCount });
       },
+
+      setHasHydrated: (value) => set({ hasHydrated: value }),
     }),
     {
       name: "wishlist-store",
+      storage: createJSONStorage(() =>
+        typeof window === "undefined" ? noopStorage : localStorage
+      ),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

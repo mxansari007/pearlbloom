@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useWishlistStore } from "@/store/useWishlistStore";
@@ -8,21 +8,10 @@ import { Trash2, ArrowRight, ShoppingBag } from "lucide-react";
 import type { Product } from "@/types/products";
 
 export default function WishlistClient({ allProducts }: { allProducts: Product[] }) {
-  const { items, remove, update } = useWishlistStore();
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    const unsub =
-      useWishlistStore.persist?.onFinishHydration?.(() => setHydrated(true)) ??
-      null;
-
-    if (unsub) {
-      return unsub;
-    }
-
-    const t = setTimeout(() => setHydrated(true), 0);
-    return () => clearTimeout(t);
-  }, []);
+  const items = useWishlistStore((s) => s.items);
+  const remove = useWishlistStore((s) => s.remove);
+  const update = useWishlistStore((s) => s.update);
+  const hydrated = useWishlistStore((s) => s.hasHydrated);
 
   useEffect(() => {
     if (!hydrated) return;

@@ -2,6 +2,18 @@ import { dbAdmin } from "./firebase-admin";
 import { serializeFirestore } from "./serialize";
 import type { Product } from "@/types/products";
 
+function normalizeVariants(value: unknown): Product["variants"] {
+  if (Array.isArray(value)) return value as Product["variants"];
+  if (value == null) return [];
+  return [value as Product["variants"][number]];
+}
+
+function normalizeProduct(product: Product): Product {
+  return {
+    ...product,
+    variants: normalizeVariants((product as unknown as { variants?: unknown }).variants),
+  };
+}
 
 const PAGE_SIZE = 8;
 
@@ -11,12 +23,13 @@ const PAGE_SIZE = 8;
 export const getAllProducts = async (): Promise<Product[]> => {
     const snap = await dbAdmin.collection("products").get();
 
-    return snap.docs.map((d) =>
-      serializeFirestore({
+    return snap.docs.map((d) => {
+      const product = serializeFirestore({
         id: d.id,
         ...(d.data() as Omit<Product, "id">),
-      })
-    );
+      }) as Product;
+      return normalizeProduct(product);
+    });
   }
 
 /* ----------------------------------
@@ -31,10 +44,11 @@ export const getProductBySlug = async (slug: string): Promise<Product | null> =>
 
     if (snap.empty) return null;
 
-    return serializeFirestore({
+    const product = serializeFirestore({
       id: snap.docs[0].id,
       ...(snap.docs[0].data() as Omit<Product, "id">),
-    });
+    }) as Product;
+    return normalizeProduct(product);
   }
 
 /* ----------------------------------
@@ -49,12 +63,13 @@ export const getProductsByIds = async (ids: string[]): Promise<Product[]> => {
 
     return snaps
       .filter((d) => d.exists)
-      .map((d) =>
-        serializeFirestore({
+      .map((d) => {
+        const product = serializeFirestore({
           id: d.id,
           ...(d.data() as Omit<Product, "id">),
-        })
-      );
+        }) as Product;
+        return normalizeProduct(product);
+      });
   }
 
 /* ----------------------------------
@@ -67,12 +82,13 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
       .limit(limit)
       .get();
 
-    return snap.docs.map((d) =>
-      serializeFirestore({
+    return snap.docs.map((d) => {
+      const product = serializeFirestore({
         id: d.id,
         ...(d.data() as Omit<Product, "id">),
-      })
-    );
+      }) as Product;
+      return normalizeProduct(product);
+    });
   }
 
 /* ----------------------------------
@@ -128,7 +144,7 @@ export async function getProductsByCollectionId(
         : null;
 
     return {
-      products: serializeFirestore(products),
+      products: (serializeFirestore(products) as Product[]).map(normalizeProduct),
       nextCursor,
     };
   } catch (error) {

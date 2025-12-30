@@ -22,14 +22,6 @@ export default function ProductCard({ product }: { product: Product }) {
 
   /* PRICING */
   const variants = Array.isArray(product.variants) ? product.variants : [];
-  type VariantLegacyDiscount = Product["variants"][number] & {
-    discountPrice?: number;
-    discountPercent?: number;
-  };
-  type ProductLegacyDiscount = Product & {
-    discountPrice?: number;
-    discountPercent?: number;
-  };
   let startingOriginalPrice = 0;
   let startingFinalPrice = 0;
   let hasDiscount = false;
@@ -38,18 +30,8 @@ export default function ProductCard({ product }: { product: Product }) {
   if (variants.length > 0) {
     const pricePairs = variants
       .map((v) => {
-        const dv = v as VariantLegacyDiscount;
         const original = typeof v.price === "number" ? v.price : 0;
-        const maybeDiscountPrice = dv.discountPrice;
-        const maybeDiscountPercent = dv.discountPercent;
-        const final =
-          v.discount
-            ? getFinalPrice(v)
-            : typeof maybeDiscountPrice === "number"
-            ? maybeDiscountPrice
-            : typeof maybeDiscountPercent === "number"
-            ? Math.round(original * (1 - maybeDiscountPercent / 100))
-            : original;
+        const final = getFinalPrice(v);
         return { original, final };
       })
       .filter((p) => p.original > 0);
@@ -70,23 +52,10 @@ export default function ProductCard({ product }: { product: Product }) {
       discountPercent = 0;
     }
   } else {
-    const dp = product as ProductLegacyDiscount;
     startingOriginalPrice = typeof product.price === "number" ? product.price : 0;
-    const maybeDiscountPrice = dp.discountPrice;
-    const maybeDiscountPercent =
-      dp.discountPercent ?? product.inventory?.discountPercent ?? 0;
+    const maybeDiscountPercent = product.inventory?.discountPercent ?? 0;
 
-    if (typeof maybeDiscountPrice === "number" && startingOriginalPrice > 0) {
-      startingFinalPrice = maybeDiscountPrice;
-      hasDiscount = startingFinalPrice < startingOriginalPrice;
-      discountPercent = hasDiscount
-        ? Math.round((1 - startingFinalPrice / startingOriginalPrice) * 100)
-        : 0;
-    } else if (
-      typeof maybeDiscountPercent === "number" &&
-      maybeDiscountPercent > 0 &&
-      startingOriginalPrice > 0
-    ) {
+    if (maybeDiscountPercent > 0 && startingOriginalPrice > 0) {
       discountPercent = maybeDiscountPercent;
       hasDiscount = true;
       startingFinalPrice = Math.round(

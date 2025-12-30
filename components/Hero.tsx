@@ -22,21 +22,6 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
             <Link href={hero.ctaLink} className="btn-cta">
               {hero.ctaLabel}
             </Link>
-
-            <Link href="/about" className="text-sm text-muted hover:underline">
-              Our Story
-            </Link>
-          </div>
-
-          <div className="flex gap-8 mt-8 text-sm">
-            <div>
-              <div className="text-xl font-semibold">500+</div>
-              <div className="text-muted">Happy customers</div>
-            </div>
-            <div>
-              <div className="text-xl font-semibold">15 yrs</div>
-              <div className="text-muted">Master craftsmanship</div>
-            </div>
           </div>
         </div>
 

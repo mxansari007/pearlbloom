@@ -12,6 +12,8 @@ type Props = {
 }
 
 export default function CollectionBrowser({ initialProducts, categories = [] }: Props) {
+  const gridInitialCount = 9
+  const listInitialCount = 24
   const [query, setQuery] = useState('')
   const [selectedCats, setSelectedCats] = useState<string[]>([])
   const sortOptions = ['featured', 'price-asc', 'price-desc', 'newest'] as const
@@ -20,7 +22,47 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
   const [minPrice, setMinPrice] = useState<number | ''>('')
   const [maxPrice, setMaxPrice] = useState<number | ''>('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [visibleCount, setVisibleCount] = useState(9) // show 9 initially for balanced grid
+  const [visibleCount, setVisibleCount] = useState(gridInitialCount) // show 9 initially for balanced grid
+
+  const priceBounds = useMemo(() => {
+    const prices = initialProducts
+      .map((p) => p.price)
+      .filter((p): p is number => typeof p === 'number' && p > 0)
+    const min = prices.length ? Math.min(...prices) : 0
+    const max = prices.length ? Math.max(...prices) : 0
+    return { min, max }
+  }, [initialProducts])
+
+  const sliderDisabled = priceBounds.max <= priceBounds.min
+  const selectedMin = minPrice === '' ? priceBounds.min : minPrice
+  const selectedMax = maxPrice === '' ? priceBounds.max : maxPrice
+  const range = Math.max(0, priceBounds.max - priceBounds.min)
+  const step =
+    range <= 0 ? 1 : range <= 1000 ? 10 : range <= 5000 ? 25 : range <= 20000 ? 50 : 100
+
+  const minPercent = range ? ((selectedMin - priceBounds.min) / range) * 100 : 0
+  const maxPercent = range ? ((selectedMax - priceBounds.min) / range) * 100 : 100
+  const minPercentClamped = Math.max(0, Math.min(100, minPercent))
+  const maxPercentClamped = Math.max(0, Math.min(100, maxPercent))
+  const splitPercentClamped = Math.max(0, Math.min(100, (minPercentClamped + maxPercentClamped) / 2))
+
+  function formatINR(value: number) {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(value)
+  }
+
+  function setMinFromSlider(value: number) {
+    const next = Math.max(priceBounds.min, Math.min(value, selectedMax - step))
+    setMinPrice(next <= priceBounds.min ? '' : next)
+  }
+
+  function setMaxFromSlider(value: number) {
+    const next = Math.min(priceBounds.max, Math.max(value, selectedMin + step))
+    setMaxPrice(next >= priceBounds.max ? '' : next)
+  }
 
   const filtered = useMemo(() => {
     let items = initialProducts.slice()
@@ -35,6 +77,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
     if (minPrice !== '') items = items.filter((p) => (p.price ?? 0) >= Number(minPrice))
     if (maxPrice !== '') items = items.filter((p) => (p.price ?? 0) <= Number(maxPrice))
 
+    if (sort === 'newest') items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     if (sort === 'price-asc') items.sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
     if (sort === 'price-desc') items.sort((a, b) => (b.price ?? 0) - (a.price ?? 0))
 
@@ -42,9 +85,9 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
   }, [initialProducts, query, selectedCats, minPrice, maxPrice, sort])
 
   useEffect(() => {
-    const t = setTimeout(() => setVisibleCount(9), 0)
+    const t = setTimeout(() => setVisibleCount(viewMode === 'grid' ? gridInitialCount : listInitialCount), 0)
     return () => clearTimeout(t)
-  }, [query, selectedCats, minPrice, maxPrice, sort])
+  }, [query, selectedCats, minPrice, maxPrice, sort, viewMode])
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -114,20 +157,71 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
         </div>
 
         <div className="card p-4">
-          <div className="mb-2 text-sm font-medium">Price</div>
-          <div className="flex gap-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-sm font-medium">Price</div>
+              <div className="mt-1 text-xs text-muted">
+                {formatINR(selectedMin)} — {formatINR(selectedMax)}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={minPrice === '' && maxPrice === ''}
+              onClick={() => {
+                setMinPrice('')
+                setMaxPrice('')
+              }}
+              className="px-3 py-1.5 rounded-md border border-[var(--input-border)] text-xs text-muted transition-all hover:bg-[var(--glass)] hover:border-[rgba(212,175,55,0.25)] disabled:opacity-50 disabled:pointer-events-none"
+            >
+              Reset
+            </button>
+          </div>
+
+          <div className="mt-4 price-range">
+            <div className="price-range__track">
+              <div
+                className="price-range__fill"
+                style={{
+                  left: `${minPercentClamped}%`,
+                  right: `${Math.max(0, Math.min(100, 100 - maxPercentClamped))}%`,
+                }}
+              />
+            </div>
+
             <input
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value === '' ? '' : Number(e.target.value))}
-              placeholder="Min"
-              className="w-1/2 rounded-lg bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] placeholder-[var(--input-placeholder)] p-3 outline-none focus:border-[rgb(var(--gold-rgb))] transition-all"
+              type="range"
+              min={priceBounds.min}
+              max={priceBounds.max}
+              step={step}
+              value={selectedMin}
+              disabled={sliderDisabled}
+              onChange={(e) => setMinFromSlider(Number(e.target.value))}
+              className="price-range__input price-range__input--min"
+              style={{
+                clipPath: `inset(0 ${Math.max(0, 100 - splitPercentClamped)}% 0 0)`,
+              }}
+              aria-label="Minimum price"
             />
             <input
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value === '' ? '' : Number(e.target.value))}
-              placeholder="Max"
-              className="w-1/2 rounded-md bg-transparent border border-white/6 p-2"
+              type="range"
+              min={priceBounds.min}
+              max={priceBounds.max}
+              step={step}
+              value={selectedMax}
+              disabled={sliderDisabled}
+              onChange={(e) => setMaxFromSlider(Number(e.target.value))}
+              className="price-range__input price-range__input--max"
+              style={{
+                clipPath: `inset(0 0 0 ${splitPercentClamped}%)`,
+              }}
+              aria-label="Maximum price"
             />
+          </div>
+
+          <div className="mt-3 flex items-center justify-between text-xs text-muted">
+            <span>{formatINR(priceBounds.min)}</span>
+            <span>{formatINR(priceBounds.max)}</span>
           </div>
         </div>
 
@@ -165,7 +259,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
               <button 
                 onClick={() => {
                   setViewMode('grid')
-                  setVisibleCount(9)
+                  setVisibleCount(gridInitialCount)
                   track('products_view_mode_changed', { view_mode: 'grid' })
                 }} 
                 className={`px-4 py-1.5 rounded-md border transition-all duration-200 cursor-pointer relative z-10 font-medium ${
@@ -179,7 +273,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
               <button 
                 onClick={() => {
                   setViewMode('list')
-                  setVisibleCount(24)
+                  setVisibleCount(listInitialCount)
                   track('products_view_mode_changed', { view_mode: 'list' })
                 }} 
                 className={`px-4 py-1.5 rounded-md border transition-all duration-200 cursor-pointer relative z-10 font-medium ${
