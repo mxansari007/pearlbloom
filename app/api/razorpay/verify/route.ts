@@ -3,10 +3,30 @@ import { NextResponse } from "next/server";
 import { dbAdmin } from "@/libs/firebase-admin";
 import { PostHog } from "posthog-node";
 
+function resolvePostHogIngestionHost(): string {
+  const explicit = process.env.POSTHOG_INGESTION_HOST;
+  if (explicit) return explicit;
+
+  const candidate = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+  if (candidate?.startsWith("http") && candidate.includes(".i.posthog.com")) {
+    return candidate;
+  }
+
+  if (candidate?.startsWith("http") && candidate.includes("eu.posthog.com")) {
+    return "https://eu.i.posthog.com";
+  }
+
+  if (candidate?.startsWith("http") && candidate.includes("posthog.com")) {
+    return "https://us.i.posthog.com";
+  }
+
+  return "https://eu.i.posthog.com";
+}
+
 const posthog =
   process.env.NEXT_PUBLIC_POSTHOG_KEY
     ? new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-        host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+        host: resolvePostHogIngestionHost(),
       })
     : null;
 

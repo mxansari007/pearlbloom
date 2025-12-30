@@ -19,8 +19,10 @@ export default function PostHogClient() {
 
     if (initialized) return;
 
+    const apiHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "/ph";
+
     posthog.init(key, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+      api_host: apiHost,
       autocapture: false,
       capture_pageview: false,
       capture_pageleave: true,
