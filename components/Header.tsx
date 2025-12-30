@@ -116,6 +116,7 @@ export default function Header() {
               {/* Cart */}
               <button
                 onClick={openCart}
+                aria-label={`Cart with ${cartCount} items`}
                 className="relative rounded-full p-2 border transition hover:bg-[var(--header-hover)]"
                 style={{
                   borderColor: "var(--header-border)",
@@ -140,6 +141,7 @@ export default function Header() {
                 <div className="relative" ref={menuRef}>
                   <button
                     onClick={() => setUserMenuOpen((v) => !v)}
+                    aria-label="User menu"
                     className="rounded-full p-2 border transition hover:bg-[var(--header-hover)]"
                     style={{
                       borderColor: "var(--header-border)",
@@ -207,8 +209,22 @@ export default function Header() {
           {/* Mobile */}
           <div className="md:hidden flex items-center gap-3">
             <ThemeToggle />
-            <button onClick={openCart}>🛒</button>
-            <button onClick={() => setOpen(true)}>☰</button>
+            <button 
+              onClick={openCart}
+              aria-label="Open cart"
+              className="p-2"
+              style={{ color: "var(--header-text)" }}
+            >
+              <ShoppingBag size={22} />
+            </button>
+            <button 
+              onClick={() => setOpen(true)}
+              aria-label="Open menu"
+              className="p-2"
+              style={{ color: "var(--header-text)" }}
+            >
+              <Menu size={22} />
+            </button>
           </div>
         </div>
       </header>

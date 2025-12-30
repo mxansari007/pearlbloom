@@ -79,6 +79,7 @@ export default function CartDrawer() {
               )}
               <button
                 onClick={close}
+                aria-label="Close cart"
                 className="transition hover:rotate-90"
                 style={{ color: "var(--muted)" }}
               >
@@ -132,6 +133,7 @@ export default function CartDrawer() {
                         <p className="text-sm font-medium line-clamp-2">{item.name}</p>
                         <button
                           onClick={() => removeItem(item.id)}
+                          aria-label={`Remove ${item.name}`}
                           className="text-muted hover:text-red-400 transition"
                         >
                           <X size={14} />

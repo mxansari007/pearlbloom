@@ -138,6 +138,7 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
             <button
               key={src}
               onClick={() => setIndex(i)}
+              aria-label={`View image ${i + 1}`}
               aria-pressed={i === safeIndex}
               className={`gallery__thumb ${i === safeIndex ? 'gallery__thumb--active' : ''}`}
             >

@@ -10,6 +10,7 @@ import SubscribeForm from "../components/SubscriptionForm";
 import { getHomepageSections } from "../libs/homepage.server";
 import { getProductsByIds } from "../libs/products.server";
 import { getCollectionsByIds } from "../libs/collections.server";
+import { getHeroData } from "../libs/hero.server";
 
 import type { Product } from "../types/products";
 
@@ -123,12 +124,18 @@ async function CollectionsRowSection({
 /* ---------------------------------------------------------------- */
 
 export default async function Home() {
-  const sections = await getHomepageSections();
+  const heroDataPromise = getHeroData();
+  const sectionsPromise = getHomepageSections();
+
+  const [hero, sections] = await Promise.all([
+    heroDataPromise,
+    sectionsPromise,
+  ]);
 
   return (
     <>
-      {/* Hero streams immediately */}
-      <Hero />
+      {/* Hero renders immediately (blocking LCP) */}
+      <Hero hero={hero} />
 
       {/* Stream each section independently */}
       {sections.map((section: any) => {

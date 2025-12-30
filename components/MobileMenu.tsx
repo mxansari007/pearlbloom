@@ -75,13 +75,13 @@ export default function MobileMenu({ open, onClose }: Props) {
 
   return (
     <div
-      aria-hidden={!open}
-      className={`fixed inset-0 z-50 flex transition-opacity ${
-        open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      className={`fixed inset-0 z-50 flex ${
+        open ? "opacity-100 pointer-events-auto visible" : "opacity-0 pointer-events-none invisible"
       }`}
       onMouseDown={onBackdropClick}
       style={{
         background: "rgba(0,0,0,0.45)",
+        transition: "opacity 0.3s ease-in-out, visibility 0.3s step-end"
       }}
     >
       {/* Panel */}
