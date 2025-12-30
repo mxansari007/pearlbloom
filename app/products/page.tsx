@@ -8,7 +8,7 @@ import CollectionBrowser from '../../components/CollectionBrowser'
 import type { Product } from '../../types/products'
 
 export const metadata: Metadata = {
-  title: 'Collections — Aurum',
+  title: 'Products- PearlBloom',
   description: 'Explore Aurum’s curated collections: rings, necklaces, earrings and more. Handcrafted, ethically sourced, heirloom quality.'
 }
 
