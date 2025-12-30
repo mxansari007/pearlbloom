@@ -13,6 +13,7 @@ import posthog from 'posthog-js'
 import AuthProvider from '@/components/AuthProvider'
 import CartDrawer from "@/components/CartDrawer";
 import { ThemeApplier } from '@/components/ThemeApplier'
+import Script from 'next/script'
 
 
 if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
@@ -55,7 +56,24 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <AuthProvider>
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body className="min-h-screen bg-[--background] text-[--foreground] font-sans">
-      <ThemeApplier />
+        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+
+                gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}');
+              `}
+            </Script>
+          </>
+        )}
+        <ThemeApplier />
         <Header />
 
         <main>{children}</main>
