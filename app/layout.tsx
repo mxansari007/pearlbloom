@@ -55,6 +55,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     // apply both font variables on html so CSS can use them if needed
     <AuthProvider>
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://pearlboom-74976.firebaseapp.com" />
+        <link rel="preconnect" href="https://www.googleapis.com" />
+        <link rel="preconnect" href="https://apis.google.com" />
+      </head>
       <body className="min-h-screen bg-[--background] text-[--foreground] font-sans">
         {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
           <>

@@ -50,6 +50,7 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
                   alt={hero.title}
                   fill
                   priority
+                  fetchPriority="high"
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover hero-float"
                 />
