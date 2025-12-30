@@ -44,6 +44,14 @@ function getStringField(obj: unknown, key: string): string | null {
   return typeof value === "string" ? value : null;
 }
 
+function getObjectField(obj: unknown, key: string): Record<string, unknown> | null {
+  if (!obj || typeof obj !== "object") return null;
+  if (!(key in obj)) return null;
+  const value = (obj as Record<string, unknown>)[key];
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
 function getQuantity(item: unknown): number {
   return Math.max(0, getNumberField(item, "quantity") ?? 0);
 }
@@ -95,6 +103,25 @@ export async function POST(req: Request) {
       const items = orderData && Array.isArray(orderData.items) ? orderData.items : [];
       const itemCount = items.reduce((sum, i) => sum + getQuantity(i), 0);
       const total = orderData ? getNumberField(orderData, "total") : null;
+      const phone = orderData ? getStringField(orderData, "phone") : null;
+      const address = orderData ? getObjectField(orderData, "address") : null;
+      const fullName = address ? getStringField(address, "fullName") : null;
+
+      await posthog.identifyImmediate({
+        distinctId,
+        properties: {
+          $set: {
+            uid: distinctId,
+            role: "customer",
+            ...(phone ? { phone, $phone: phone } : {}),
+            ...(fullName ? { name: fullName, $name: fullName } : {}),
+            last_purchase_at: new Date().toISOString(),
+          },
+          $set_once: {
+            first_purchase_at: new Date().toISOString(),
+          },
+        },
+      });
 
       await posthog.captureImmediate({
         distinctId,
