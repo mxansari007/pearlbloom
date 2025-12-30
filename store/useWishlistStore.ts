@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { track } from "@/utils/analytics";
 
 type WishlistItem = {
   id: string;
@@ -29,6 +30,12 @@ export const useWishlistStore = create<WishlistState>()(
           if (state.items.some((i) => i.id === item.id)) {
             return state;
           }
+          track("wishlist_item_added", {
+            product_id: item.id,
+            slug: item.slug,
+            price: item.price,
+            wishlist_count: state.items.length + 1,
+          });
           return { items: [...state.items, item] };
         }),
 
@@ -41,7 +48,17 @@ export const useWishlistStore = create<WishlistState>()(
 
       remove: (id) =>
         set((state) => ({
-          items: state.items.filter((i) => i.id !== id),
+          items: (() => {
+            const removed = state.items.find((i) => i.id === id);
+            const next = state.items.filter((i) => i.id !== id);
+            track("wishlist_item_removed", {
+              product_id: removed?.id,
+              slug: removed?.slug,
+              price: removed?.price,
+              wishlist_count: next.length,
+            });
+            return next;
+          })(),
         })),
 
       toggle: (item) =>
@@ -49,6 +66,13 @@ export const useWishlistStore = create<WishlistState>()(
           const exists = state.items.some(
             (i) => i.id === item.id
           );
+
+          track(exists ? "wishlist_item_removed" : "wishlist_item_added", {
+            product_id: item.id,
+            slug: item.slug,
+            price: item.price,
+            wishlist_count: exists ? state.items.length - 1 : state.items.length + 1,
+          });
 
           return exists
             ? {
@@ -59,7 +83,11 @@ export const useWishlistStore = create<WishlistState>()(
             : { items: [...state.items, item] };
         }),
 
-      clear: () => set({ items: [] }),
+      clear: () => {
+        const prevCount = get().items.length;
+        set({ items: [] });
+        track("wishlist_cleared", { wishlist_count: prevCount });
+      },
     }),
     {
       name: "wishlist-store",

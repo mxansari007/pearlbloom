@@ -1,6 +1,32 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/libs/firebase-admin";
+import { PostHog } from "posthog-node";
+
+const posthog =
+  process.env.NEXT_PUBLIC_POSTHOG_KEY
+    ? new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
+        host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+      })
+    : null;
+
+function getNumberField(obj: unknown, key: string): number | null {
+  if (!obj || typeof obj !== "object") return null;
+  if (!(key in obj)) return null;
+  const value = (obj as Record<string, unknown>)[key];
+  return typeof value === "number" ? value : null;
+}
+
+function getStringField(obj: unknown, key: string): string | null {
+  if (!obj || typeof obj !== "object") return null;
+  if (!(key in obj)) return null;
+  const value = (obj as Record<string, unknown>)[key];
+  return typeof value === "string" ? value : null;
+}
+
+function getQuantity(item: unknown): number {
+  return Math.max(0, getNumberField(item, "quantity") ?? 0);
+}
 
 export async function POST(req: Request) {
   try {
@@ -31,7 +57,8 @@ export async function POST(req: Request) {
     
     // Fetch order to get displayId
     const orderSnap = await orderRef.get();
-    const displayId = orderSnap.exists ? orderSnap.data()?.displayId : null;
+    const orderData = orderSnap.exists ? (orderSnap.data() as Record<string, unknown>) : null;
+    const displayId = orderData ? getStringField(orderData, "displayId") : null;
 
     await orderRef.update({
       status: "paid",
@@ -42,6 +69,25 @@ export async function POST(req: Request) {
       },
       updatedAt: Date.now(),
     });
+
+    const distinctId = orderData ? getStringField(orderData, "userId") : null;
+    if (posthog && distinctId) {
+      const items = orderData && Array.isArray(orderData.items) ? orderData.items : [];
+      const itemCount = items.reduce((sum, i) => sum + getQuantity(i), 0);
+      const total = orderData ? getNumberField(orderData, "total") : null;
+
+      await posthog.captureImmediate({
+        distinctId,
+        event: "purchase",
+        properties: {
+          order_id: orderId,
+          display_id: displayId,
+          value: total,
+          item_count: itemCount,
+          currency: "INR",
+        },
+      });
+    }
 
     return NextResponse.json({ success: true, displayId });
   } catch (error) {

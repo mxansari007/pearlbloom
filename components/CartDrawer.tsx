@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCartStore } from "@/store/useCartStore";
 import Image from "next/image";
 import { ShoppingBag, Trash2, Plus, Minus, X } from "lucide-react";
+import { track } from "@/utils/analytics";
 
 export default function CartDrawer() {
   const { items, isOpen, close, removeItem, updateQty, clear } = useCartStore();
@@ -194,7 +195,15 @@ export default function CartDrawer() {
 
             <Link
               href="/cart"
-              onClick={close}
+              onClick={() => {
+                track("view_cart_clicked", {
+                  source: "cart_drawer",
+                  cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
+                  cart_unique_items: items.length,
+                  cart_value: total,
+                });
+                close();
+              }}
               className="block text-center rounded-xl
                          bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
                          py-3 text-black font-medium

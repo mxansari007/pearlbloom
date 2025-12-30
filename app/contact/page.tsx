@@ -1,7 +1,6 @@
 // src/app/contact/page.tsx
 import type { ReactNode } from 'react'
 import ContactForm from '../../components/ContactForm' // client component
-import Link from 'next/link'
 
 export const metadata = {
   title: 'Contact — Pearl Bloom',
@@ -100,7 +99,7 @@ export default function ContactPage(): ReactNode {
                 <details className="card p-4">
                   <summary className="font-medium cursor-pointer">Wholesale & retail partnerships</summary>
                   <div className="mt-2 text-sm text-muted">
-                    We welcome trade partnerships. Please include "Wholesale" in the subject and provide company credentials.
+                    We welcome trade partnerships. Please include &quot;Wholesale&quot; in the subject and provide company credentials.
                   </div>
                 </details>
               </div>

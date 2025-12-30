@@ -50,4 +50,16 @@ export interface Order {
     razorpayPaymentId?: string;
     razorpaySignature?: string;
   };
+
+  tracking?: {
+    awb?: string;
+    carrier?: string;
+    trackingUrl?: string;
+    events?: {
+      status: string;
+      location?: string;
+      timestamp: string;
+      message?: string;
+    }[];
+  };
 }

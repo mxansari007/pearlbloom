@@ -19,6 +19,26 @@ import { useAuthStore } from "@/store/useAppStore";
 import type { Order, OrderItem } from "@/types/orders";
 import type { Review } from "@/types/reviews";
 import WriteReviewModal from "@/components/WriteReviewModal";
+import { track } from "@/utils/analytics";
+
+type RazorpaySuccessResponse = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayInstance = {
+  open: () => void;
+  on: (event: string, handler: (payload: unknown) => void) => void;
+};
+
+type RazorpayConstructor = new (options: Record<string, unknown>) => RazorpayInstance;
+
+function getRazorpayConstructor(): RazorpayConstructor | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as { Razorpay?: RazorpayConstructor };
+  return w.Razorpay ?? null;
+}
 
 const STATUS_STEPS = [
   { key: "pending", label: "Order Placed", icon: "📦" },
@@ -105,6 +125,12 @@ export default function OrderDetailsPage() {
       );
 
       setOrder({ id: docSnap.id, ...data, items: enrichedItems });
+      track("order_details_viewed", {
+        display_id: data.displayId || displayId,
+        order_status: data.status,
+        order_total: data.total,
+        item_count: enrichedItems.reduce((sum, i) => sum + i.quantity, 0),
+      });
     } catch (err) {
       console.error("Failed to load order:", err);
       setError("Unable to load order details.");
@@ -156,7 +182,7 @@ export default function OrderDetailsPage() {
 
   const loadRazorpay = () =>
     new Promise((resolve) => {
-      if ((window as any).Razorpay) return resolve(true);
+      if (getRazorpayConstructor()) return resolve(true);
 
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -191,7 +217,7 @@ export default function OrderDetailsPage() {
         name: "Pearl Boom",
         description: "Retry Order Payment",
         order_id: razorpayOrder.id,
-        handler: async function (response: any) {
+        handler: async function (response: RazorpaySuccessResponse) {
           // Verify
           await fetch("/api/razorpay/verify", {
             method: "POST",
@@ -220,9 +246,14 @@ export default function OrderDetailsPage() {
         }
       };
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.on("payment.failed", function (response: any) {
-         console.error("Payment failed", response.error);
+      const Razorpay = getRazorpayConstructor();
+      if (!Razorpay) {
+        throw new Error("Razorpay SDK failed to load");
+      }
+
+      const rzp = new Razorpay(options);
+      rzp.on("payment.failed", function (response: unknown) {
+         console.error("Payment failed", response);
          alert("Payment failed. Please try again.");
          setRetrying(false);
       });
@@ -405,6 +436,61 @@ export default function OrderDetailsPage() {
             })}
           </div>
         </section>
+
+        {/* TRACKING DETAILS */}
+        {order.tracking?.awb && (
+          <section className="order-page__section">
+            <h2 className="order-page__section-title">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Shipment Tracking
+            </h2>
+
+            <div className="bg-[var(--panel-bg-soft)] rounded-lg p-4 border border-[var(--border-subtle)]">
+              <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+                <div>
+                  <p className="text-sm text-muted">Tracking Number (AWB)</p>
+                  <p className="font-mono font-medium text-lg">{order.tracking.awb}</p>
+                  {order.tracking.carrier && (
+                    <p className="text-sm text-muted mt-1">Carrier: {order.tracking.carrier}</p>
+                  )}
+                </div>
+              </div>
+
+              {order.tracking.events && order.tracking.events.length > 0 ? (
+                <div className="relative pl-4 border-l-2 border-[var(--border-subtle)] space-y-6">
+                  {order.tracking.events.map((event, i: number) => (
+                    <div key={i} className="relative">
+                      <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-[rgb(var(--gold-rgb))]" />
+                      <p className="font-medium">{event.status}</p>
+                      <p className="text-sm text-muted mt-0.5">{event.location}</p>
+                      <p className="text-xs text-muted mt-1">
+                        {new Date(event.timestamp).toLocaleString()}
+                      </p>
+                      {event.message && (
+                        <p className="text-sm mt-1 opacity-80">{event.message}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted">
+                  <p>No tracking updates available yet.</p>
+                  <a 
+                    href={order.tracking.trackingUrl || `https://www.rapidshyp.com/track/${order.tracking.awb}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-[rgb(var(--gold-rgb))] hover:underline mt-2 inline-block"
+                  >
+                    Track on RapidShyp
+                  </a>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* PAYMENT TIMER & RETRY */}
         {order.status === "pending" && timeLeft !== null && (

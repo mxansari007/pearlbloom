@@ -11,6 +11,26 @@ import { dbClient } from "@/libs/firebase-client";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import type { Address } from "@/types/user";
 import { placeOrder } from "@/utils/placeorder";
+import { track } from "@/utils/analytics";
+
+type RazorpaySuccessResponse = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayInstance = {
+  open: () => void;
+  on: (event: string, handler: (payload: unknown) => void) => void;
+};
+
+type RazorpayConstructor = new (options: Record<string, unknown>) => RazorpayInstance;
+
+function getRazorpayConstructor(): RazorpayConstructor | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as { Razorpay?: RazorpayConstructor };
+  return w.Razorpay ?? null;
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -26,6 +46,16 @@ export default function CheckoutPage() {
     (sum, i) => sum + i.price * i.quantity,
     0
   );
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    track("checkout_viewed", {
+      source: "cart_checkout",
+      cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
+      cart_unique_items: items.length,
+      cart_value: total,
+    });
+  }, [items, total]);
 
   /* ---------------- Auth Guard ---------------- */
 
@@ -81,7 +111,7 @@ export default function CheckoutPage() {
 
 const loadRazorpay = () =>
   new Promise((resolve) => {
-    if ((window as any).Razorpay) return resolve(true);
+    if (getRazorpayConstructor()) return resolve(true);
 
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -97,6 +127,12 @@ const handlePlaceOrder = async () => {
     setLoading(true);
 
     const now = Date.now();
+
+    track("checkout_submitted", {
+      cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
+      cart_unique_items: items.length,
+      cart_value: total,
+    });
 
     // 1️⃣ Create order in Firestore (pending)
     // Note: Firestore doesn't accept undefined values, so we use empty strings as fallbacks
@@ -121,6 +157,13 @@ const handlePlaceOrder = async () => {
       status: "pending",
       createdAt: now,
       updatedAt: now,
+    });
+
+    track("order_created", {
+      order_id: orderId,
+      cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
+      cart_unique_items: items.length,
+      cart_value: total,
     });
 
     // 2️⃣ Load Razorpay
@@ -158,15 +201,23 @@ const handlePlaceOrder = async () => {
       description: "Order Payment",
       order_id: razorpayOrder.id,
 
-      handler: async function (response: any) {
+      handler: async function (response: RazorpaySuccessResponse) {
         // 5️⃣ Update order → paid
-        await fetch("/api/razorpay/verify", {
+        const verifyRes = await fetch("/api/razorpay/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             orderId,
             ...response,
           }),
+        });
+
+        track("payment_succeeded", {
+          order_id: orderId,
+          verified: verifyRes.ok,
+          cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
+          cart_unique_items: items.length,
+          cart_value: total,
         });
 
         const date = new Date().toISOString().split("T")[0];
@@ -189,6 +240,12 @@ const handlePlaceOrder = async () => {
              // Only redirect if NOT currently verifying a success response
              // See similar logic in buy-now/page.tsx
              if (!isOrderPlaced) {
+                track("payment_cancelled", {
+                  order_id: orderId,
+                  cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
+                  cart_unique_items: items.length,
+                  cart_value: total,
+                });
                 setIsOrderPlaced(true); // Prevent guard from redirecting to cart
                 setTimeout(() => {
                     const clearCart = useCartStore.getState().clear;
@@ -204,11 +261,22 @@ const handlePlaceOrder = async () => {
       },
     };
 
-    const paymentObject = new (window as any).Razorpay(options);
+    const Razorpay = getRazorpayConstructor();
+    if (!Razorpay) {
+      throw new Error("Razorpay SDK failed to load");
+    }
+
+    const paymentObject = new Razorpay(options);
     
     // Handle explicit payment failures
-    paymentObject.on('payment.failed', function (response: any){
-        console.error("Payment failed:", response.error);
+    paymentObject.on("payment.failed", function (response: unknown) {
+        console.error("Payment failed:", response);
+        track("payment_failed", {
+          order_id: orderId,
+          cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
+          cart_unique_items: items.length,
+          cart_value: total,
+        });
         
         setIsOrderPlaced(true); // Prevent guard from redirecting to cart
         const clearCart = useCartStore.getState().clear;
@@ -219,6 +287,7 @@ const handlePlaceOrder = async () => {
         router.replace(`/orders/${displayId}`);
     });
 
+    track("payment_started", { order_id: orderId, amount: total, currency: "INR" });
     paymentObject.open();
 
   } catch (err) {

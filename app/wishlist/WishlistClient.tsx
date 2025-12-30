@@ -9,11 +9,24 @@ import type { Product } from "@/types/products";
 
 export default function WishlistClient({ allProducts }: { allProducts: Product[] }) {
   const { items, remove, update } = useWishlistStore();
-  const [mounted, setMounted] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    
+    const unsub =
+      useWishlistStore.persist?.onFinishHydration?.(() => setHydrated(true)) ??
+      null;
+
+    if (unsub) {
+      return unsub;
+    }
+
+    const t = setTimeout(() => setHydrated(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
     // Attempt to repair missing slugs for existing wishlist items
     if (items.length > 0 && allProducts.length > 0) {
       items.forEach((item) => {
@@ -25,9 +38,9 @@ export default function WishlistClient({ allProducts }: { allProducts: Product[]
         }
       });
     }
-  }, [items, allProducts, update]);
+  }, [hydrated, items, allProducts, update]);
 
-  if (!mounted) {
+  if (!hydrated) {
     return (
       <div
         className="min-h-screen relative overflow-hidden"

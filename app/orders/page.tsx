@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import useSWR from "swr";
 import {
   collection,
   getDocs,
@@ -14,13 +15,36 @@ import {
 import { dbClient } from "@/libs/firebase-client";
 import { useAuthStore } from "@/store/useAppStore";
 import type { Order } from "@/types/orders";
+import { track } from "@/utils/analytics";
 
 export default function OrdersPage() {
   const router = useRouter();
   const { user, isAuthenticated, authInitialized } = useAuthStore();
 
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const trackedCountRef = useRef<number | null>(null);
+
+  const { data: orders = [], error, isLoading } = useSWR(
+    authInitialized && isAuthenticated && user?.uid ? ["orders", user.uid] : null,
+    async ([, uid]: [string, string]) => {
+      const q = query(collection(dbClient, "orders"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+      return snap.docs
+        .map((d) => ({
+          id: d.id,
+          ...(d.data() as Order),
+        }))
+        .filter((o) => o.userId === uid);
+    }
+  );
+
+  useEffect(() => {
+    if (!authInitialized || !isAuthenticated || !user?.uid) return;
+    if (isLoading) return;
+    if (error) return;
+    if (trackedCountRef.current === orders.length) return;
+    track("orders_list_viewed", { orders_count: orders.length });
+    trackedCountRef.current = orders.length;
+  }, [authInitialized, isAuthenticated, user?.uid, isLoading, error, orders.length]);
 
   /* ---------------- Auth Guard ---------------- */
 
@@ -31,32 +55,7 @@ export default function OrdersPage() {
       router.replace("/login?redirect=/orders");
       return;
     }
-
-    loadOrders();
-  }, [authInitialized, isAuthenticated, user]);
-
-  /* ---------------- Load Orders ---------------- */
-
-  const loadOrders = async () => {
-    if (!user) return;
-
-    const q = query(
-      collection(dbClient, "orders"),
-      orderBy("createdAt", "desc")
-    );
-
-    const snap = await getDocs(q);
-
-    const userOrders = snap.docs
-      .map((d) => ({
-        id: d.id,
-        ...(d.data() as Order),
-      }))
-      .filter((o) => o.userId === user.uid);
-
-    setOrders(userOrders);
-    setLoading(false);
-  };
+  }, [authInitialized, isAuthenticated, user, router]);
 
   /* ---------------- Status Helpers ---------------- */
 
@@ -92,12 +91,22 @@ export default function OrdersPage() {
 
   /* ---------------- UI States ---------------- */
 
-  if (!authInitialized || loading) {
+  if (!authInitialized || isLoading) {
     return (
       <div className="orders-page">
         <div className="orders-page__loading">
           <div className="orders-page__spinner" />
           <p>Loading your orders…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="orders-page">
+        <div className="orders-page__loading">
+          <p>Unable to load orders.</p>
         </div>
       </div>
     );

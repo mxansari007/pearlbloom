@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCartStore } from "@/store/useCartStore";
+import { track } from "@/utils/analytics";
 
 export default function OrderSuccessClient({
   displayId,
@@ -22,8 +23,13 @@ export default function OrderSuccessClient({
     }
   }, [clearCart, searchParams]);
 
+  useEffect(() => {
+    track("order_success_viewed", { display_id: displayId });
+  }, [displayId]);
+
   const copyOrderId = () => {
     navigator.clipboard.writeText(displayId);
+    track("order_id_copied", { display_id: displayId });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "autoprefixer": "^10.4.22",
+    "dotenv": "^17.2.3",
     "firebase": "^12.6.0",
     "firebase-admin": "^13.6.0",
     "firebase-cli": "^1.2.0",

@@ -17,6 +17,7 @@ import {
   getRecaptchaVerifier,
   resetRecaptcha,
 } from "@/utils/initRecaptcha";
+import { track } from "@/utils/analytics";
 
 
 type Step = "phone" | "otp" | "profile";
@@ -95,7 +96,8 @@ export default function LoginPage() {
       setStep("otp");
       setResendTimer(RESEND_DELAY);
       setCanResend(false);
-    } catch (err: any) {
+      track("login_otp_sent", { method: "phone_otp" });
+    } catch (err: unknown) {
       console.error(err);
       resetRecaptcha();
       
@@ -104,11 +106,13 @@ export default function LoginPage() {
       console.error(`[Auth Debug] Current hostname: "${hostname}"`);
       console.error(`[Auth Debug] If this hostname is not in Firebase Console > Auth > Settings > Authorized Domains, phone auth will fail.`);
 
-      if (err.code === 'auth/invalid-app-credential') {
+      const errorObj = err as { code?: string; message?: string };
+
+      if (errorObj.code === 'auth/invalid-app-credential') {
         setError(`Configuration error: Domain "${hostname}" is not authorized. Check Firebase Console.`);
-      } else if (err.code === 'auth/too-many-requests') {
+      } else if (errorObj.code === 'auth/too-many-requests') {
         setError("Too many requests. Please try again later.");
-      } else if (err.message && err.message.includes('CAPTCHA_CHECK_FAILED')) {
+      } else if (typeof errorObj.message === 'string' && errorObj.message.includes('CAPTCHA_CHECK_FAILED')) {
         setError(`Domain "${hostname}" is not authorized for reCAPTCHA. Please add it to Firebase Console.`);
       } else {
         setError(
@@ -141,6 +145,7 @@ export default function LoginPage() {
       setConfirmation(result);
       setResendTimer(RESEND_DELAY);
       setCanResend(false);
+      track("login_otp_resent", { method: "phone_otp" });
     } catch {
       setError("Failed to resend OTP. Please try again.");
     } finally {
@@ -179,6 +184,7 @@ export default function LoginPage() {
         };
 
         await setDoc(userRef, newUser);
+        track("signup_started", { method: "phone_otp" });
         setStep("profile");
         return;
       }
@@ -192,6 +198,7 @@ export default function LoginPage() {
       }
 
       setUser(appUser);
+      track("login_success", { method: "phone_otp" });
       const params = new URLSearchParams(window.location.search);
       const redirect = params.get("redirect") || "/";
       window.location.href = redirect;
@@ -229,6 +236,7 @@ export default function LoginPage() {
       await setDoc(userRef, appUser, { merge: true });
 
       setUser(appUser);
+      track("signup_completed", { method: "phone_otp" });
       window.location.href = "/";
     } catch {
       setError("Failed to save profile. Please try again.");

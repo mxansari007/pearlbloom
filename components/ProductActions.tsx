@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { Product, Variant } from '../types/products'
 import { useWishlistStore } from '@/store/useWishlistStore'
 import { getFinalPrice, getStartingPrice } from '../libs/pricing'
+import { track } from '@/utils/analytics'
 
 export default function ProductActions({
   product,
@@ -28,6 +29,10 @@ export default function ProductActions({
   function copyLink() {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href)
+      track('product_link_copied', {
+        product_id: product.id,
+        slug: product.slug,
+      })
       showNotification('Link copied to clipboard')
     }
   }
@@ -49,11 +54,22 @@ export default function ProductActions({
       slug: product.slug,
     })
 
+    track(isWishlisted ? 'wishlist_item_removed' : 'wishlist_item_added', {
+      product_id: product.id,
+      slug: product.slug,
+      price: basePrice,
+      source: 'product_page',
+    })
+
     showNotification(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist')
   }
 
   function shareProduct() {
     if (navigator.share) {
+      track('product_shared', {
+        product_id: product.id,
+        slug: product.slug,
+      })
       navigator.share({
         title: product.name,
         text: `Check out ${product.name} on Pearl Bloom`,

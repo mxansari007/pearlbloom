@@ -14,6 +14,31 @@ import { getHeroData } from "../libs/hero.server";
 
 import type { Product } from "../types/products";
 
+type FeaturedProductsSectionData = {
+  id: string;
+  type: "featuredProducts";
+  title: string;
+  productIds?: string[];
+};
+
+type CollectionsRowSectionData = {
+  id: string;
+  type: "collectionsRow";
+  title: string;
+  collectionIds?: string[];
+};
+
+type BannerSectionData = {
+  id: string;
+  type: "banner";
+  title: string;
+};
+
+type HomepageSection =
+  | FeaturedProductsSectionData
+  | CollectionsRowSectionData
+  | BannerSectionData;
+
 /* ---------------------------------------------------------------- */
 /* Skeletons */
 /* ---------------------------------------------------------------- */
@@ -67,7 +92,7 @@ function CollectionsSkeleton({ title }: { title?: string }) {
 async function FeaturedProductsSection({
   section,
 }: {
-  section: any;
+  section: FeaturedProductsSectionData;
 }) {
   const products: Product[] = await getProductsByIds(
     section.productIds ?? []
@@ -89,7 +114,7 @@ async function FeaturedProductsSection({
 async function CollectionsRowSection({
   section,
 }: {
-  section: any;
+  section: CollectionsRowSectionData;
 }) {
   if (!section.collectionIds?.length) return null;
 
@@ -138,7 +163,7 @@ export default async function Home() {
       <Hero hero={hero} />
 
       {/* Stream each section independently */}
-      {sections.map((section: any) => {
+      {(sections as HomepageSection[]).map((section) => {
         if (section.type === "featuredProducts") {
           return (
             <Suspense

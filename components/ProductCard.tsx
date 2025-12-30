@@ -7,6 +7,7 @@ import type { MouseEvent } from "react";
 import type { Product } from "../types/products";
 import { useWishlistStore } from "@/store/useWishlistStore";
 import { getFinalPrice } from "@/libs/pricing";
+import { track } from "@/utils/analytics";
 
 export default function ProductCard({ product }: { product: Product }) {
   const image =
@@ -106,6 +107,13 @@ export default function ProductCard({ product }: { product: Product }) {
     e.preventDefault();
     e.stopPropagation();
 
+    track(isWishlisted ? "wishlist_item_removed" : "wishlist_item_added", {
+      product_id: product.id,
+      slug: product.slug,
+      price: startingFinalPrice,
+      source: "product_card",
+    });
+
     toggleWishlist({
       id: product.id,
       name: product.name,
@@ -116,7 +124,19 @@ export default function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <Link href={`/product/${product.slug}`} className="block group">
+    <Link
+      href={`/product/${product.slug}`}
+      className="block group"
+      onClick={() => {
+        track("product_clicked", {
+          product_id: product.id,
+          slug: product.slug,
+          price: startingFinalPrice,
+          has_discount: hasDiscount,
+          discount_percent: discountPercent,
+        });
+      }}
+    >
       <article className="product-card">
         {/* IMAGE CONTAINER */}
         <div className="product-card__media">

@@ -1,6 +1,6 @@
 // src/app/layout.tsx
 import './globals.css'
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import ChatWidget from '@/components/ChatWIdget'
@@ -8,21 +8,11 @@ import ChatWidget from '@/components/ChatWIdget'
 // next/font/google (App Router friendly)
 import { Playfair_Display, Inter } from 'next/font/google'
 import SunriseOverlay from '../components/SunriseOverlay' // adjust path if needed
-// instrumentation-client.js
-import posthog from 'posthog-js'
 import AuthProvider from '@/components/AuthProvider'
 import CartDrawer from "@/components/CartDrawer";
 import { ThemeApplier } from '@/components/ThemeApplier'
 import Script from 'next/script'
-
-
-if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    defaults: '2025-11-30'
-  });
-}
-            
+import PostHogClient from '@/components/PostHogClient'
 
 // load Playfair Display for headings (Display) and Inter for body.
 // adjust weights if you need more/less variants.
@@ -61,6 +51,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="preconnect" href="https://apis.google.com" />
       </head>
       <body className="min-h-screen bg-[--background] text-[--foreground] font-sans">
+        <Suspense fallback={null}>
+          <PostHogClient />
+        </Suspense>
         {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
           <>
             <Script

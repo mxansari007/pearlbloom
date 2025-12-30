@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Product } from '../types/products'
 import ProductCard from './ProductCard'
+import { track } from '@/utils/analytics'
 
 type Props = {
   initialProducts: Product[]
@@ -44,6 +45,21 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
     const t = setTimeout(() => setVisibleCount(9), 0)
     return () => clearTimeout(t)
   }, [query, selectedCats, minPrice, maxPrice, sort])
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      track('products_filter_changed', {
+        query_length: query.trim().length,
+        categories_count: selectedCats.length,
+        sort,
+        min_price: minPrice === '' ? null : minPrice,
+        max_price: maxPrice === '' ? null : maxPrice,
+        results_count: filtered.length,
+      })
+    }, 500)
+
+    return () => clearTimeout(t)
+  }, [query, selectedCats, minPrice, maxPrice, sort, filtered.length])
 
   const countsByCategory = useMemo(() => {
     const map = new Map<string, number>()
@@ -150,6 +166,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
                 onClick={() => {
                   setViewMode('grid')
                   setVisibleCount(9)
+                  track('products_view_mode_changed', { view_mode: 'grid' })
                 }} 
                 className={`px-4 py-1.5 rounded-md border transition-all duration-200 cursor-pointer relative z-10 font-medium ${
                   viewMode === 'grid' 
@@ -163,6 +180,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
                 onClick={() => {
                   setViewMode('list')
                   setVisibleCount(24)
+                  track('products_view_mode_changed', { view_mode: 'list' })
                 }} 
                 className={`px-4 py-1.5 rounded-md border transition-all duration-200 cursor-pointer relative z-10 font-medium ${
                   viewMode === 'list' 
@@ -190,7 +208,10 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
 
         <div className="collection-page__load-more">
           {hasMore ? (
-            <button onClick={() => setVisibleCount((c) => c + 12)} className="collection-page__load-btn">
+            <button onClick={() => {
+              setVisibleCount((c) => c + 12)
+              track('products_load_more_clicked', { shown_count: visible.length, total_count: filtered.length })
+            }} className="collection-page__load-btn">
               <svg
                 className="w-5 h-5"
                 fill="none"

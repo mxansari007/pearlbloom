@@ -3,9 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useCartStore } from "@/store/useCartStore";
 import { useAuthStore } from "@/store/useAppStore";
 import { Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
+import { track } from "@/utils/analytics";
 
 export default function CartPage() {
   const router = useRouter();
@@ -19,6 +21,12 @@ export default function CartPage() {
   );
 
   const handleCheckout = () => {
+    track("begin_checkout", {
+      source: "cart_page",
+      cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
+      cart_unique_items: items.length,
+      cart_value: total,
+    });
     // wait until auth state is known
     if (!authInitialized) return;
 
@@ -30,6 +38,14 @@ export default function CartPage() {
     // user is logged in → go to checkout
     router.push("/checkout");
   };
+
+  useEffect(() => {
+    track("cart_viewed", {
+      cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
+      cart_unique_items: items.length,
+      cart_value: total,
+    });
+  }, [items, total]);
 
   return (
     <div

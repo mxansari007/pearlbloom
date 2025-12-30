@@ -12,6 +12,26 @@ import { dbClient } from "@/libs/firebase-client";
 import { collection, getDocs, query } from "firebase/firestore";
 import type { Address } from "@/types/user";
 import { placeOrder } from "@/utils/placeorder";
+import { track } from "@/utils/analytics";
+
+type RazorpaySuccessResponse = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayInstance = {
+  open: () => void;
+  on: (event: string, handler: (payload: unknown) => void) => void;
+};
+
+type RazorpayConstructor = new (options: Record<string, unknown>) => RazorpayInstance;
+
+function getRazorpayConstructor(): RazorpayConstructor | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as { Razorpay?: RazorpayConstructor };
+  return w.Razorpay ?? null;
+}
 
 export default function BuyNowCheckoutPage() {
   const router = useRouter();
@@ -24,6 +44,20 @@ export default function BuyNowCheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+
+  useEffect(() => {
+    if (!item) return;
+    track("checkout_viewed", {
+      source: "buy_now_checkout",
+      cart_item_count: item.quantity || 1,
+      cart_unique_items: 1,
+      cart_value: getTotal(),
+      product_id: item.productId || item.id,
+      variant_id: item.variantId || item.id,
+      sku: item.sku,
+      slug: item.slug,
+    });
+  }, [item, getTotal]);
 
   /* ---------------- Auth Guard ---------------- */
 
@@ -72,7 +106,7 @@ export default function BuyNowCheckoutPage() {
 
   const loadRazorpay = () =>
     new Promise((resolve) => {
-      if ((window as any).Razorpay) return resolve(true);
+      if (getRazorpayConstructor()) return resolve(true);
 
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -88,6 +122,17 @@ export default function BuyNowCheckoutPage() {
 
       const now = Date.now();
       const total = getTotal();
+
+      track("checkout_submitted", {
+        source: "buy_now_checkout",
+        cart_item_count: item.quantity || 1,
+        cart_unique_items: 1,
+        cart_value: total,
+        product_id: item.productId || item.id,
+        variant_id: item.variantId || item.id,
+        sku: item.sku,
+        slug: item.slug,
+      });
 
       // 1️⃣ Create order in Firestore
       const orderId = await placeOrder({
@@ -111,6 +156,14 @@ export default function BuyNowCheckoutPage() {
         status: "pending",
         createdAt: now,
         updatedAt: now,
+      });
+
+      track("order_created", {
+        order_id: orderId,
+        source: "buy_now_checkout",
+        cart_item_count: item.quantity || 1,
+        cart_unique_items: 1,
+        cart_value: total,
       });
 
       // 2️⃣ Load Razorpay
@@ -146,7 +199,7 @@ export default function BuyNowCheckoutPage() {
         name: "Pearl Boom",
         description: `Order #${orderId.slice(-6).toUpperCase()}`,
         order_id: razorpayOrder.id,
-        handler: async function (response: any) {
+        handler: async function (response: RazorpaySuccessResponse) {
           setVerifying(true);
           try {
             const verifyRes = await fetch("/api/razorpay/verify", {
@@ -163,6 +216,14 @@ export default function BuyNowCheckoutPage() {
             const verifyData = await verifyRes.json();
 
             if (verifyData.success) {
+              track("payment_succeeded", {
+                order_id: orderId,
+                verified: true,
+                source: "buy_now_checkout",
+                cart_item_count: item.quantity || 1,
+                cart_unique_items: 1,
+                cart_value: total,
+              });
               // Success!
               setIsOrderPlaced(true);
               clearBuyNowItem();
@@ -170,11 +231,26 @@ export default function BuyNowCheckoutPage() {
               const finalDisplayId = verifyData.displayId || `PB-${new Date(now).toISOString().split("T")[0]}-${orderId.slice(-6).toUpperCase()}`;
               router.replace(`/order-success/${finalDisplayId}?clearCart=false`);
             } else {
+              track("payment_failed", {
+                order_id: orderId,
+                verified: false,
+                source: "buy_now_checkout",
+                cart_item_count: item.quantity || 1,
+                cart_unique_items: 1,
+                cart_value: total,
+              });
               alert("Payment verification failed. Please contact support.");
               setVerifying(false);
             }
           } catch (err) {
             console.error("Verification error:", err);
+            track("payment_failed", {
+              order_id: orderId,
+              source: "buy_now_checkout",
+              cart_item_count: item.quantity || 1,
+              cart_unique_items: 1,
+              cart_value: total,
+            });
             alert("Payment verification error. Please contact support.");
             setVerifying(false);
           }
@@ -191,6 +267,13 @@ export default function BuyNowCheckoutPage() {
           ondismiss: () => {
              // Only redirect if NOT currently verifying a success response
              if (!isOrderPlaced) {
+                 track("payment_cancelled", {
+                   order_id: orderId,
+                   source: "buy_now_checkout",
+                   cart_item_count: item.quantity || 1,
+                   cart_unique_items: 1,
+                   cart_value: total,
+                 });
                  setIsOrderPlaced(true); // Prevent guard from redirecting to home
                  setTimeout(() => {
                     const clearBuyNowItem = useBuyNowStore.getState().clearBuyNowItem;
@@ -206,11 +289,22 @@ export default function BuyNowCheckoutPage() {
         },
       };
 
-      const paymentObject = new (window as any).Razorpay(options);
+      const Razorpay = getRazorpayConstructor();
+      if (!Razorpay) {
+        throw new Error("Razorpay SDK failed to load");
+      }
+      const paymentObject = new Razorpay(options);
       
       // Handle explicit payment failures
-      paymentObject.on('payment.failed', function (response: any){
-          console.error("Payment failed:", response.error);
+      paymentObject.on("payment.failed", function (response: unknown) {
+          console.error("Payment failed:", response);
+          track("payment_failed", {
+            order_id: orderId,
+            source: "buy_now_checkout",
+            cart_item_count: item.quantity || 1,
+            cart_unique_items: 1,
+            cart_value: total,
+          });
           
           setIsOrderPlaced(true); // Prevent guard from redirecting to home
           const clearBuyNowItem = useBuyNowStore.getState().clearBuyNowItem;
@@ -221,10 +315,12 @@ export default function BuyNowCheckoutPage() {
           router.replace(`/orders/${displayId}`);
       });
 
+      track("payment_started", { order_id: orderId, amount: total, currency: "INR", source: "buy_now_checkout" });
       paymentObject.open();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Checkout error:", err);
-      alert(err.message || "Something went wrong. Please try again.");
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      alert(message);
       setLoading(false);
     }
   };

@@ -18,6 +18,9 @@ import { dbClient } from "@/libs/firebase-client";
 import { useAuthStore } from "@/store/useAppStore";
 import type { Address } from "@/types/user";
 
+const editableFields = ["fullName", "phone", "line1", "city", "state", "postalCode"] as const;
+type EditableField = (typeof editableFields)[number];
+
 export default function AddressClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -226,15 +229,15 @@ export default function AddressClient() {
               border: "1px solid var(--border-subtle)",
             }}
           >
-            {["fullName", "phone", "line1", "city", "state", "postalCode"].map(
+            {editableFields.map(
               (field) => (
                 <input
                   key={field}
                   placeholder={field.replace(/^\w/, (c) => c.toUpperCase())}
                   className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
-                  value={(form as any)[field]}
+                  value={form[field]}
                   onChange={(e) =>
-                    setForm({ ...form, [field]: e.target.value })
+                    setForm({ ...form, [field]: e.target.value } as Address & Record<EditableField, string>)
                   }
                 />
               )

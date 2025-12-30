@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { FaAmazon, FaShoppingBag } from "react-icons/fa";
 import { SiFlipkart } from "react-icons/si";
 import { useProductVariant } from "@/hooks/useProductVariant";
+import { track } from "@/utils/analytics";
 
 export default function ProductClient({ product }: { product: Product }) {
   const router = useRouter();
@@ -28,6 +29,15 @@ export default function ProductClient({ product }: { product: Product }) {
   useEffect(() => {
     initializeProduct(product);
   }, [initializeProduct, product]);
+
+  useEffect(() => {
+    track("product_viewed", {
+      product_id: product.id,
+      slug: product.slug,
+      name: product.name,
+      has_variants: Array.isArray(product.variants) && product.variants.length > 0,
+    });
+  }, [product.id, product.slug, product.name, product.variants]);
 
   const variants = Array.isArray(product.variants) ? product.variants : [];
   const singleVariant = variants.length === 1 ? variants[0] : null;
@@ -145,7 +155,18 @@ export default function ProductClient({ product }: { product: Product }) {
     setIsAdding(true);
 
     const item = buildCartItem();
-    if (item) addItem(item);
+    if (item) {
+      track("add_to_cart_clicked", {
+        product_id: item.productId,
+        variant_id: item.variantId,
+        sku: item.sku,
+        slug: item.slug,
+        price: item.price,
+        quantity: item.quantity,
+        source: "product_page",
+      });
+      addItem(item);
+    }
 
     await new Promise((r) => setTimeout(r, 300));
     setIsAdding(false);
@@ -161,6 +182,15 @@ export default function ProductClient({ product }: { product: Product }) {
     if (outOfStock) return;
     const item = buildCartItem();
     if (item) {
+      track("begin_checkout", {
+        product_id: item.productId,
+        variant_id: item.variantId,
+        sku: item.sku,
+        slug: item.slug,
+        price: item.price,
+        quantity: item.quantity,
+        source: "buy_now",
+      });
       setBuyNowItem(item);
       router.push("/checkout/buy-now");
     }
