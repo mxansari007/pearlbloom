@@ -649,6 +649,77 @@ a:focus {
 
 
 
+/* -----------------------------------------
+   LIST VIEW REFINEMENT
+------------------------------------------ */
+.list-view-container .product-card {
+  display: flex;
+  flex-direction: row;
+  height: auto;
+  min-height: 240px;
+  align-items: stretch;
+}
+
+.list-view-container .product-card__media {
+  width: 300px;
+  flex-shrink: 0;
+  padding-top: 0;
+  height: auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.list-view-container .product-card__img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.list-view-container .product-card__body {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+}
+
+.list-view-container .product-card__title {
+  font-size: 1.6rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.list-view-container .product-card p {
+  font-size: 0.95rem;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  margin-bottom: 1.5rem;
+}
+
+.list-view-container .product-card__price-row {
+  justify-content: flex-start;
+  margin-top: auto;
+}
+
+@media (max-width: 768px) {
+  .list-view-container .product-card {
+    flex-direction: column;
+  }
+  .list-view-container .product-card__media {
+    width: 100%;
+    padding-top: 100%;
+    height: 0;
+  }
+  .list-view-container .product-card__body {
+    padding: 1.25rem;
+  }
+}
+
+
 /* ===== Pearl Bloom Animated Luxury Background ===== */
 
 @keyframes floatSlow {

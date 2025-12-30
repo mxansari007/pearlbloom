@@ -18,6 +18,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
   const [sort, setSort] = useState<SortOption>('newest')
   const [minPrice, setMinPrice] = useState<number | ''>('')
   const [maxPrice, setMaxPrice] = useState<number | ''>('')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [visibleCount, setVisibleCount] = useState(9) // show 9 initially for balanced grid
 
   const filtered = useMemo(() => {
@@ -62,7 +63,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
   return (
     <div id="browse" className="grid grid-cols-1 lg:grid-cols-5 gap-8"> {/* wider gap, extra column for breathing */}
       {/* Sidebar filters (1 column) */}
-      <aside className="lg:col-span-1 space-y-6">
+      <aside className="lg:col-span-1 space-y-6 lg:sticky lg:top-24 h-fit">
         <div className="card p-4">
           <label className="block">
             <span className="text-sm text-muted">Search</span>
@@ -131,11 +132,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
           </select>
         </div>
 
-        <div className="card p-4 text-center">
-          <div className="text-sm text-muted">Need help picking a piece?</div>
-          <a href="/contact" className="btn-cta mt-3 inline-block">Contact us</a>
-          <div className="text-sm text-muted mt-3">or call +91 98765 43210</div>
-        </div>
+
       </aside>
 
       {/* Main product area (4 columns) */}
@@ -149,14 +146,42 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
           <div className="flex items-center gap-4 text-sm text-muted">
             <div>View</div>
             <div className="flex gap-2">
-              <button onClick={() => setVisibleCount(9)} className="px-3 py-1 rounded-md border border-[var(--input-border)] hover:bg-[var(--glass)]">Grid</button>
-              <button onClick={() => setVisibleCount(24)} className="px-3 py-1 rounded-md border border-white/6">List</button>
+              <button 
+                onClick={() => {
+                  setViewMode('grid')
+                  setVisibleCount(9)
+                }} 
+                className={`px-4 py-1.5 rounded-md border transition-all duration-200 cursor-pointer relative z-10 font-medium ${
+                  viewMode === 'grid' 
+                    ? 'bg-[rgba(212,175,55,0.15)] border-[rgba(212,175,55,0.4)] text-[rgb(212,175,55)] shadow-[0_0_10px_rgba(212,175,55,0.1)]' 
+                    : 'border-[var(--input-border)] text-muted hover:bg-[var(--glass)] hover:border-[rgba(212,175,55,0.2)]'
+                }`}
+              >
+                Grid
+              </button>
+              <button 
+                onClick={() => {
+                  setViewMode('list')
+                  setVisibleCount(24)
+                }} 
+                className={`px-4 py-1.5 rounded-md border transition-all duration-200 cursor-pointer relative z-10 font-medium ${
+                  viewMode === 'list' 
+                    ? 'bg-[rgba(212,175,55,0.15)] border-[rgba(212,175,55,0.4)] text-[rgb(212,175,55)] shadow-[0_0_10px_rgba(212,175,55,0.1)]' 
+                    : 'border-[var(--input-border)] text-muted hover:bg-[var(--glass)] hover:border-[rgba(212,175,55,0.2)]'
+                }`}
+              >
+                List
+              </button>
             </div>
           </div>
         </div>
 
         <div className="mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+          <div className={
+            viewMode === 'grid' 
+              ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-8"
+              : "flex flex-col gap-6 list-view-container"
+          }>
             {visible.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -186,16 +211,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
           )}
         </div>
 
-        <div className="mt-10 card p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-            <h3 className="font-display text-lg">Not sure which to choose?</h3>
-            <p className="text-sm text-muted mt-2">Book a free consultation with our design specialist or request a private viewing.</p>
-          </div>
-          <div className="flex gap-3">
-            <a href="/contact" className="btn-cta">Book consultation</a>
-            <a href="/about" className="rounded-md px-4 py-2 border border-[var(--input-border)] hover:bg-[var(--glass)] transition text-sm">Why Pearl Bloom</a>
-          </div>
-        </div>
+
       </div>
     </div>
   )
