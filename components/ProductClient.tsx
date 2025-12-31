@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Product, Variant } from "../types/products";
 import { isOutOfStock } from "../libs/pricing";
 import ProductVariantBlock from "./ProductVariantBlock";
@@ -19,86 +19,14 @@ export default function ProductClient({ product }: { product: Product }) {
   const [isAdding, setIsAdding] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-
-  const [pincode, setPincode] = useState(() => {
-    if (typeof window === "undefined") return "";
-    try {
-      const saved = localStorage.getItem("pb_delivery_pincode");
-      return saved && /^\d{6}$/.test(saved) ? saved : "";
-    } catch {
-      return "";
-    }
-  });
-  const [pincodeStatus, setPincodeStatus] = useState<
-    | { state: "idle" }
-    | { state: "checking" }
-    | { state: "serviceable"; etaDays?: number; message?: string }
-    | { state: "not_serviceable"; message?: string }
-    | { state: "error"; message: string }
-  >({ state: "idle" });
-  const lastCheckedRef = useRef<string | null>(null);
-
-  function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null;
-  }
+  const [pincode, setPincode] = useState("");
+  const [checkingPincode, setCheckingPincode] = useState(false);
+  const [pincodeResult, setPincodeResult] = useState<null | { serviceable: boolean; message?: string }>(null);
 
   function showNotification(message: string) {
     setToastMessage(message);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2500);
-  }
-
-  async function checkPincodeServiceability(orderValue: number) {
-    const cleaned = pincode.replace(/\s+/g, "").trim();
-    if (!/^\d{6}$/.test(cleaned)) {
-      setPincodeStatus({ state: "error", message: "Enter a valid 6-digit pincode" });
-      return;
-    }
-
-    if (lastCheckedRef.current === cleaned && pincodeStatus.state !== "error") return;
-
-    setPincodeStatus({ state: "checking" });
-    try {
-      const res = await fetch("/api/rapidshyp/serviceability", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          deliveryPincode: cleaned,
-          totalOrderValue: orderValue,
-        }),
-      });
-
-      const data: unknown = await res.json();
-
-      if (!res.ok) {
-        const errorMessage =
-          isRecord(data) && typeof data.error === "string" ? data.error : "Unable to check pincode";
-        setPincodeStatus({
-          state: "error",
-          message: errorMessage,
-        });
-        return;
-      }
-
-      const serviceable =
-        isRecord(data) && typeof data.serviceable === "boolean" ? data.serviceable : null;
-      const message = isRecord(data) && typeof data.message === "string" ? data.message : undefined;
-
-      if (serviceable === null) {
-        setPincodeStatus({ state: "error", message: message || "Unable to check pincode" });
-      } else if (serviceable === true) {
-        setPincodeStatus({ state: "serviceable", message });
-      } else {
-        setPincodeStatus({ state: "not_serviceable", message });
-      }
-
-      lastCheckedRef.current = cleaned;
-      try {
-        localStorage.setItem("pb_delivery_pincode", cleaned);
-      } catch {}
-    } catch {
-      setPincodeStatus({ state: "error", message: "Unable to check pincode" });
-    }
   }
 
   useEffect(() => {
@@ -271,6 +199,39 @@ export default function ProductClient({ product }: { product: Product }) {
     }
   }
 
+  async function checkServiceability() {
+    const pin = pincode.trim();
+    if (!/^\d{6}$/.test(pin)) {
+      setPincodeResult({ serviceable: false, message: "Enter a valid 6-digit pincode." });
+      return;
+    }
+
+    setCheckingPincode(true);
+    setPincodeResult(null);
+    try {
+      const resp = await fetch(
+        `/api/shipping/nimbus/serviceability?pincode=${encodeURIComponent(pin)}`,
+        { method: "GET" }
+      );
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        const msg = typeof (json as any)?.error === "string" ? (json as any).error : "Failed to check pincode";
+        setPincodeResult({ serviceable: false, message: msg });
+        return;
+      }
+
+      const serviceable = Boolean((json as any)?.serviceable);
+      setPincodeResult({
+        serviceable,
+        message: serviceable ? "Delivery available to this pincode." : "Delivery not available to this pincode.",
+      });
+    } catch (e: any) {
+      setPincodeResult({ serviceable: false, message: e?.message || "Failed to check pincode" });
+    } finally {
+      setCheckingPincode(false);
+    }
+  }
+
   return (
     <div className="product-detail">
       {/* Price Block */}
@@ -329,12 +290,44 @@ export default function ProductClient({ product }: { product: Product }) {
             selectedVariant={selectedVariant ?? undefined}
             onChange={(v) => {
               setVariant(v);
-              setPincodeStatus({ state: "idle" });
-              lastCheckedRef.current = null;
             }}
           />
         </div>
       )}
+
+      <div className="product-detail__section">
+        <span className="product-detail__label">Delivery</span>
+        <div className="flex items-center gap-3 flex-wrap">
+          <input
+            value={pincode}
+            onChange={(e) => setPincode(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") checkServiceability();
+            }}
+            inputMode="numeric"
+            placeholder="Enter pincode"
+            className="rounded-xl border border-[var(--input-border)] bg-[var(--input-bg)] px-4 py-2 text-sm w-44"
+            aria-label="Pincode"
+          />
+          <button
+            onClick={checkServiceability}
+            disabled={checkingPincode}
+            className="px-4 py-2 rounded-xl border border-[rgba(var(--gold-rgb),0.35)] text-[rgb(var(--gold-rgb))] hover:bg-[rgba(var(--gold-rgb),0.08)] disabled:opacity-50 text-sm"
+          >
+            {checkingPincode ? "Checking..." : "Check"}
+          </button>
+        </div>
+
+        {pincodeResult?.message && (
+          <div
+            className={`mt-3 text-sm ${
+              pincodeResult.serviceable ? "text-green-400" : "text-red-300"
+            }`}
+          >
+            {pincodeResult.message}
+          </div>
+        )}
+      </div>
 
       {/* Primary Actions */}
       <div className="product-detail__actions">
@@ -353,63 +346,6 @@ export default function ProductClient({ product }: { product: Product }) {
         >
           {isAdding ? "Adding..." : "Add to Cart"}
         </button>
-      </div>
-
-      <div className="mt-5">
-        <span className="product-detail__label">Delivery</span>
-        <div className="mt-2 flex gap-3 items-center">
-          <input
-            value={pincode}
-            onChange={(e) => {
-              const v = e.target.value;
-              setPincode(v);
-              setPincodeStatus({ state: "idle" });
-              lastCheckedRef.current = null;
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") checkPincodeServiceability(finalPrice);
-            }}
-            inputMode="numeric"
-            pattern="\\d*"
-            maxLength={6}
-            placeholder="Enter pincode"
-            className="flex-1 px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
-            aria-label="Pincode"
-          />
-          <button
-            type="button"
-            onClick={() => {
-              track("pincode_check_clicked", {
-                product_id: product.id,
-                slug: product.slug,
-                pincode_length: pincode.trim().length,
-                price: finalPrice,
-              });
-              checkPincodeServiceability(finalPrice);
-            }}
-            disabled={pincodeStatus.state === "checking"}
-            className="px-5 py-3 rounded-lg border border-[rgba(var(--gold-rgb),0.35)] bg-transparent text-[var(--fg)] font-semibold transition-all hover:bg-[rgba(var(--gold-rgb),0.08)] hover:border-[rgba(var(--gold-rgb),0.5)] disabled:opacity-60 disabled:pointer-events-none"
-          >
-            {pincodeStatus.state === "checking" ? "Checking..." : "Check"}
-          </button>
-        </div>
-
-        <div className="mt-2 text-sm">
-          {pincodeStatus.state === "serviceable" && (
-            <div className="text-[rgb(var(--gold-rgb))]">
-              Deliverable{typeof pincodeStatus.etaDays === "number" ? ` • ETA ${pincodeStatus.etaDays} day(s)` : ""}
-              {pincodeStatus.message ? ` — ${pincodeStatus.message}` : ""}
-            </div>
-          )}
-          {pincodeStatus.state === "not_serviceable" && (
-            <div className="text-muted">
-              Not deliverable to this pincode{pincodeStatus.message ? ` — ${pincodeStatus.message}` : ""}
-            </div>
-          )}
-          {pincodeStatus.state === "error" && (
-            <div className="text-muted">{pincodeStatus.message}</div>
-          )}
-        </div>
       </div>
 
       {/* Marketplace Buttons */}

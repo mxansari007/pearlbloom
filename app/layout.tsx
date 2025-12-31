@@ -13,6 +13,7 @@ import CartDrawer from "@/components/CartDrawer";
 import { ThemeApplier } from '@/components/ThemeApplier'
 import Script from 'next/script'
 import PostHogClient from '@/components/PostHogClient'
+import FacebookPixel from '@/components/FacebookPixel'
 
 // load Playfair Display for headings (Display) and Inter for body.
 // adjust weights if you need more/less variants.
@@ -46,77 +47,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <AuthProvider>
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <head>
-        <Script id="google-tag-manager" strategy="beforeInteractive">
-          {`
-            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','GTM-NWQSN4H2');
-          `}
-        </Script>
-        <Script id="facebook-pixel-base" strategy="afterInteractive">
-          {`
-            !function(f,b,e,v,n,t,s){
-              if(f.fbq)return;
-              n=f.fbq=function(){n.callMethod ? n.callMethod.apply(n,arguments) : n.queue.push(arguments)};
-              if(!f._fbq)f._fbq=n;
-              n.push=n;
-              n.loaded=!0;
-              n.version='2.0';
-              n.queue=[];
-            }(window, document, 'script');
-          `}
-        </Script>
-        <Script src="https://connect.facebook.net/en_US/fbevents.js" strategy="afterInteractive" />
-        <Script id="facebook-pixel-init" strategy="afterInteractive">
-          {`
-            fbq('init', '762023996911449');
-            fbq('track', 'PageView');
-          `}
-        </Script>
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            src="https://www.facebook.com/tr?id=762023996911449&ev=PageView&noscript=1"
-            alt=""
-          />
-        </noscript>
         <link rel="preconnect" href="https://pearlboom-74976.firebaseapp.com" />
         <link rel="preconnect" href="https://www.googleapis.com" />
         <link rel="preconnect" href="https://apis.google.com" />
       </head>
       <body className="min-h-screen bg-[--background] text-[--foreground] font-sans">
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-NWQSN4H2"
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-          />
-        </noscript>
         <Suspense fallback={null}>
           <PostHogClient />
         </Suspense>
-        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="google-analytics" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-
-                gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}');
-              `}
-            </Script>
-          </>
-        )}
+        <Suspense fallback={null}>
+          <FacebookPixel />
+        </Suspense>
+      
         <ThemeApplier />
         <Header />
 

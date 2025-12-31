@@ -478,14 +478,16 @@ export default function OrderDetailsPage() {
               ) : (
                 <div className="text-center py-4 text-muted">
                   <p>No tracking updates available yet.</p>
-                  <a 
-                    href={order.tracking.trackingUrl || `https://www.rapidshyp.com/track/${order.tracking.awb}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-[rgb(var(--gold-rgb))] hover:underline mt-2 inline-block"
-                  >
-                    Track on RapidShyp
-                  </a>
+                  {order.tracking.trackingUrl && (
+                    <a
+                      href={order.tracking.trackingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[rgb(var(--gold-rgb))] hover:underline mt-2 inline-block"
+                    >
+                      Track Shipment
+                    </a>
+                  )}
                 </div>
               )}
             </div>
