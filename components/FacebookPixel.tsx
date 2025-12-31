@@ -1,37 +1,34 @@
 "use client";
 
-import { useEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
+import Script from "next/script";
+import { useEffect, useState } from "react";
+import * as pixel from "../libs/fpixel";
 
-export default function FacebookPixel() {
+const FacebookPixel = () => {
+  const [loaded, setLoaded] = useState(false);
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const pixelId = pixel.FB_PIXEL_ID;
+
+  if (!pixelId) return null;
 
   useEffect(() => {
-    const pixelId = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID;
-    if (!pixelId) return;
-    let cancelled = false;
-    let attempt = 0;
+    if (!loaded) return;
 
-    const trackPageView = () => {
-      if (cancelled) return;
-      const fbq = (window as any).fbq;
-      if (typeof fbq === "function") {
-        fbq("track", "PageView");
-        return;
-      }
+    pixel.pageview();
+  }, [pathname, loaded]);
 
-      attempt += 1;
-      if (attempt >= 15) return;
-      setTimeout(trackPageView, 200);
-    };
+  return (
+    <div>
+      <Script
+        id="fb-pixel"
+        src="/scripts/pixel.js"
+        strategy="afterInteractive"
+        onLoad={() => setLoaded(true)}
+        data-pixel-id={pixelId}
+      />
+    </div>
+  );
+};
 
-    trackPageView();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname, searchParams]);
-
-  return null;
-}
+export default FacebookPixel;

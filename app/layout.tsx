@@ -52,12 +52,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="preconnect" href="https://apis.google.com" />
       </head>
       <body className="min-h-screen bg-[--background] text-[--foreground] font-sans">
+        <FacebookPixel />
         <Suspense fallback={null}>
           <PostHogClient />
         </Suspense>
-        <Suspense fallback={null}>
-          <FacebookPixel />
-        </Suspense>
+
       
         <ThemeApplier />
         <Header />
