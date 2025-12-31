@@ -89,7 +89,7 @@ export default async function ProductPage({
 
           {/* Details Column */}
           <div className="product-page__details">
-            <ProductClient product={product} />
+            <ProductClient key={product.id} product={product} />
 
             {/* Description */}
             {product.description && (
