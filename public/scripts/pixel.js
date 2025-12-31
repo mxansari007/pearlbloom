@@ -33,5 +33,14 @@ initializeFacebookPixel(
 
 if (PIXEL_ID) {
   window.fbq("init", PIXEL_ID);
-  window.fbq("track", "PageView");
+
+  const q = window.__pbFbqQueue;
+  if (Array.isArray(q) && q.length) {
+    q.forEach((args) => {
+      try {
+        window.fbq.apply(window, args);
+      } catch (e) {}
+    });
+    window.__pbFbqQueue = [];
+  }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import posthog from "posthog-js";
+import { trackFromPosthog } from "@/libs/fpixel";
 
 export type AnalyticsProps = Record<string, unknown>;
 
@@ -9,8 +10,9 @@ function enabled() {
 }
 
 export function track(event: string, props?: AnalyticsProps) {
-  if (!enabled()) return;
   if (typeof window === "undefined") return;
-  posthog.capture(event, props);
+  if (enabled()) {
+    posthog.capture(event, props);
+  }
+  trackFromPosthog(event, props);
 }
-
