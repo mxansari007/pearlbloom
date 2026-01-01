@@ -1,6 +1,8 @@
 export const revalidate = 300;
 
 import { Suspense } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
 import Hero from "../components/Hero";
 import ProductGrid from "../components/ProductGrid";
@@ -39,6 +41,27 @@ type HomepageSection =
   | FeaturedProductsSectionData
   | CollectionsRowSectionData
   | BannerSectionData;
+
+type BannerPlacement = "home_top" | "home_bottom";
+type BannerSize = "sm" | "md" | "lg";
+
+type BannerItem = {
+  id: string;
+  imageUrl: string | null;
+  alt: string | null;
+  href: string | null;
+  label: string | null;
+  active: boolean;
+};
+
+type BannerCarousel = {
+  id: string;
+  placement: BannerPlacement;
+  size: BannerSize;
+  title: string | null;
+  subtitle: string | null;
+  items: BannerItem[];
+};
 
 /* ---------------------------------------------------------------- */
 /* Skeletons */
@@ -161,6 +184,17 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
+function asBoolean(v: unknown): boolean {
+  if (typeof v === "boolean") return v;
+  if (typeof v === "string") {
+    const s = v.trim().toLowerCase();
+    if (s === "true") return true;
+    if (s === "false") return false;
+  }
+  if (typeof v === "number") return v !== 0;
+  return Boolean(v);
+}
+
 function asNumberOrNull(v: unknown): number | null {
   if (typeof v === "number" && Number.isFinite(v)) return v;
   if (typeof v === "string") {
@@ -203,7 +237,134 @@ function buildOfferSummary(args: {
   return parts.join(" ");
 }
 
+function getBannerPlacement(v: unknown): BannerPlacement | null {
+  if (typeof v !== "string") return null;
+  const s = v.trim().toLowerCase();
+  if (s === "home_top" || s === "home-top" || s === "top") return "home_top";
+  if (s === "home_bottom" || s === "home-bottom" || s === "bottom") return "home_bottom";
+  return null;
+}
+
+function getBannerSize(v: unknown): BannerSize {
+  if (typeof v !== "string") return "md";
+  const s = v.trim().toLowerCase();
+  if (s === "sm" || s === "small") return "sm";
+  if (s === "lg" || s === "large") return "lg";
+  return "md";
+}
+
+const PLACEHOLDER_BANNER_IMAGES = [
+  "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1600&q=80",
+  "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?auto=format&fit=crop&w=1600&q=80",
+  "https://images.unsplash.com/photo-1522338140500-02d2751f1750?auto=format&fit=crop&w=1600&q=80",
+  "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=1600&q=80",
+];
+
+async function BannerCarouselSection({ placement }: { placement: BannerPlacement }) {
+  let carousels: BannerCarousel[] = [];
+
+  try {
+    const snap = await dbAdmin
+      .collection("bannerCarousels")
+      .where("active", "==", true)
+      .limit(10)
+      .get();
+
+    carousels = snap.docs
+      .map((d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) }) as Record<string, unknown> & { id: string })
+      .map((raw): BannerCarousel | null => {
+        const p = getBannerPlacement(raw["placement"]);
+        if (!p || p !== placement) return null;
+        const itemsRaw = Array.isArray(raw["items"]) ? (raw["items"] as unknown[]) : [];
+        const items = itemsRaw
+          .map((it, idx): BannerItem | null => {
+            if (!isRecord(it)) return null;
+            const active = "active" in it ? asBoolean(it["active"]) : true;
+            if (!active) return null;
+            const imageUrl = asStringOrNull(it["imageUrl"]) ?? asStringOrNull(it["image"]);
+            const alt = asStringOrNull(it["alt"]) ?? asStringOrNull(it["title"]) ?? null;
+            const href = asStringOrNull(it["href"]) ?? asStringOrNull(it["link"]) ?? null;
+            const label = asStringOrNull(it["label"]) ?? null;
+            return {
+              id: asStringOrNull(it["id"]) ?? `${idx}`,
+              imageUrl,
+              alt,
+              href,
+              label,
+              active,
+            };
+          })
+          .filter((x): x is NonNullable<typeof x> => Boolean(x));
+
+        if (!items.length) return null;
+
+        return {
+          id: raw.id,
+          placement,
+          size: getBannerSize(raw["size"]),
+          title: asStringOrNull(raw["title"]),
+          subtitle: asStringOrNull(raw["subtitle"]),
+          items,
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => Boolean(x));
+  } catch {
+    return null;
+  }
+
+  if (!carousels.length) return null;
+
+  return (
+    <>
+      {carousels.map((c) => (
+        <section key={c.id} className="banner-carousel">
+          {c.title ? (
+            <div className="banner-carousel__header">
+              <div className="banner-carousel__titleWrap">
+                <h2 className="banner-carousel__title">{c.title}</h2>
+                {c.subtitle ? <div className="banner-carousel__subtitle">{c.subtitle}</div> : null}
+              </div>
+            </div>
+          ) : null}
+
+          <div className={`banner-carousel__track banner-carousel__track--${c.size}`} aria-label="Promotions">
+            {c.items.map((b, idx) => {
+              const src = b.imageUrl || PLACEHOLDER_BANNER_IMAGES[idx % PLACEHOLDER_BANNER_IMAGES.length];
+              const alt = b.alt || "Promotion banner";
+              const slide = (
+                <div className="banner-carousel__slide">
+                  <Image
+                    src={src}
+                    alt={alt}
+                    fill
+                    sizes="(max-width: 768px) 88vw, 420px"
+                    style={{ objectFit: "cover" }}
+                    priority={placement === "home_top" && idx === 0}
+                  />
+                  {b.label ? <div className="banner-carousel__label">{b.label}</div> : null}
+                </div>
+              );
+
+              return b.href ? (
+                <Link key={b.id} href={b.href} className="banner-carousel__link" aria-label={alt}>
+                  {slide}
+                </Link>
+              ) : (
+                <div key={b.id} className="banner-carousel__link" aria-label={alt}>
+                  {slide}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </>
+  );
+}
+
 async function OffersSection() {
+  let offers: { id: string; code: string; title: string | null; summary: string; terms: string }[] = [];
+
   try {
     const snap = await dbAdmin
       .collection("coupons")
@@ -211,7 +372,7 @@ async function OffersSection() {
       .limit(6)
       .get();
 
-    const offers = snap.docs
+    offers = snap.docs
       .map((d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) }) as Record<string, unknown> & { id: string })
       .map((c) => {
         const discountObj = isRecord(c.discount) ? c.discount : null;
@@ -262,70 +423,70 @@ async function OffersSection() {
       })
       .filter((o): o is NonNullable<typeof o> => Boolean(o))
       .slice(0, 3);
-
-    if (!offers.length) return null;
-
-    return (
-      <section className="container mx-auto px-6 py-14">
-        <div className="flex items-end justify-between gap-6 mb-6">
-          <div>
-            <h2 className="text-2xl font-display">Current Offers</h2>
-            <p className="text-sm" style={{ color: "var(--muted)" }}>
-              Apply these at cart or checkout.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {offers.map((o) => (
-            <div
-              key={o.id}
-              className="rounded-2xl p-5"
-              style={{
-                background: "var(--panel-bg-soft)",
-                border: "1px solid var(--border-subtle)",
-              }}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="text-xs mb-1" style={{ color: "var(--muted)" }}>
-                    Coupon code
-                  </div>
-                  <div className="text-lg font-medium truncate">{o.code}</div>
-                  {o.title ? (
-                    <div className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-                      {o.title}
-                    </div>
-                  ) : null}
-                </div>
-                <div
-                  className="shrink-0 text-xs px-2.5 py-1 rounded-full"
-                  style={{
-                    background: "rgba(var(--gold-rgb),0.12)",
-                    border: "1px solid rgba(var(--gold-rgb),0.22)",
-                    color: "rgb(var(--gold-rgb))",
-                  }}
-                  title={o.terms}
-                >
-                  Details
-                </div>
-              </div>
-
-              <div className="mt-4 text-sm" style={{ color: "rgb(var(--gold-rgb))" }}>
-                {o.summary}
-              </div>
-
-              <div className="mt-4 text-xs" style={{ color: "var(--muted)" }}>
-                Hover “Details” for terms.
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    );
   } catch {
     return null;
   }
+
+  if (!offers.length) return null;
+
+  return (
+    <section className="container mx-auto px-6 py-14">
+      <div className="flex items-end justify-between gap-6 mb-6">
+        <div>
+          <h2 className="text-2xl font-display">Current Offers</h2>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
+            Apply these at cart or checkout.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {offers.map((o) => (
+          <div
+            key={o.id}
+            className="rounded-2xl p-5"
+            style={{
+              background: "var(--panel-bg-soft)",
+              border: "1px solid var(--border-subtle)",
+            }}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="text-xs mb-1" style={{ color: "var(--muted)" }}>
+                  Coupon code
+                </div>
+                <div className="text-lg font-medium truncate">{o.code}</div>
+                {o.title ? (
+                  <div className="text-sm mt-1" style={{ color: "var(--muted)" }}>
+                    {o.title}
+                  </div>
+                ) : null}
+              </div>
+              <div
+                className="shrink-0 text-xs px-2.5 py-1 rounded-full"
+                style={{
+                  background: "rgba(var(--gold-rgb),0.12)",
+                  border: "1px solid rgba(var(--gold-rgb),0.22)",
+                  color: "rgb(var(--gold-rgb))",
+                }}
+                title={o.terms}
+              >
+                Details
+              </div>
+            </div>
+
+            <div className="mt-4 text-sm" style={{ color: "rgb(var(--gold-rgb))" }}>
+              {o.summary}
+            </div>
+
+            <div className="mt-4 text-xs" style={{ color: "var(--muted)" }}>
+              Hover “Details” for terms.
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 /* ---------------------------------------------------------------- */
@@ -345,6 +506,10 @@ export default async function Home() {
     <>
       {/* Hero renders immediately (blocking LCP) */}
       <Hero hero={hero} />
+
+      <Suspense fallback={null}>
+        <BannerCarouselSection placement="home_top" />
+      </Suspense>
 
       {/* Stream each section independently */}
       {(sections as HomepageSection[]).map((section) => {
@@ -388,6 +553,10 @@ export default async function Home() {
 
       <Suspense fallback={null}>
         <OffersSection />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <BannerCarouselSection placement="home_bottom" />
       </Suspense>
 
       {/* Footer subscription */}

@@ -4053,3 +4053,111 @@ a:focus {
   border: 1px solid var(--border-subtle);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
+
+.banner-carousel {
+  width: 100%;
+  padding: 18px 24px 8px 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.banner-carousel__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+  padding: 0 2px;
+}
+
+.banner-carousel__title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.banner-carousel__subtitle {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.banner-carousel__track {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 18px;
+  padding: 6px 2px 16px 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.banner-carousel__track::-webkit-scrollbar {
+  display: none;
+}
+
+.banner-carousel__track {
+  scrollbar-width: none;
+}
+
+.banner-carousel__track--sm {
+  --banner-h: 140px;
+}
+
+.banner-carousel__track--md {
+  --banner-h: 180px;
+}
+
+.banner-carousel__track--lg {
+  --banner-h: 220px;
+}
+
+.banner-carousel__link {
+  flex: 0 0 auto;
+  display: block;
+  scroll-snap-align: start;
+  text-decoration: none;
+  outline: none;
+}
+
+.banner-carousel__slide {
+  height: var(--banner-h, 180px);
+  width: min(88vw, 520px);
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+  transform: translateZ(0);
+}
+
+.banner-carousel__link:focus-visible .banner-carousel__slide {
+  box-shadow: 0 0 0 3px rgba(var(--gold-rgb), 0.25), 0 18px 50px rgba(0, 0, 0, 0.25);
+  border-color: rgba(var(--gold-rgb), 0.25);
+}
+
+.banner-carousel__label {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #000;
+  background: linear-gradient(to right, #fcd34d, #fbbf24);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+@media (min-width: 1024px) {
+  .banner-carousel {
+    padding: 22px 24px 10px 24px;
+  }
+
+  .banner-carousel__slide {
+    width: min(40vw, 520px);
+  }
+}

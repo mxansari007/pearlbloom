@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   collection,
   doc,
@@ -99,9 +99,10 @@ async function lookupPincode(pincode: string) {
     method: "GET",
     cache: "no-store",
   });
-  const json = await resp.json().catch(() => ({}));
+  const json: unknown = await resp.json().catch(() => ({}));
   if (!resp.ok) {
-    const msg = typeof (json as any)?.error === "string" ? (json as any).error : "Invalid pincode";
+    const obj = typeof json === "object" && json !== null ? (json as Record<string, unknown>) : {};
+    const msg = typeof obj.error === "string" ? obj.error : "Invalid pincode";
     throw new Error(msg);
   }
   return json as { valid: boolean; city: string; state: string; country: string };
@@ -112,12 +113,14 @@ async function checkServiceability(pincode: string) {
     `/api/shipping/nimbus/serviceability?pincode=${encodeURIComponent(pincode)}`,
     { method: "GET", cache: "no-store" }
   );
-  const json = await resp.json().catch(() => ({}));
+  const json: unknown = await resp.json().catch(() => ({}));
   if (!resp.ok) {
-    const msg = typeof (json as any)?.error === "string" ? (json as any).error : "Serviceability check failed";
+    const obj = typeof json === "object" && json !== null ? (json as Record<string, unknown>) : {};
+    const msg = typeof obj.error === "string" ? obj.error : "Serviceability check failed";
     throw new Error(msg);
   }
-  return Boolean((json as any)?.serviceable);
+  const obj = typeof json === "object" && json !== null ? (json as Record<string, unknown>) : {};
+  return Boolean(obj.serviceable);
 }
 
 export default function CheckoutAddressSection({
@@ -164,7 +167,7 @@ export default function CheckoutAddressSection({
     state: "",
     postalCode: "",
     country: "India",
-    createdAt: Date.now(),
+    createdAt: 0,
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -189,7 +192,7 @@ export default function CheckoutAddressSection({
     onSelectedAddress(selected);
   }, [selected, onSelectedAddress]);
 
-  const loadAddresses = async () => {
+  const loadAddresses = useCallback(async () => {
     try {
       const q = query(
         collection(dbClient, "users", userId, "addresses"),
@@ -213,11 +216,11 @@ export default function CheckoutAddressSection({
     } finally {
       setLoading(false);
     }
-  };
+  }, [onSelectAddressId, selectedAddressId, userId]);
 
   useEffect(() => {
     loadAddresses();
-  }, [userId]);
+  }, [loadAddresses]);
 
   useEffect(() => {
     const pin = onlyDigits(form.postalCode).slice(0, 6);
@@ -248,9 +251,10 @@ export default function CheckoutAddressSection({
         }));
         setPincodeStatus({ state: "valid" });
       })
-      .catch((e: any) => {
+      .catch((e: unknown) => {
         if (cancelled) return;
-        setPincodeStatus({ state: "invalid", message: e?.message || "Invalid pincode" });
+        const msg = e instanceof Error ? e.message : null;
+        setPincodeStatus({ state: "invalid", message: msg || "Invalid pincode" });
         setServiceabilityStatus({ state: "idle" });
       });
 
