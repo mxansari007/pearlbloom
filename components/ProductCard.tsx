@@ -6,7 +6,7 @@ import { Heart, ArrowRight } from "lucide-react";
 import type { MouseEvent } from "react";
 import type { Product } from "../types/products";
 import { useWishlistStore } from "@/store/useWishlistStore";
-import { getFinalPrice } from "@/libs/pricing";
+import { getProductPriceInfo, getStartingVariantPriceInfo } from "@/libs/pricing";
 import { track } from "@/utils/analytics";
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -22,51 +22,15 @@ export default function ProductCard({ product }: { product: Product }) {
 
   /* PRICING */
   const variants = Array.isArray(product.variants) ? product.variants : [];
-  let startingOriginalPrice = 0;
-  let startingFinalPrice = 0;
-  let hasDiscount = false;
-  let discountPercent = 0;
+  const priceInfo =
+    variants.length > 0
+      ? getStartingVariantPriceInfo(product) ?? { original: 0, final: 0, hasDiscount: false, discountPercent: 0 }
+      : getProductPriceInfo(product);
 
-  if (variants.length > 0) {
-    const pricePairs = variants
-      .map((v) => {
-        const original = typeof v.price === "number" ? v.price : 0;
-        const final = getFinalPrice(v);
-        return { original, final };
-      })
-      .filter((p) => p.original > 0);
-
-    if (pricePairs.length > 0) {
-      const minFinal = Math.min(...pricePairs.map((p) => p.final));
-      const match = pricePairs.find((p) => p.final === minFinal) ?? pricePairs[0];
-      startingOriginalPrice = match.original;
-      startingFinalPrice = match.final;
-      hasDiscount = startingFinalPrice < startingOriginalPrice;
-      discountPercent = hasDiscount
-        ? Math.round((1 - startingFinalPrice / startingOriginalPrice) * 100)
-        : 0;
-    } else {
-      startingOriginalPrice = 0;
-      startingFinalPrice = 0;
-      hasDiscount = false;
-      discountPercent = 0;
-    }
-  } else {
-    startingOriginalPrice = typeof product.price === "number" ? product.price : 0;
-    const maybeDiscountPercent = product.inventory?.discountPercent ?? 0;
-
-    if (maybeDiscountPercent > 0 && startingOriginalPrice > 0) {
-      discountPercent = maybeDiscountPercent;
-      hasDiscount = true;
-      startingFinalPrice = Math.round(
-        startingOriginalPrice * (1 - maybeDiscountPercent / 100)
-      );
-    } else {
-      startingFinalPrice = startingOriginalPrice;
-      hasDiscount = false;
-      discountPercent = 0;
-    }
-  }
+  const startingOriginalPrice = priceInfo.original;
+  const startingFinalPrice = priceInfo.final;
+  const hasDiscount = priceInfo.hasDiscount;
+  const discountPercent = priceInfo.discountPercent;
 
   const savingsAmount = hasDiscount
     ? Math.max(0, startingOriginalPrice - startingFinalPrice)

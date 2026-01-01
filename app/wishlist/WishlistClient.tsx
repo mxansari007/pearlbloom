@@ -1,33 +1,46 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useWishlistStore } from "@/store/useWishlistStore";
-import { Trash2, ArrowRight, ShoppingBag } from "lucide-react";
+import { Trash2, ArrowRight } from "lucide-react";
 import type { Product } from "@/types/products";
+import { getProductPriceInfo, getStartingVariantPriceInfo } from "@/libs/pricing";
 
 export default function WishlistClient({ allProducts }: { allProducts: Product[] }) {
   const items = useWishlistStore((s) => s.items);
   const remove = useWishlistStore((s) => s.remove);
   const update = useWishlistStore((s) => s.update);
   const hydrated = useWishlistStore((s) => s.hasHydrated);
+  const productsById = useMemo(() => new Map(allProducts.map((p) => [p.id, p])), [allProducts]);
 
   useEffect(() => {
     if (!hydrated) return;
 
-    // Attempt to repair missing slugs for existing wishlist items
-    if (items.length > 0 && allProducts.length > 0) {
-      items.forEach((item) => {
-        if (!item.slug) {
-          const product = allProducts.find((p) => p.id === item.id);
-          if (product && product.slug) {
-            update(item.id, { slug: product.slug });
-          }
-        }
-      });
-    }
-  }, [hydrated, items, allProducts, update]);
+    if (items.length === 0 || productsById.size === 0) return;
+
+    items.forEach((item) => {
+      const product = productsById.get(item.id);
+      if (!product) return;
+
+      const variants = Array.isArray(product.variants) ? product.variants : [];
+      const priceInfo =
+        variants.length > 0
+          ? getStartingVariantPriceInfo(product) ?? { original: 0, final: 0, hasDiscount: false, discountPercent: 0 }
+          : getProductPriceInfo(product);
+
+      const updates: Partial<typeof item> = {};
+      if (!item.slug && product.slug) updates.slug = product.slug;
+      if (typeof priceInfo.final === "number" && priceInfo.final > 0 && item.price !== priceInfo.final) updates.price = priceInfo.final;
+      if (!item.image) {
+        const img = product.thumbnailUrl ?? product.images?.[0];
+        if (img) updates.image = img;
+      }
+
+      if (Object.keys(updates).length > 0) update(item.id, updates);
+    });
+  }, [hydrated, items, productsById, update]);
 
   if (!hydrated) {
     return (
@@ -94,7 +107,28 @@ export default function WishlistClient({ allProducts }: { allProducts: Product[]
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {items.map((item) => (
+            {items.map((item) => {
+              const product = productsById.get(item.id);
+              const variants = product && Array.isArray(product.variants) ? product.variants : [];
+              const priceInfo = product
+                ? variants.length > 0
+                  ? getStartingVariantPriceInfo(product) ?? { original: item.price, final: item.price, hasDiscount: false, discountPercent: 0 }
+                  : getProductPriceInfo(product)
+                : { original: item.price, final: item.price, hasDiscount: false, discountPercent: 0 };
+
+              const formattedFinal = new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                maximumFractionDigits: 0,
+              }).format(priceInfo.final);
+
+              const formattedOriginal = new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                maximumFractionDigits: 0,
+              }).format(priceInfo.original);
+
+              return (
               <div
                 key={item.id}
                 className="group relative flex flex-col rounded-xl overflow-hidden card transition-all duration-300 hover:-translate-y-1"
@@ -131,13 +165,30 @@ export default function WishlistClient({ allProducts }: { allProducts: Product[]
                   <Link href={item.slug ? `/product/${item.slug}` : '#'} className="block">
                     <h3 className="font-display text-lg mb-1 truncate group-hover:text-[rgb(212,175,55)] transition-colors">{item.name}</h3>
                   </Link>
-                  <p className="text-muted text-sm mb-5">
-                     {new Intl.NumberFormat('en-IN', {
-                        style: 'currency',
-                        currency: 'INR',
-                        maximumFractionDigits: 0
-                      }).format(item.price)}
-                  </p>
+                  <div className="mb-5">
+                    <div className="flex items-baseline gap-2">
+                      <div className="text-sm font-medium" style={{ color: "rgb(var(--gold-rgb))" }}>
+                        {formattedFinal}
+                      </div>
+                      {priceInfo.hasDiscount ? (
+                        <div className="text-xs line-through text-muted">
+                          {formattedOriginal}
+                        </div>
+                      ) : null}
+                      {priceInfo.hasDiscount ? (
+                        <div
+                          className="text-[10px] px-2 py-0.5 rounded-full"
+                          style={{
+                            background: "rgba(var(--gold-rgb),0.12)",
+                            border: "1px solid rgba(var(--gold-rgb),0.22)",
+                            color: "rgb(var(--gold-rgb))",
+                          }}
+                        >
+                          {priceInfo.discountPercent}% OFF
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
                   
                   <div className="mt-auto">
                     <Link 
@@ -150,7 +201,8 @@ export default function WishlistClient({ allProducts }: { allProducts: Product[]
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import type { Product, Variant } from '../types/products'
 import { useWishlistStore } from '@/store/useWishlistStore'
-import { getFinalPrice, getStartingPrice } from '../libs/pricing'
+import { getProductPriceInfo, getStartingVariantPriceInfo, getVariantPriceInfo } from '../libs/pricing'
 import { track } from '@/utils/analytics'
 
 export default function ProductActions({
@@ -40,8 +40,8 @@ export default function ProductActions({
   function toggleWishlist() {
     const basePrice =
       selectedVariant
-        ? getFinalPrice(selectedVariant)
-        : getStartingPrice(product.variants) ?? 0
+        ? getVariantPriceInfo(selectedVariant, product.inventory?.discountPercent).final
+        : (getStartingVariantPriceInfo(product)?.final ?? getProductPriceInfo(product).final) ?? 0
 
     toggleWishlistStore({
       id: product.id,
