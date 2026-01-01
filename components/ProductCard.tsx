@@ -77,8 +77,8 @@ export default function ProductCard({ product }: { product: Product }) {
           <button
             onClick={handleWishlist}
             aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-            className="absolute top-3 right-3 z-20
-                       w-10 h-10 rounded-full
+            className="absolute top-2 right-2 md:top-3 md:right-3 z-20
+                       w-9 h-9 md:w-10 md:h-10 rounded-full
                        flex items-center justify-center
                        transition-all duration-300
                        hover:scale-110
@@ -100,7 +100,7 @@ export default function ProductCard({ product }: { product: Product }) {
             }}
           >
             <Heart
-              size={18}
+              size={16}
               strokeWidth={2}
               className={`transition-all duration-300 ${
                 isWishlisted
@@ -171,14 +171,14 @@ export default function ProductCard({ product }: { product: Product }) {
         {/* CARD BODY */}
         <div className="product-card__body">
           {/* Product Name */}
-          <h3 className="product-card__title line-clamp-2">
+          <h3 className="product-card__title line-clamp-1 md:line-clamp-2">
             {product.name}
           </h3>
 
           {/* Short description */}
           {product.shortDescription && (
             <p
-              className="mt-1 mb-3 text-xs line-clamp-2"
+              className="hidden md:block mt-1 mb-3 text-xs line-clamp-2"
               style={{ color: 'var(--muted)' }}
             >
               {product.shortDescription}
