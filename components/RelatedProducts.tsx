@@ -8,7 +8,7 @@ import type { Product } from "../types/products";
 
 function RelatedProductsSkeleton() {
   return (
-    <div className="bg-[var(--card-border)] p-px sm:bg-transparent sm:p-0">
+    <div className="-mx-5 sm:mx-0 bg-[var(--grid-divider)] p-px sm:bg-transparent sm:p-0">
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-px sm:gap-6">
       {Array.from({ length: 4 }).map((_, i) => (
         <div
@@ -45,7 +45,7 @@ async function RelatedProductsStream({
   if (!suggestions.length) return null;
 
   return (
-    <div className="bg-[var(--card-border)] p-px sm:bg-transparent sm:p-0">
+    <div className="-mx-5 sm:mx-0 bg-[var(--grid-divider)] p-px sm:bg-transparent sm:p-0">
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-px sm:gap-6">
         {suggestions.map((p) => (
           <ProductCard product={p} key={p.id} />

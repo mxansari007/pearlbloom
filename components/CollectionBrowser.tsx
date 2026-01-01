@@ -305,7 +305,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
 
         <div className="mb-6">
           {viewMode === 'grid' ? (
-            <div className="bg-[var(--card-border)] p-px sm:bg-transparent sm:p-0">
+            <div className="-mx-5 sm:mx-0 bg-[var(--grid-divider)] p-px sm:bg-transparent sm:p-0">
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-px sm:gap-4 lg:gap-8">
                 {visible.map((p) => (
                   <ProductCard key={p.id} product={p} />

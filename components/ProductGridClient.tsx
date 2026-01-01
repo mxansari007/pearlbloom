@@ -60,7 +60,7 @@ function ProductGridClient({
 
   return (
     <>
-      <div className="bg-[var(--card-border)] p-px sm:bg-transparent sm:p-0">
+      <div className="-mx-5 sm:mx-0 bg-[var(--grid-divider)] p-px sm:bg-transparent sm:p-0">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-px sm:gap-6">
           {products.map((p) => (
             <ProductCard key={p.id} product={p} />
