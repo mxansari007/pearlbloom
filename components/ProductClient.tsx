@@ -13,6 +13,7 @@ import { SiFlipkart } from "react-icons/si";
 import { useProductVariant } from "@/hooks/useProductVariant";
 import { track } from "@/utils/analytics";
 import { useAppConfigStore } from "@/store/useAppStore";
+import { CreditCard, Landmark, ShieldCheck, Smartphone, Wallet } from "lucide-react";
 
 export default function ProductClient({ product }: { product: Product }) {
   const router = useRouter();
@@ -400,17 +401,58 @@ export default function ProductClient({ product }: { product: Product }) {
 
       {/* Trust Indicators */}
       <div className="product-detail__trust">
-        <div className="product-detail__trust-item">
-          Authentic Product
+        <div
+          className="product-detail__trust-item"
+          style={{
+            background: "rgba(var(--gold-rgb),0.12)",
+            border: "1px solid rgba(var(--gold-rgb),0.28)",
+            color: "rgb(var(--gold-rgb))",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 10,
+            padding: "10px 12px",
+            borderRadius: 14,
+          }}
+        >
+          <span className="flex items-center gap-2">
+            <ShieldCheck size={16} />
+            Secure payments via Razorpay
+          </span>
+          <span className="flex items-center gap-2" style={{ color: "var(--fg)" }}>
+            <span className="flex items-center gap-1 text-xs">
+              <Smartphone size={14} />
+              UPI
+            </span>
+            <span className="flex items-center gap-1 text-xs">
+              <CreditCard size={14} />
+              Cards
+            </span>
+            <span className="flex items-center gap-1 text-xs">
+              <Landmark size={14} />
+              Netbanking
+            </span>
+            <span className="flex items-center gap-1 text-xs">
+              <Wallet size={14} />
+              Wallets
+            </span>
+          </span>
         </div>
-        <div className="product-detail__trust-item">
-          Secure Payments
-        </div>
+        <div className="product-detail__trust-item">Easy returns & quick refunds</div>
+        <div className="product-detail__trust-item">Transparent delivery timelines</div>
         <div className="product-detail__trust-item">
           {typeof freeShippingAbove === "number" && freeShippingAbove > 0
             ? `Free shipping over ₹${freeShippingAbove.toLocaleString("en-IN")}`
-            : "Fast Shipping"}
+            : "Fast shipping across India"}
         </div>
+      </div>
+
+      <div className="text-xs mt-3" style={{ color: "var(--muted)" }}>
+        <a href="/shipping-and-delivery" className="underline underline-offset-2">Shipping</a>
+        {" • "}
+        <a href="/returns-and-refunds" className="underline underline-offset-2">Returns</a>
+        {" • "}
+        <a href="/warranty-and-care" className="underline underline-offset-2">Warranty</a>
       </div>
 
       {/* Wishlist / Share */}

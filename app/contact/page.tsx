@@ -1,6 +1,6 @@
 // src/app/contact/page.tsx
-import type { ReactNode } from 'react'
 import ContactForm from '../../components/ContactForm' // client component
+import { dbAdmin } from '@/libs/firebase-admin'
 
 export const metadata = {
   title: 'Contact — Pearl Bloom',
@@ -11,43 +11,131 @@ export const metadata = {
   }
 }
 
-export default function ContactPage(): ReactNode {
-  // replace these placeholders in your copy when you want
-  const business = {
-    name: 'Pearl Bloom',
-    email: 'hello@pearlbloom.in',
-    phone: '+91 98765 43210',
-    address: {
-      line1: '76, Delhi Road',
-      line2: 'Bulandshahr, India',
-      postal: '203001'
-    },
-    hours: [
-      'Mon–Fri: 10:00 — 19:00',
-      'Sat: 11:00 — 17:00',
-      'Sun: Closed / By appointment'
-    ],
-    insta: 'https://instagram.com/yourhandle',
-    facebook: 'https://facebook.com/yourhandle',
-    pinterest: 'https://pinterest.com/yourhandle'
+type BusinessSettings = {
+  name?: string
+  email?: string
+  phone?: string
+  address?: { line1?: string; line2?: string; postal?: string; city?: string; state?: string }
+  hours?: string[]
+  socials?: { instagram?: string; facebook?: string; pinterest?: string; youtube?: string; linkedin?: string; whatsapp?: string }
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+function asString(v: unknown): string | null {
+  return typeof v === 'string' ? v : null
+}
+
+function asStringArray(v: unknown): string[] | null {
+  if (!Array.isArray(v)) return null
+  const out = v.filter((x) => typeof x === 'string') as string[]
+  return out.length ? out : []
+}
+
+async function getBusinessFromSettings(): Promise<BusinessSettings | null> {
+  try {
+    const snap = await dbAdmin.collection('siteSettings').doc('main').get()
+    if (!snap.exists) return null
+    const data = snap.data() as unknown
+    if (!isRecord(data)) return null
+
+    const footer = isRecord(data.footer) ? data.footer : null
+    const business = isRecord(data.business) ? data.business : null
+
+    const address = business && isRecord(business.address) ? business.address : null
+    const socials = business && isRecord(business.socials) ? business.socials : null
+    const footerSocialsRaw = footer && Array.isArray(footer.socialLinks) ? footer.socialLinks : null
+    const footerSocials = (() => {
+      if (!footerSocialsRaw) return null
+      const map: Record<string, string> = {}
+      footerSocialsRaw.forEach((x) => {
+        if (!isRecord(x)) return
+        const p = asString(x.platform)
+        const u = asString(x.url)
+        if (!p || !u) return
+        map[p] = u
+      })
+      return map
+    })()
+
+    return {
+      name: asString(business?.name) ?? 'Pearl Bloom',
+      email: asString(business?.email) ?? asString(footer?.contactEmail) ?? undefined,
+      phone: asString(business?.phone) ?? asString(footer?.contactPhone) ?? undefined,
+      address: address
+        ? {
+            line1: asString(address.line1) ?? undefined,
+            line2: asString(address.line2) ?? undefined,
+            postal: asString(address.postal) ?? undefined,
+            city: asString(address.city) ?? undefined,
+            state: asString(address.state) ?? undefined,
+          }
+        : undefined,
+      hours: asStringArray(business?.hours) ?? undefined,
+      socials: socials
+        ? {
+            instagram: asString(socials.instagram) ?? undefined,
+            facebook: asString(socials.facebook) ?? undefined,
+            pinterest: asString(socials.pinterest) ?? undefined,
+            youtube: asString(socials.youtube) ?? undefined,
+            linkedin: asString(socials.linkedin) ?? undefined,
+            whatsapp: asString(socials.whatsapp) ?? undefined,
+          }
+        : footerSocials
+        ? {
+            instagram: asString(footerSocials.instagram) ?? undefined,
+            facebook: asString(footerSocials.facebook) ?? undefined,
+            pinterest: asString(footerSocials.pinterest) ?? undefined,
+            youtube: asString(footerSocials.youtube) ?? undefined,
+            linkedin: asString(footerSocials.linkedin) ?? undefined,
+            whatsapp: asString(footerSocials.whatsapp) ?? undefined,
+          }
+        : undefined,
+    }
+  } catch {
+    return null
   }
+}
+
+export default async function ContactPage() {
+  const business = await getBusinessFromSettings()
+
+  const businessFallback = {
+    name: 'Pearl Bloom',
+    email: '',
+    phone: '',
+    address: null as null | { line1: string; line2?: string; postal?: string; city?: string; state?: string },
+    hours: [] as string[],
+    socials: {} as Record<string, string>,
+  }
+
+  const resolvedBusiness = business ?? businessFallback
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'JewelryStore',
-    name: business.name,
+    name: resolvedBusiness.name ?? 'Pearl Bloom',
     url: typeof process !== 'undefined' ? (process.env.NEXT_PUBLIC_SITE_URL ?? '') : '',
-    telephone: business.phone,
-    email: business.email,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: `${business.address.line1}, ${business.address.line2}`,
-      postalCode: business.address.postal,
-      addressLocality: 'Bulandshahr',
-      addressCountry: 'IN'
-    },
-    openingHours: business.hours.map((h) => h.replace(' — ', '')),
-    sameAs: [business.insta, business.facebook, business.pinterest]
+    telephone: resolvedBusiness.phone || undefined,
+    email: resolvedBusiness.email || undefined,
+    address: resolvedBusiness.address
+      ? {
+          '@type': 'PostalAddress',
+          streetAddress: `${resolvedBusiness.address.line1 ?? ''}${resolvedBusiness.address.line2 ? `, ${resolvedBusiness.address.line2}` : ''}`,
+          postalCode: resolvedBusiness.address.postal,
+          addressLocality: resolvedBusiness.address.city,
+          addressRegion: resolvedBusiness.address.state,
+          addressCountry: 'IN',
+        }
+      : undefined,
+    openingHours: Array.isArray(resolvedBusiness.hours)
+      ? resolvedBusiness.hours.map((h) => h.replace(' — ', ''))
+      : undefined,
+    sameAs: resolvedBusiness.socials
+      ? Object.values(resolvedBusiness.socials).filter((v) => typeof v === 'string' && v.startsWith('http'))
+      : undefined,
   }
 
   return (
@@ -67,7 +155,7 @@ export default function ContactPage(): ReactNode {
             </div>
 
             <div className="card p-6">
-              <ContactForm contactEmail={business.email} />
+              <ContactForm contactEmail={resolvedBusiness.email ?? ""} />
             </div>
 
             {/* FAQ */}
@@ -109,43 +197,71 @@ export default function ContactPage(): ReactNode {
           {/* Right column — business info + social + map */}
           <aside className="space-y-6">
             <div className="card p-5">
-              <h3 className="font-display text-lg">Pearl Bloom</h3>
+              <h3 className="font-display text-lg">{resolvedBusiness.name ?? 'Pearl Bloom'}</h3>
               <div className="text-sm text-muted mt-2">
-                <div>{business.address.line1}</div>
-                <div>{business.address.line2}</div>
-                <div>{business.address.postal}</div>
+                {resolvedBusiness.address ? (
+                  <>
+                    {resolvedBusiness.address.line1 ? <div>{resolvedBusiness.address.line1}</div> : null}
+                    {resolvedBusiness.address.line2 ? <div>{resolvedBusiness.address.line2}</div> : null}
+                    {resolvedBusiness.address.postal ? <div>{resolvedBusiness.address.postal}</div> : null}
+                  </>
+                ) : (
+                  <div>We’re available online across India.</div>
+                )}
               </div>
 
               <div className="mt-4 text-sm">
-                <div><strong>Email:</strong> <a href={`mailto:${business.email}`} className="underline">{business.email}</a></div>
-                <div className="mt-2"><strong>Phone:</strong> <a href={`tel:${business.phone}`} className="underline">{business.phone}</a></div>
+                {resolvedBusiness.email ? (
+                  <div><strong>Email:</strong> <a href={`mailto:${resolvedBusiness.email}`} className="underline">{resolvedBusiness.email}</a></div>
+                ) : null}
+                {resolvedBusiness.phone ? (
+                  <div className="mt-2"><strong>Phone:</strong> <a href={`tel:${resolvedBusiness.phone}`} className="underline">{resolvedBusiness.phone}</a></div>
+                ) : null}
+                {!resolvedBusiness.email && !resolvedBusiness.phone ? (
+                  <div className="text-muted">Use the form on the left or chat support.</div>
+                ) : null}
               </div>
 
-              <div className="mt-4">
-                <div className="text-sm text-muted">Hours</div>
-                <ul className="mt-2 text-sm">
-                  {business.hours.map((h) => <li key={h}>{h}</li>)}
-                </ul>
-              </div>
+              {Array.isArray(resolvedBusiness.hours) && resolvedBusiness.hours.length ? (
+                <div className="mt-4">
+                  <div className="text-sm text-muted">Hours</div>
+                  <ul className="mt-2 text-sm">
+                    {resolvedBusiness.hours.map((h) => <li key={h}>{h}</li>)}
+                  </ul>
+                </div>
+              ) : null}
             </div>
 
             <div className="card p-4">
               <h4 className="font-medium">Follow us</h4>
               <div className="flex gap-3 mt-3">
-                <a href={business.insta} target="_blank" rel="noreferrer" aria-label="Instagram" className="rounded-full w-10 h-10 flex items-center justify-center bg-white/6 hover:bg-white/8 transition">IG</a>
-                <a href={business.facebook} target="_blank" rel="noreferrer" aria-label="Facebook" className="rounded-full w-10 h-10 flex items-center justify-center bg-white/6 hover:bg-white/8 transition">FB</a>
-                <a href={business.pinterest} target="_blank" rel="noreferrer" aria-label="Pinterest" className="rounded-full w-10 h-10 flex items-center justify-center bg-white/6 hover:bg-white/8 transition">PT</a>
+                {resolvedBusiness.socials?.instagram ? (
+                  <a href={resolvedBusiness.socials.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="rounded-full w-10 h-10 flex items-center justify-center bg-white/6 hover:bg-white/8 transition">IG</a>
+                ) : null}
+                {resolvedBusiness.socials?.facebook ? (
+                  <a href={resolvedBusiness.socials.facebook} target="_blank" rel="noreferrer" aria-label="Facebook" className="rounded-full w-10 h-10 flex items-center justify-center bg-white/6 hover:bg-white/8 transition">FB</a>
+                ) : null}
+                {resolvedBusiness.socials?.pinterest ? (
+                  <a href={resolvedBusiness.socials.pinterest} target="_blank" rel="noreferrer" aria-label="Pinterest" className="rounded-full w-10 h-10 flex items-center justify-center bg-white/6 hover:bg-white/8 transition">PT</a>
+                ) : null}
+                {resolvedBusiness.socials?.whatsapp ? (
+                  <a href={resolvedBusiness.socials.whatsapp} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="rounded-full w-10 h-10 flex items-center justify-center bg-white/6 hover:bg-white/8 transition">WA</a>
+                ) : null}
               </div>
             </div>
 
-            <div className="card p-0 overflow-hidden">
-              <iframe
-                title="Store location"
-                src="https://www.google.com/maps?q=1,+54,+bhoot,+Nazimpura,+Yamunapuram,+Bulandshahr,+India&output=embed"
-                className="w-full h-48 border-0"
-                loading="lazy"
-              />
-            </div>
+            {resolvedBusiness.address ? (
+              <div className="card p-0 overflow-hidden">
+                <iframe
+                  title="Store location"
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(
+                    `${resolvedBusiness.address.line1 ?? ''} ${resolvedBusiness.address.line2 ?? ''} ${resolvedBusiness.address.city ?? ''} ${resolvedBusiness.address.state ?? ''} ${resolvedBusiness.address.postal ?? ''} India`
+                  )}&output=embed`}
+                  className="w-full h-48 border-0"
+                  loading="lazy"
+                />
+              </div>
+            ) : null}
           </aside>
         </div>
       </main>

@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { HeroData } from "../libs/hero.server";
 
 export default function Hero({ hero }: { hero: HeroData | null }) {
-  if (!hero) return null;
+  if (!hero) return null
 
   return (
     <section className="py-20">
@@ -22,6 +22,27 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
             <Link href={hero.ctaLink} className="btn-cta">
               {hero.ctaLabel}
             </Link>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            {[
+              "Secure payments",
+              "Easy returns",
+              "Fast delivery",
+              "WhatsApp support",
+            ].map((t) => (
+              <span
+                key={t}
+                className="text-xs px-3 py-1.5 rounded-full"
+                style={{
+                  background: "rgba(var(--gold-rgb),0.10)",
+                  border: "1px solid rgba(var(--gold-rgb),0.22)",
+                  color: "rgb(var(--gold-rgb))",
+                }}
+              >
+                {t}
+              </span>
+            ))}
           </div>
         </div>
 

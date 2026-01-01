@@ -585,6 +585,30 @@ export default function BuyNowCheckoutPage() {
             >
               {loading ? "Placing order…" : "Place Order"}
             </button>
+
+            <div
+              className="mt-4 rounded-xl p-4 text-sm"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid var(--border-subtle)",
+                color: "var(--muted)",
+              }}
+            >
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <span style={{ color: "var(--fg)" }}>Secure checkout</span>
+                <span>Payments powered by Razorpay</span>
+              </div>
+              <div className="text-xs mt-2">
+                UPI • Cards • Netbanking • Wallets
+                <span className="mx-2">•</span>
+                <a href="/returns-and-refunds" className="underline underline-offset-2">Returns & refunds</a>
+                <span className="mx-2">•</span>
+                <a href="/shipping-and-delivery" className="underline underline-offset-2">Shipping</a>
+                <span className="mx-2">•</span>
+                <a href="/contact" className="underline underline-offset-2">Need help?</a>
+              </div>
+            </div>
+
             {!configLoaded ? (
               <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>
                 Loading shipping rates…
