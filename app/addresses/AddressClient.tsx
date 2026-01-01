@@ -12,14 +12,118 @@ import {
   doc,
   runTransaction,
 } from "firebase/firestore";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 import { dbClient } from "@/libs/firebase-client";
 import { useAuthStore } from "@/store/useAppStore";
 import type { Address } from "@/types/user";
 
-const editableFields = ["fullName", "phone", "line1", "city", "state", "postalCode"] as const;
-type EditableField = (typeof editableFields)[number];
+const IN_STATES = [
+  "Andaman and Nicobar Islands",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chandigarh",
+  "Chhattisgarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jammu and Kashmir",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Ladakh",
+  "Lakshadweep",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Puducherry",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+];
+
+type FormErrors = Partial<Record<keyof Address, string>>;
+
+function onlyDigits(value: string) {
+  return value.replace(/[^\d]/g, "");
+}
+
+function validateAddress(
+  form: Address,
+  pincodeVerified: boolean
+): FormErrors {
+  const errors: FormErrors = {};
+
+  if (!form.fullName.trim() || form.fullName.trim().length < 2) {
+    errors.fullName = "Enter full name.";
+  }
+
+  const phone = onlyDigits(form.phone);
+  if (phone.length !== 10) {
+    errors.phone = "Enter a valid 10-digit phone number.";
+  }
+
+  if (!form.line1.trim() || form.line1.trim().length < 5) {
+    errors.line1 = "Enter a complete address.";
+  }
+
+  if (!/^\d{6}$/.test(form.postalCode.trim())) {
+    errors.postalCode = "Enter a valid 6-digit pincode.";
+  } else if (!pincodeVerified) {
+    errors.postalCode = "Pincode not verified.";
+  }
+
+  if (!form.city.trim()) {
+    errors.city = "City is required.";
+  }
+
+  if (!form.state.trim()) {
+    errors.state = "State is required.";
+  }
+
+  return errors;
+}
+
+async function lookupPincode(pincode: string) {
+  const resp = await fetch(`/api/geo/pincode?pincode=${encodeURIComponent(pincode)}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  const json = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    const msg = typeof (json as any)?.error === "string" ? (json as any).error : "Invalid pincode";
+    throw new Error(msg);
+  }
+  return json as { valid: boolean; city: string; state: string; country: string };
+}
+
+async function checkServiceability(pincode: string) {
+  const resp = await fetch(
+    `/api/shipping/nimbus/serviceability?pincode=${encodeURIComponent(pincode)}`,
+    { method: "GET", cache: "no-store" }
+  );
+  const json = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    const msg = typeof (json as any)?.error === "string" ? (json as any).error : "Serviceability check failed";
+    throw new Error(msg);
+  }
+  return Boolean((json as any)?.serviceable);
+}
 
 export default function AddressClient() {
   const router = useRouter();
@@ -31,11 +135,27 @@ export default function AddressClient() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [pincodeStatus, setPincodeStatus] = useState<
+    | { state: "idle" }
+    | { state: "checking" }
+    | { state: "valid" }
+    | { state: "invalid"; message: string }
+  >({ state: "idle" });
+  const [serviceabilityStatus, setServiceabilityStatus] = useState<
+    | { state: "idle" }
+    | { state: "checking" }
+    | { state: "serviceable" }
+    | { state: "not_serviceable" }
+    | { state: "error"; message: string }
+  >({ state: "idle" });
 
   const [form, setForm] = useState<Address>({
     fullName: "",
     phone: "",
     line1: "",
+    line2: "",
     city: "",
     state: "",
     postalCode: "",
@@ -88,6 +208,47 @@ export default function AddressClient() {
   if (!user) return null;
 
   const primaryAddress = addresses.find((a) => a.isDefault);
+
+  useEffect(() => {
+    if (!showForm) return;
+    const pin = onlyDigits(form.postalCode).slice(0, 6);
+    if (pin.length !== 6) {
+      setPincodeStatus({ state: "idle" });
+      setServiceabilityStatus({ state: "idle" });
+      return;
+    }
+
+    let cancelled = false;
+    setPincodeStatus({ state: "checking" });
+    setServiceabilityStatus({ state: "idle" });
+
+    lookupPincode(pin)
+      .then((data) => {
+        if (cancelled) return;
+        if (!data?.valid) {
+          setPincodeStatus({ state: "invalid", message: "Invalid pincode" });
+          setServiceabilityStatus({ state: "idle" });
+          return;
+        }
+        setForm((prev) => ({
+          ...prev,
+          postalCode: pin,
+          city: data.city,
+          state: data.state,
+          country: data.country,
+        }));
+        setPincodeStatus({ state: "valid" });
+      })
+      .catch((e: any) => {
+        if (cancelled) return;
+        setPincodeStatus({ state: "invalid", message: e?.message || "Invalid pincode" });
+        setServiceabilityStatus({ state: "idle" });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [form.postalCode, showForm]);
 
   /* ---------------- Set primary address ---------------- */
 
@@ -150,33 +311,60 @@ export default function AddressClient() {
   /* ---------------- Add address ---------------- */
 
   const saveAddress = async () => {
-    if (!form.fullName || !form.phone || !form.line1 || !form.city) return;
+    const pincodeVerified = pincodeStatus.state === "valid";
+    const nextErrors = validateAddress(form, pincodeVerified);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
     try {
       setSaving(true);
 
-      const isFirstAddress = addresses.length === 0;
+      const pin = onlyDigits(form.postalCode).slice(0, 6);
+      setServiceabilityStatus({ state: "checking" });
+      const ok = await checkServiceability(pin);
+      if (!ok) {
+        setServiceabilityStatus({ state: "not_serviceable" });
+        setErrors((prev) => ({ ...prev, postalCode: "Delivery not available to this pincode." }));
+        return;
+      }
+      setServiceabilityStatus({ state: "serviceable" });
 
-      await addDoc(
-        collection(dbClient, "users", user.uid, "addresses"),
-        {
+      const isFirstAddress = addresses.length === 0;
+      if (editingAddressId) {
+        await runTransaction(dbClient, async (tx) => {
+          tx.update(doc(dbClient, "users", user.uid, "addresses", editingAddressId), {
+            ...form,
+            phone: onlyDigits(form.phone),
+            postalCode: onlyDigits(form.postalCode).slice(0, 6),
+            createdAt: form.createdAt || Date.now(),
+          });
+        });
+      } else {
+        await addDoc(collection(dbClient, "users", user.uid, "addresses"), {
           ...form,
+          phone: onlyDigits(form.phone),
+          postalCode: onlyDigits(form.postalCode).slice(0, 6),
           isDefault: isFirstAddress,
           createdAt: Date.now(),
-        }
-      );
+        });
+      }
 
       setShowForm(false);
+      setEditingAddressId(null);
       setForm({
         fullName: "",
         phone: "",
         line1: "",
+        line2: "",
         city: "",
         state: "",
         postalCode: "",
         country: "India",
         createdAt: Date.now(),
       });
+      setErrors({});
+      setPincodeStatus({ state: "idle" });
+      setServiceabilityStatus({ state: "idle" });
 
       await loadAddresses();
 
@@ -213,11 +401,36 @@ export default function AddressClient() {
 
         {/* ADD BUTTON */}
         <button
-          onClick={() => setShowForm((v) => !v)}
+          onClick={() => {
+            if (showForm) {
+              setShowForm(false);
+              setEditingAddressId(null);
+              setErrors({});
+              setPincodeStatus({ state: "idle" });
+              setServiceabilityStatus({ state: "idle" });
+              return;
+            }
+            setEditingAddressId(null);
+            setForm({
+              fullName: "",
+              phone: "",
+              line1: "",
+              line2: "",
+              city: "",
+              state: "",
+              postalCode: "",
+              country: "India",
+              createdAt: Date.now(),
+            });
+            setErrors({});
+            setPincodeStatus({ state: "idle" });
+            setServiceabilityStatus({ state: "idle" });
+            setShowForm(true);
+          }}
           className="mb-6 rounded-xl px-5 py-2 text-sm font-medium text-black"
           style={{ background: "rgb(212,175,55)" }}
         >
-          {showForm ? "Cancel" : "Add New Address"}
+          {showForm ? "Close" : "Add New Address"}
         </button>
 
         {/* FORM */}
@@ -229,27 +442,156 @@ export default function AddressClient() {
               border: "1px solid var(--border-subtle)",
             }}
           >
-            {editableFields.map(
-              (field) => (
+            <div>
+              <div className="text-sm font-medium">
+                {editingAddressId ? "Edit address" : "Add new address"}
+              </div>
+              <div className="text-xs" style={{ color: "var(--muted)" }}>
+                Pincode validates city/state and checks delivery availability.
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="text-xs" style={{ color: "var(--muted)" }}>
+                  Full name
+                </label>
                 <input
-                  key={field}
-                  placeholder={field.replace(/^\w/, (c) => c.toUpperCase())}
-                  className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
-                  value={form[field]}
-                  onChange={(e) =>
-                    setForm({ ...form, [field]: e.target.value } as Address & Record<EditableField, string>)
-                  }
+                  value={form.fullName}
+                  onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--panel-bg)] px-4 py-2 text-sm"
+                  placeholder="Your name"
                 />
-              )
-            )}
+                {errors.fullName && (
+                  <div className="mt-1 text-xs text-red-300">{errors.fullName}</div>
+                )}
+              </div>
+
+              <div>
+                <label className="text-xs" style={{ color: "var(--muted)" }}>
+                  Phone
+                </label>
+                <input
+                  value={form.phone}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, phone: onlyDigits(e.target.value).slice(0, 10) }))
+                  }
+                  inputMode="numeric"
+                  className="mt-1 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--panel-bg)] px-4 py-2 text-sm"
+                  placeholder="10-digit number"
+                />
+                {errors.phone && <div className="mt-1 text-xs text-red-300">{errors.phone}</div>}
+              </div>
+
+              <div>
+                <label className="text-xs" style={{ color: "var(--muted)" }}>
+                  Pincode
+                </label>
+                <input
+                  value={form.postalCode}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, postalCode: onlyDigits(e.target.value).slice(0, 6) }))
+                  }
+                  inputMode="numeric"
+                  className="mt-1 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--panel-bg)] px-4 py-2 text-sm"
+                  placeholder="6-digit pincode"
+                />
+                <div className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
+                  {pincodeStatus.state === "checking"
+                    ? "Validating pincode…"
+                    : pincodeStatus.state === "valid"
+                      ? serviceabilityStatus.state === "checking"
+                        ? "Checking delivery availability…"
+                        : serviceabilityStatus.state === "serviceable"
+                          ? "Delivery available."
+                          : serviceabilityStatus.state === "not_serviceable"
+                            ? "Delivery not available to this pincode."
+                            : serviceabilityStatus.state === "error"
+                              ? serviceabilityStatus.message
+                              : "Pincode verified."
+                      : pincodeStatus.state === "invalid"
+                        ? pincodeStatus.message
+                        : ""}
+                </div>
+                {errors.postalCode && (
+                  <div className="mt-1 text-xs text-red-300">{errors.postalCode}</div>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="text-xs" style={{ color: "var(--muted)" }}>
+                  Address line
+                </label>
+                <input
+                  value={form.line1}
+                  onChange={(e) => setForm((p) => ({ ...p, line1: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--panel-bg)] px-4 py-2 text-sm"
+                  placeholder="House no, street, area"
+                />
+                {errors.line1 && <div className="mt-1 text-xs text-red-300">{errors.line1}</div>}
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="text-xs" style={{ color: "var(--muted)" }}>
+                  Landmark (optional)
+                </label>
+                <input
+                  value={form.line2 || ""}
+                  onChange={(e) => setForm((p) => ({ ...p, line2: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--panel-bg)] px-4 py-2 text-sm"
+                  placeholder="Landmark, building, etc."
+                />
+              </div>
+
+              <div>
+                <label className="text-xs" style={{ color: "var(--muted)" }}>
+                  City
+                </label>
+                <input
+                  value={form.city}
+                  onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))}
+                  disabled={pincodeStatus.state !== "valid"}
+                  className="mt-1 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--panel-bg)] px-4 py-2 text-sm disabled:opacity-60"
+                  placeholder={pincodeStatus.state === "valid" ? "City" : "Enter pincode first"}
+                />
+                {errors.city && <div className="mt-1 text-xs text-red-300">{errors.city}</div>}
+              </div>
+
+              <div>
+                <label className="text-xs" style={{ color: "var(--muted)" }}>
+                  State
+                </label>
+                <select
+                  value={form.state}
+                  onChange={(e) => setForm((p) => ({ ...p, state: e.target.value }))}
+                  disabled={pincodeStatus.state !== "valid"}
+                  className="mt-1 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--panel-bg)] px-4 py-2 text-sm disabled:opacity-60"
+                >
+                  <option value="" disabled>
+                    {pincodeStatus.state === "valid" ? "Select state" : "Enter pincode first"}
+                  </option>
+                  {IN_STATES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+                {errors.state && <div className="mt-1 text-xs text-red-300">{errors.state}</div>}
+              </div>
+            </div>
 
             <button
               onClick={saveAddress}
-              disabled={saving}
-              className="rounded-xl px-5 py-2 text-black text-sm"
+              disabled={
+                saving ||
+                pincodeStatus.state === "checking" ||
+                serviceabilityStatus.state === "checking" ||
+                serviceabilityStatus.state === "not_serviceable" ||
+                serviceabilityStatus.state === "error"
+              }
+              className="rounded-xl px-5 py-2 text-black text-sm disabled:opacity-60"
               style={{ background: "rgb(212,175,55)" }}
             >
-              {saving ? "Saving…" : "Save Address"}
+              {saving ? "Saving…" : editingAddressId ? "Update Address" : "Save Address"}
             </button>
           </div>
         )}
@@ -279,6 +621,32 @@ export default function AddressClient() {
                       Primary
                     </span>
                   )}
+                  <button
+                    onClick={() => {
+                      setEditingAddressId(a.id || null);
+                      setShowForm(true);
+                      setErrors({});
+                      setPincodeStatus({ state: "idle" });
+                      setServiceabilityStatus({ state: "idle" });
+                      setForm({
+                        id: a.id,
+                        fullName: a.fullName || "",
+                        phone: a.phone || "",
+                        line1: a.line1 || "",
+                        line2: a.line2 || "",
+                        city: a.city || "",
+                        state: a.state || "",
+                        postalCode: a.postalCode || "",
+                        country: a.country || "India",
+                        isDefault: a.isDefault,
+                        createdAt: a.createdAt || Date.now(),
+                      });
+                    }}
+                    title="Edit address"
+                    style={{ color: "rgb(212,175,55)" }}
+                  >
+                    <Pencil size={16} />
+                  </button>
 
                   <button
                     onClick={() => deleteAddress(a)}

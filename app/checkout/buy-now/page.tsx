@@ -3,16 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 import { Plus, Minus } from "lucide-react";
 
 import { useBuyNowStore } from "@/store/useBuyNowStore";
 import { useAuthStore } from "@/store/useAppStore";
-import { dbClient } from "@/libs/firebase-client";
-import { collection, getDocs, query } from "firebase/firestore";
 import type { Address } from "@/types/user";
 import { placeOrder } from "@/utils/placeorder";
 import { track } from "@/utils/analytics";
+import CheckoutAddressSection from "@/components/CheckoutAddressSection";
 
 type RazorpaySuccessResponse = {
   razorpay_order_id: string;
@@ -39,8 +37,8 @@ export default function BuyNowCheckoutPage() {
 
   const { item, updateQty, clearBuyNowItem, getTotal } = useBuyNowStore();
 
-  const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [address, setAddress] = useState<Address | null>(null);
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
@@ -76,31 +74,6 @@ export default function BuyNowCheckoutPage() {
         router.replace("/");
     }
   }, [authInitialized, item, router, isOrderPlaced]);
-
-  /* ---------------- Load Addresses ---------------- */
-
-  useEffect(() => {
-    if (user) {
-      loadAddresses();
-    }
-  }, [user]);
-
-  const loadAddresses = async () => {
-    if (!user) return;
-    try {
-      const q = query(collection(dbClient, "users", user.uid, "addresses"));
-      const snap = await getDocs(q);
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Address));
-      setAddresses(list);
-
-      // Select default or first
-      const def = list.find((a) => a.isDefault);
-      if (def) setSelectedAddressId(def.id!);
-      else if (list.length > 0) setSelectedAddressId(list[0].id!);
-    } catch (err) {
-      console.error("Failed to load addresses", err);
-    }
-  };
 
   /* ---------------- Payment Logic ---------------- */
 
@@ -325,7 +298,6 @@ export default function BuyNowCheckoutPage() {
     }
   };
 
-  const address = addresses.find((a) => a.id === selectedAddressId);
   const total = getTotal();
 
   if (!authInitialized || loading) {
@@ -354,60 +326,15 @@ export default function BuyNowCheckoutPage() {
               border: "1px solid var(--border-subtle)",
             }}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-medium">Shipping Address</h2>
-              <Link
-                href="/addresses?redirect=/checkout/buy-now"
-                className="text-sm font-medium hover:underline"
-                style={{ color: "rgb(var(--gold-rgb))" }}
-              >
-                Manage Addresses
-              </Link>
-            </div>
-
-            {addresses.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="mb-4" style={{ color: "var(--muted)" }}>
-                  You don&apos;t have any saved addresses.
-                </p>
-                <Link
-                  href="/addresses?redirect=/checkout/buy-now"
-                  className="inline-block px-6 py-2 rounded-lg font-medium transition"
-                  style={{
-                    background: "var(--btn-primary-bg)",
-                    color: "var(--btn-primary-text)",
-                  }}
-                >
-                  Add New Address
-                </Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {addresses.map((addr) => (
-                  <div
-                    key={addr.id}
-                    onClick={() => setSelectedAddressId(addr.id!)}
-                    className={`relative p-4 rounded-xl cursor-pointer border-2 transition-all ${
-                      selectedAddressId === addr.id
-                        ? "border-[rgb(var(--gold-rgb))]"
-                        : "border-transparent hover:border-[var(--border-subtle)]"
-                    }`}
-                    style={{ background: "var(--bg-color)" }}
-                  >
-                    <div className="font-medium mb-1">{addr.fullName}</div>
-                    <div className="text-sm" style={{ color: "var(--muted)" }}>
-                      {addr.line1}
-                      {addr.line2 && `, ${addr.line2}`}
-                      <br />
-                      {addr.city}, {addr.state} {addr.postalCode}
-                      <br />
-                      {addr.country}
-                    </div>
-                    <div className="mt-2 text-sm">{addr.phone}</div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {user?.uid ? (
+              <CheckoutAddressSection
+                userId={user.uid}
+                title="Shipping Address"
+                selectedAddressId={selectedAddressId}
+                onSelectAddressId={setSelectedAddressId}
+                onSelectedAddress={setAddress}
+              />
+            ) : null}
           </div>
 
           {/* Item Review Section */}

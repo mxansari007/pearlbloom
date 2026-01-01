@@ -3,15 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 
 import { useCartStore } from "@/store/useCartStore";
 import { useAuthStore } from "@/store/useAppStore";
-import { dbClient } from "@/libs/firebase-client";
-import { collection, getDocs, query, where } from "firebase/firestore";
 import type { Address } from "@/types/user";
 import { placeOrder } from "@/utils/placeorder";
 import { track } from "@/utils/analytics";
+import CheckoutAddressSection from "@/components/CheckoutAddressSection";
 
 type RazorpaySuccessResponse = {
   razorpay_order_id: string;
@@ -38,8 +36,9 @@ export default function CheckoutPage() {
   const { items } = useCartStore();
   const { user, isAuthenticated, authInitialized } = useAuthStore();
 
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [address, setAddress] = useState<Address | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [placingOrder, setPlacingOrder] = useState(false);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
 
   const total = items.reduce(
@@ -71,32 +70,9 @@ export default function CheckoutPage() {
       router.replace("/cart");
       return;
     }
-
-    loadPrimaryAddress();
   }, [authInitialized, isAuthenticated, items, isOrderPlaced]);
 
-  /* ---------------- Load Primary Address ---------------- */
-
-  const loadPrimaryAddress = async () => {
-    if (!user) return;
-
-    const q = query(
-      collection(dbClient, "users", user.uid, "addresses"),
-      where("isDefault", "==", true)
-    );
-
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      setAddress({
-        id: snap.docs[0].id,
-        ...(snap.docs[0].data() as Address),
-      });
-    }
-
-    setLoading(false);
-  };
-
-  if (!authInitialized || loading) {
+  if (!authInitialized) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -124,7 +100,7 @@ const handlePlaceOrder = async () => {
   if (!user || !address || items.length === 0) return;
 
   try {
-    setLoading(true);
+    setPlacingOrder(true);
 
     const now = Date.now();
 
@@ -295,7 +271,7 @@ const handlePlaceOrder = async () => {
     const message = err instanceof Error ? err.message : "Payment failed";
     alert(`${message}. Please try again.`);
   } finally {
-    setLoading(false);
+    setPlacingOrder(false);
   }
 };
 
@@ -309,18 +285,17 @@ const handlePlaceOrder = async () => {
       className="min-h-screen px-6 py-12"
       style={{ background: "var(--panel-bg)", color: "var(--fg)" }}
     >
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold mb-2">Checkout</h1>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
+            Review your order and confirm delivery details
+          </p>
+        </div>
 
-        {/* LEFT COLUMN */}
-        <div className="lg:col-span-2 space-y-8">
-
-          {/* HEADER */}
-          <div>
-            <h1 className="text-2xl font-semibold mb-2">Checkout</h1>
-            <p className="text-sm" style={{ color: "var(--muted)" }}>
-              Review your order and confirm delivery details
-            </p>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* LEFT COLUMN */}
+          <div className="lg:col-span-2 space-y-8">
 
           {/* DELIVERY ADDRESS */}
           <section
@@ -330,36 +305,15 @@ const handlePlaceOrder = async () => {
               border: "1px solid var(--border-subtle)",
             }}
           >
-            <div className="flex justify-between items-start mb-4">
-              <h2 className="text-lg font-medium">Delivery Address</h2>
-<Link href="/addresses?redirect=/checkout">Change</Link>
-
-            </div>
-
-            {address ? (
-              <div className="text-sm space-y-1">
-                <p className="font-medium">{address.fullName}</p>
-                <p>{address.phone}</p>
-                <p>
-                  {address.line1}, {address.city}, {address.state}{" "}
-                  {address.postalCode}
-                </p>
-                <p>{address.country}</p>
-              </div>
-            ) : (
-              <div className="text-sm">
-                <p style={{ color: "var(--muted)" }}>
-                  No delivery address selected.
-                </p>
-                <Link
-                  href="/addresses?redirect=/checkout"
-                  className="inline-block mt-3 text-sm"
-                  style={{ color: "rgb(212,175,55)" }}
-                >
-                  Add address →
-                </Link>
-              </div>
-            )}
+            {user?.uid ? (
+              <CheckoutAddressSection
+                userId={user.uid}
+                title="Delivery Address"
+                selectedAddressId={selectedAddressId}
+                onSelectAddressId={setSelectedAddressId}
+                onSelectedAddress={setAddress}
+              />
+            ) : null}
           </section>
 
           {/* ORDER ITEMS */}
@@ -451,20 +405,20 @@ const handlePlaceOrder = async () => {
             </div>
           </div>
 
-            <button
+          <button
             onClick={handlePlaceOrder}
-            disabled={!address || loading}
+            disabled={!address || placingOrder}
             className="w-full rounded-xl py-3 font-medium transition"
             style={{
-                background: !address
+              background: !address
                 ? "rgba(0,0,0,0.2)"
                 : "linear-gradient(to right, #fcd34d, #fbbf24)",
-                color: !address ? "var(--muted)" : "#000",
-                cursor: !address ? "not-allowed" : "pointer",
+              color: !address ? "var(--muted)" : "#000",
+              cursor: !address ? "not-allowed" : "pointer",
             }}
-            >
-            {loading ? "Placing order…" : "Place Order"}
-            </button>
+          >
+            {placingOrder ? "Placing order…" : "Place Order"}
+          </button>
           {!address && (
             <p
               className="text-xs mt-3"
@@ -474,6 +428,7 @@ const handlePlaceOrder = async () => {
             </p>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
