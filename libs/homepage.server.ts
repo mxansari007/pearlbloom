@@ -2,6 +2,7 @@ import { dbAdmin } from "./firebase-admin";
 
 
 export const getHomepageSections = async () => {
+  try {
     const snap = await dbAdmin
       .collection("homepageSections")
       .orderBy("order", "asc")
@@ -11,4 +12,8 @@ export const getHomepageSections = async () => {
       id: d.id,
       ...d.data(),
     }));
+  } catch (error) {
+    console.error("getHomepageSections failed:", error);
+    return [];
   }
+}

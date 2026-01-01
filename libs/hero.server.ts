@@ -16,6 +16,7 @@ export type HeroData = {
    Get hero data (cached)
 ----------------------------------- */
 export const getHeroData = async (): Promise<HeroData | null> => {
+  try {
     const snap = await dbAdmin
       .collection("siteSettings")
       .doc("main")
@@ -24,4 +25,8 @@ export const getHeroData = async (): Promise<HeroData | null> => {
     if (!snap.exists) return null;
 
     return snap.data()?.hero ?? null;
+  } catch (error) {
+    console.error("getHeroData failed:", error);
+    return null;
   }
+}

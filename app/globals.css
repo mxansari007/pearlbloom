@@ -624,7 +624,8 @@ a:focus {
     padding-top: 140%;
   }
   .product-card__img {
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center;
     padding: 0;
   }
 }

@@ -7,6 +7,7 @@ import type { Collection } from "@/types/collections";
    Get all collections (cached)
 ----------------------------------- */
 export const getAllCollections = async (): Promise<Collection[]> => {
+  try {
     const snap = await dbAdmin.collection("collections").get();
 
     return snap.docs.map((d) =>
@@ -15,12 +16,17 @@ export const getAllCollections = async (): Promise<Collection[]> => {
         ...(d.data() as Omit<Collection, "id">),
       })
     );
+  } catch (error) {
+    console.error("getAllCollections failed:", error);
+    return [];
   }
+}
 
 /* ----------------------------------
    Get collections by IDs (cached)
 ----------------------------------- */
 export const getCollectionsByIds = async (ids: string[]): Promise<Collection[]> => {
+  try {
     if (!ids.length) return [];
 
     const snaps = await Promise.all(
@@ -35,12 +41,17 @@ export const getCollectionsByIds = async (ids: string[]): Promise<Collection[]> 
           ...(d.data() as Omit<Collection, "id">),
         })
       );
-  };
+  } catch (error) {
+    console.error("getCollectionsByIds failed:", error);
+    return [];
+  }
+};
 
 /* ----------------------------------
    Get collection by slug (cached)
 ----------------------------------- */
 export const getCollectionBySlug = async (slug: string): Promise<Collection | null> => {
+  try {
     if (!slug) return null;
 
     const snap = await dbAdmin
@@ -57,4 +68,8 @@ export const getCollectionBySlug = async (slug: string): Promise<Collection | nu
       id: doc.id,
       ...(doc.data() as Omit<Collection, "id">),
     });
+  } catch (error) {
+    console.error("getCollectionBySlug failed:", error);
+    return null;
   }
+}

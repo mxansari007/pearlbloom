@@ -1,6 +1,8 @@
 import { dbAdmin } from "./firebase-admin";
 import { serializeFirestore } from "./serialize";
 import type { Product } from "@/types/products";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 
 function normalizeVariants(value: unknown): Product["variants"] {
   if (Array.isArray(value)) return value as Product["variants"];
@@ -17,10 +19,92 @@ function normalizeProduct(product: Product): Product {
 
 const PAGE_SIZE = 8;
 
+type CatalogItem = {
+  id?: unknown;
+  title?: unknown;
+  name?: unknown;
+  slug?: unknown;
+  price?: unknown;
+  description?: unknown;
+  images?: unknown;
+  brand?: unknown;
+  categories?: unknown;
+  marketplaces?: unknown;
+};
+
+async function readCatalogProducts(): Promise<Product[]> {
+  try {
+    const filePath = path.join(process.cwd(), "data", "catalog.json");
+    const raw = await readFile(filePath, "utf8");
+    const json = JSON.parse(raw) as unknown;
+    if (!Array.isArray(json)) return [];
+
+    const now = new Date().toISOString();
+
+    return json
+      .map((it): Product | null => {
+        const item = it as CatalogItem;
+        const id = typeof item.id === "string" ? item.id : "";
+        const slug = typeof item.slug === "string" ? item.slug : "";
+        const name =
+          (typeof item.name === "string" ? item.name : "") ||
+          (typeof item.title === "string" ? item.title : "");
+        if (!id || !slug || !name) return null;
+
+        const images = Array.isArray(item.images)
+          ? (item.images.filter((x) => typeof x === "string") as string[])
+          : [];
+
+        const marketplaces =
+          typeof item.marketplaces === "object" &&
+          item.marketplaces !== null &&
+          !Array.isArray(item.marketplaces)
+            ? (item.marketplaces as Product["marketplaces"])
+            : undefined;
+
+        const categories = Array.isArray(item.categories)
+          ? (item.categories.filter((x) => typeof x === "string") as string[])
+          : undefined;
+
+        return normalizeProduct({
+          id,
+          slug,
+          name,
+          brand: typeof item.brand === "string" ? item.brand : undefined,
+          price: typeof item.price === "number" ? item.price : 0,
+          description: typeof item.description === "string" ? item.description : undefined,
+          shortDescription: undefined,
+          categories,
+          attributes: undefined,
+          images,
+          thumbnailUrl: images[0] ?? undefined,
+          currency: "INR",
+          inventoryPolicy: { trackStock: false, allowBackorder: true },
+          inventory: undefined,
+          marketplaces,
+          variants: [],
+          isFeatured: false,
+          createdAt: now,
+          updatedAt: now,
+        });
+      })
+      .filter((p): p is Product => Boolean(p));
+  } catch (error) {
+    console.error("readCatalogProducts failed:", error);
+    return [];
+  }
+}
+
+async function readCatalogSlugs(): Promise<string[]> {
+  const products = await readCatalogProducts();
+  return products.map((p) => p.slug).filter(Boolean);
+}
+
 /* ----------------------------------
    Get ALL products (cached)
 ----------------------------------- */
 export const getAllProducts = async (): Promise<Product[]> => {
+  try {
     const snap = await dbAdmin.collection("products").get();
 
     return snap.docs.map((d) => {
@@ -30,12 +114,17 @@ export const getAllProducts = async (): Promise<Product[]> => {
       }) as Product;
       return normalizeProduct(product);
     });
+  } catch (error) {
+    console.error("getAllProducts failed:", error);
+    return readCatalogProducts();
   }
+}
 
 /* ----------------------------------
    Get product by slug (cached)
 ----------------------------------- */
 export const getProductBySlug = async (slug: string): Promise<Product | null> => {
+  try {
     const snap = await dbAdmin
       .collection("products")
       .where("slug", "==", slug)
@@ -49,12 +138,18 @@ export const getProductBySlug = async (slug: string): Promise<Product | null> =>
       ...(snap.docs[0].data() as Omit<Product, "id">),
     }) as Product;
     return normalizeProduct(product);
+  } catch (error) {
+    console.error("getProductBySlug failed:", error);
+    const products = await readCatalogProducts();
+    return products.find((p) => p.slug === slug) ?? null;
   }
+}
 
 /* ----------------------------------
    Get products by IDs (cached)
 ----------------------------------- */
 export const getProductsByIds = async (ids: string[]): Promise<Product[]> => {
+  try {
     if (!ids.length) return [];
 
     const snaps = await Promise.all(
@@ -70,12 +165,19 @@ export const getProductsByIds = async (ids: string[]): Promise<Product[]> => {
         }) as Product;
         return normalizeProduct(product);
       });
+  } catch (error) {
+    console.error("getProductsByIds failed:", error);
+    const products = await readCatalogProducts();
+    const idSet = new Set(ids);
+    return products.filter((p) => idSet.has(p.id));
   }
+}
 
 /* ----------------------------------
    Get featured products (cached)
 ----------------------------------- */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
+  try {
     const snap = await dbAdmin
       .collection("products")
       .where("isFeatured", "==", true)
@@ -89,12 +191,18 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
       }) as Product;
       return normalizeProduct(product);
     });
+  } catch (error) {
+    console.error("getFeaturedProducts failed:", error);
+    const products = await readCatalogProducts();
+    return products.slice(0, Math.max(0, limit));
   }
+}
 
 /* ----------------------------------
    Get all slugs (cached)
 ----------------------------------- */
 export const getAllSlugs = async (): Promise<string[]> => {
+  try {
     const snap = await dbAdmin
       .collection("products")
       .select("slug")
@@ -106,7 +214,11 @@ export const getAllSlugs = async (): Promise<string[]> => {
         return typeof data.slug === "string" ? data.slug : null;
       })
       .filter((s): s is string => Boolean(s));
+  } catch (error) {
+    console.error("getAllSlugs failed:", error);
+    return readCatalogSlugs();
   }
+}
 
 
 
