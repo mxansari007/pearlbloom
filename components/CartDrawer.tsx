@@ -12,7 +12,7 @@ export default function CartDrawer() {
   const configLoaded = useAppConfigStore((s) => s.configLoaded);
   const freeShippingAbove = useAppConfigStore((s) => s.freeShippingAbove);
 
-  const total = items.reduce(
+  const subtotal = items.reduce(
     (sum, i) => sum + i.price * i.quantity,
     0
   );
@@ -193,14 +193,14 @@ export default function CartDrawer() {
           >
             <div className="flex justify-between mb-4">
               <span>Total</span>
-              <span>₹{total.toLocaleString("en-IN")}</span>
+              <span>₹{subtotal.toLocaleString("en-IN")}</span>
             </div>
 
             {configLoaded && typeof freeShippingAbove === "number" && freeShippingAbove > 0 && (
               <div className="text-xs mb-4" style={{ color: "var(--muted)" }}>
-                {total >= freeShippingAbove
+                {subtotal >= freeShippingAbove
                   ? "Free shipping unlocked on this order."
-                  : `Add ₹${Math.max(0, freeShippingAbove - total).toLocaleString("en-IN")} more for free shipping.`}
+                  : `Add ₹${Math.max(0, freeShippingAbove - subtotal).toLocaleString("en-IN")} more for free shipping.`}
               </div>
             )}
 
@@ -211,7 +211,7 @@ export default function CartDrawer() {
                   source: "cart_drawer",
                   cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
                   cart_unique_items: items.length,
-                  cart_value: total,
+                  cart_value: subtotal,
                 });
                 close();
               }}

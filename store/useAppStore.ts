@@ -60,8 +60,8 @@ export const useAuthStore = create<AuthState>()(
 
 type SiteSettingsRuntimeConfig = {
   testMode?: boolean;
-  shippingRate?: number;
-  freeShippingAbove?: number;
+  shippingRate?: number | string;
+  freeShippingAbove?: number | string;
 };
 
 interface AppConfigState {
@@ -86,10 +86,24 @@ export const useAppConfigStore = create<AppConfigState>()(
           const ref = doc(dbClient, "siteSettings", "main");
           const snap = await getDoc(ref);
           const data = snap.exists() ? (snap.data() as SiteSettingsRuntimeConfig) : null;
+          const asNumberOrNull = (value: unknown): number | null => {
+            if (typeof value === "number" && Number.isFinite(value)) return value;
+            if (typeof value === "string") {
+              const n = Number(value);
+              return Number.isFinite(n) ? n : null;
+            }
+            return null;
+          };
           const testMode = typeof data?.testMode === "boolean" ? data.testMode : false;
-          const shippingRate = typeof data?.shippingRate === "number" ? data.shippingRate : 0;
+          const shippingRate =
+            asNumberOrNull(data?.shippingRate) ??
+            asNumberOrNull((data as unknown as { globalShippingRate?: unknown })?.globalShippingRate) ??
+            asNumberOrNull((data as unknown as { shipping?: unknown })?.shipping) ??
+            0;
           const freeShippingAbove =
-            typeof data?.freeShippingAbove === "number" ? data.freeShippingAbove : null;
+            asNumberOrNull(data?.freeShippingAbove) ??
+            asNumberOrNull((data as unknown as { free_shipping_above?: unknown })?.free_shipping_above) ??
+            asNumberOrNull((data as unknown as { freeShippingThreshold?: unknown })?.freeShippingThreshold);
           set({
             configLoaded: true,
             testMode,

@@ -102,9 +102,11 @@ export default function BuyNowCheckoutPage() {
         typeof freeShippingAbove === "number" &&
         freeShippingAbove > 0 &&
         subtotal >= freeShippingAbove;
-      const shippingBase =
-        (typeof item.shippingRate === "number" ? item.shippingRate : globalShippingRate) *
-        (item.quantity || 1);
+      const rate =
+        typeof item.shippingRate === "number" && item.shippingRate > 0
+          ? item.shippingRate
+          : globalShippingRate;
+      const shippingBase = rate * (item.quantity || 1);
       const shipping = eligibleForFreeShipping ? 0 : shippingBase;
       const total = subtotal + shipping;
 
@@ -331,7 +333,7 @@ export default function BuyNowCheckoutPage() {
     subtotal >= freeShippingAbove;
   const shippingBase =
     (item
-      ? (typeof item.shippingRate === "number" ? item.shippingRate : globalShippingRate) *
+      ? (typeof item.shippingRate === "number" && item.shippingRate > 0 ? item.shippingRate : globalShippingRate) *
         (item.quantity || 1)
       : 0);
   const shipping = configLoaded ? (eligibleForFreeShipping ? 0 : shippingBase) : 0;
@@ -452,14 +454,20 @@ export default function BuyNowCheckoutPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span style={{ color: "var(--muted)" }}>Shipping</span>
-                {eligibleForFreeShipping || shipping === 0 ? (
+                {!configLoaded ? (
+                  <span style={{ color: "var(--muted)" }}>—</span>
+                ) : eligibleForFreeShipping ? (
                   <span style={{ color: "rgb(212,175,55)" }}>Free</span>
                 ) : (
                   <span>₹{shipping.toLocaleString("en-IN")}</span>
                 )}
               </div>
 
-              {configLoaded && typeof freeShippingAbove === "number" && freeShippingAbove > 0 && !eligibleForFreeShipping && (
+              {configLoaded &&
+                typeof freeShippingAbove === "number" &&
+                freeShippingAbove > 0 &&
+                shippingBase > 0 &&
+                !eligibleForFreeShipping && (
                 <div
                   className="text-xs rounded-xl px-3 py-2"
                   style={{

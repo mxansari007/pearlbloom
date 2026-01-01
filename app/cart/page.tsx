@@ -27,7 +27,11 @@ export default function CartPage() {
     typeof freeShippingAbove === "number" && freeShippingAbove > 0 && subtotal >= freeShippingAbove;
 
   const shippingBase = items.reduce(
-    (sum, i) => sum + (typeof i.shippingRate === "number" ? i.shippingRate : globalShippingRate) * i.quantity,
+    (sum, i) => {
+      const rate =
+        typeof i.shippingRate === "number" && i.shippingRate > 0 ? i.shippingRate : globalShippingRate;
+      return sum + rate * i.quantity;
+    },
     0
   );
 
@@ -223,14 +227,20 @@ export default function CartPage() {
 
               <div className="flex justify-between text-sm mb-6">
                 <span>Shipping</span>
-                {eligibleForFreeShipping || shipping === 0 ? (
+                {!configLoaded ? (
+                  <span style={{ color: "var(--muted)" }}>—</span>
+                ) : eligibleForFreeShipping ? (
                   <span style={{ color: "rgb(212,175,55)" }}>Free</span>
                 ) : (
                   <span>₹{shipping.toLocaleString("en-IN")}</span>
                 )}
               </div>
 
-              {configLoaded && typeof freeShippingAbove === "number" && freeShippingAbove > 0 && !eligibleForFreeShipping && (
+              {configLoaded &&
+                typeof freeShippingAbove === "number" &&
+                freeShippingAbove > 0 &&
+                shippingBase > 0 &&
+                !eligibleForFreeShipping && (
                 <div
                   className="text-xs mb-4 rounded-xl px-3 py-2"
                   style={{
