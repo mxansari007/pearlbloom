@@ -411,6 +411,7 @@ export default function ProductClient({ product }: { product: Product }) {
             alignItems: "center",
             justifyContent: "space-between",
             gap: 10,
+            flexWrap: "wrap",
             padding: "10px 12px",
             borderRadius: 14,
           }}
@@ -419,7 +420,10 @@ export default function ProductClient({ product }: { product: Product }) {
             <ShieldCheck size={16} />
             Secure payments via Razorpay
           </span>
-          <span className="flex items-center gap-2" style={{ color: "var(--fg)" }}>
+          <span
+            className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto"
+            style={{ color: "var(--fg)" }}
+          >
             <span className="flex items-center gap-1 text-xs">
               <Smartphone size={14} />
               UPI

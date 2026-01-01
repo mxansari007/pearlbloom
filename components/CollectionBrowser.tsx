@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Product } from '../types/products'
 import ProductCard from './ProductCard'
 import { track } from '@/utils/analytics'
+import { ArrowUpDown, Filter, X } from 'lucide-react'
 
 type Props = {
   initialProducts: Product[]
@@ -23,6 +24,8 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
   const [maxPrice, setMaxPrice] = useState<number | ''>('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [visibleCount, setVisibleCount] = useState(gridInitialCount) // show 9 initially for balanced grid
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
+  const [sortDrawerOpen, setSortDrawerOpen] = useState(false)
 
   const priceBounds = useMemo(() => {
     const prices = initialProducts
@@ -119,10 +122,16 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
   const visible = filtered.slice(0, visibleCount)
   const hasMore = visibleCount < filtered.length
 
-  return (
-    <div id="browse" className="grid grid-cols-1 lg:grid-cols-5 gap-8"> {/* wider gap, extra column for breathing */}
-      {/* Sidebar filters (1 column) */}
-      <aside className="lg:col-span-1 space-y-6 lg:sticky lg:top-24 h-fit">
+  const sortLabels: Record<SortOption, string> = {
+    newest: 'Newest',
+    featured: 'Featured',
+    'price-asc': 'Price: Low → High',
+    'price-desc': 'Price: High → Low',
+  }
+
+  function FiltersContent({ compact }: { compact?: boolean }) {
+    return (
+      <div className={compact ? 'space-y-4' : 'space-y-6'}>
         <div className="card p-4">
           <label className="block">
             <span className="text-sm text-muted">Search</span>
@@ -135,7 +144,6 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
           </label>
         </div>
 
-        {/* Scrollable categories container */}
         <div className="card p-4">
           <div className="mb-3 text-sm font-medium">Categories</div>
           <div className="sidebar-scroll space-y-2">
@@ -241,13 +249,20 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
             <option value="price-desc">Price: High → Low</option>
           </select>
         </div>
+      </div>
+    )
+  }
 
-
+  return (
+    <div id="browse" className="grid grid-cols-1 lg:grid-cols-5 gap-8 pb-24 lg:pb-0"> {/* wider gap, extra column for breathing */}
+      {/* Sidebar filters (1 column) */}
+      <aside className="lg:col-span-1 lg:sticky lg:top-24 h-fit hidden lg:block">
+        <FiltersContent />
       </aside>
 
       {/* Main product area (4 columns) */}
       <div className="lg:col-span-4">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <div className="text-sm text-muted">Showing <strong>{filtered.length}</strong> products</div>
             {query && <div className="text-sm text-muted mt-1">Results for “{query}”</div>}
@@ -291,7 +306,7 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
         <div className="mb-6">
           <div className={
             viewMode === 'grid' 
-              ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-8"
+              ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-1 sm:gap-4 lg:gap-8"
               : "flex flex-col gap-6 list-view-container"
           }>
             {visible.map((p) => (
@@ -328,6 +343,146 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
 
 
       </div>
+
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 lg:hidden"
+        style={{
+          background: "var(--panel-bg)",
+          borderTop: "1px solid var(--border-subtle)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
+      >
+        <div className="grid grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setSortDrawerOpen(true)}
+            className="flex items-center justify-center gap-2 py-4 text-sm font-semibold tracking-wide"
+            style={{ color: "var(--fg)" }}
+          >
+            <ArrowUpDown size={18} />
+            SORT
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterDrawerOpen(true)}
+            className="flex items-center justify-center gap-2 py-4 text-sm font-semibold tracking-wide"
+            style={{
+              color: "var(--fg)",
+              borderLeft: "1px solid var(--border-subtle)",
+            }}
+          >
+            <Filter size={18} />
+            FILTER
+          </button>
+        </div>
+      </div>
+
+      {filterDrawerOpen && (
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setFilterDrawerOpen(false)
+          }}
+          style={{ background: "rgba(0,0,0,0.55)" }}
+        >
+          <div
+            className="absolute inset-x-0 bottom-0 rounded-t-2xl overflow-hidden"
+            style={{
+              background: "var(--panel-bg)",
+              borderTop: "1px solid var(--border-subtle)",
+              paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)",
+              maxHeight: "85vh",
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-4">
+              <div className="text-sm font-medium">Filters</div>
+              <button
+                type="button"
+                aria-label="Close filters"
+                onClick={() => setFilterDrawerOpen(false)}
+                className="w-9 h-9 rounded-full flex items-center justify-center"
+                style={{
+                  background: "var(--header-hover)",
+                  color: "var(--fg)",
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-4 overflow-y-auto" style={{ maxHeight: "calc(85vh - 60px)" }}>
+              <FiltersContent compact />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sortDrawerOpen && (
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setSortDrawerOpen(false)
+          }}
+          style={{ background: "rgba(0,0,0,0.55)" }}
+        >
+          <div
+            className="absolute inset-x-0 bottom-0 rounded-t-2xl overflow-hidden"
+            style={{
+              background: "var(--panel-bg)",
+              borderTop: "1px solid var(--border-subtle)",
+              paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)",
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-4">
+              <div className="text-sm font-medium">Sort</div>
+              <button
+                type="button"
+                aria-label="Close sort"
+                onClick={() => setSortDrawerOpen(false)}
+                className="w-9 h-9 rounded-full flex items-center justify-center"
+                style={{
+                  background: "var(--header-hover)",
+                  color: "var(--fg)",
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-4 pb-2">
+              {sortOptions.map((opt) => {
+                const active = sort === opt
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      setSort(opt)
+                      track('products_sort_changed', { sort: opt })
+                      setSortDrawerOpen(false)
+                    }}
+                    className="w-full text-left rounded-xl px-4 py-3 border transition flex items-center justify-between mb-2"
+                    style={{
+                      borderColor: active ? "rgba(var(--gold-rgb),0.35)" : "var(--border-subtle)",
+                      background: active ? "rgba(var(--gold-rgb),0.10)" : "rgba(255,255,255,0.02)",
+                      color: "var(--fg)",
+                    }}
+                  >
+                    <span className="text-sm font-medium">{sortLabels[opt]}</span>
+                    {active && (
+                      <span className="text-xs font-semibold" style={{ color: "rgb(var(--gold-rgb))" }}>
+                        Selected
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
