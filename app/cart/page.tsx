@@ -97,11 +97,11 @@ export default function CartPage() {
         <span className="glow-orb" />
       </div>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-16">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-10 md:py-16">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 md:mb-10">
+          <div className="flex items-center gap-3 sm:gap-4">
             <h1 className="text-2xl font-semibold">Shopping Cart</h1>
             {items.length > 0 && (
               <button

@@ -16,7 +16,7 @@ export default function CollectionHero({
   return (
     <section className="relative rounded-2xl overflow-hidden card">
       <div className="grid grid-cols-1 lg:grid-cols-2 items-center">
-        <div className="p-8 lg:p-12">
+        <div className="p-5 sm:p-8 lg:p-12">
           <p className="kicker">Collections</p>
           <h1 className="text-3xl md:text-4xl font-display mt-2">{title}</h1>
           {subtitle && <p className="text-muted mt-2">{subtitle}</p>}

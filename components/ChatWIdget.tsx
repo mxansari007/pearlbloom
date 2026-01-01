@@ -247,15 +247,15 @@ export default function ChatWidget() {
   /* ---------------- UI ---------------- */
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50">
 
       {/* Floating Button */}
       {minimized && (
         <div className="relative" ref={launcherRef}>
 
           <div
-            className="relative w-[72px]"
-            style={{ height: launcherOpen ? 220 : 72 }}
+            className="relative w-[56px] md:w-[72px]"
+            style={{ height: launcherOpen ? 180 : 56 }}
           >
             <button
               type="button"
@@ -281,11 +281,11 @@ export default function ChatWidget() {
                   return;
                 }
               }}
-              className="absolute right-0 top-0 w-[58px] h-[58px] rounded-full flex items-center justify-center shadow-xl"
+              className="absolute right-0 top-0 w-[46px] h-[46px] md:w-[58px] md:h-[58px] rounded-full flex items-center justify-center shadow-xl"
               style={{
                 background: "linear-gradient(to bottom right, #22c55e, #16a34a)",
                 transition: "transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 220ms ease",
-                transform: launcherOpen ? "translate(0px, -92px)" : "translate(0px, 0px)",
+                transform: launcherOpen ? "translate(0px, -72px)" : "translate(0px, 0px)",
                 opacity: 1,
                 pointerEvents: launcherOpen ? "auto" : "auto",
                 zIndex: 2,
@@ -293,7 +293,7 @@ export default function ChatWidget() {
                 overflow: "hidden",
               }}
             >
-              <FaWhatsapp size={22} color="#fff" />
+              <FaWhatsapp size={18} color="#fff" />
             </a>
 
             <button
@@ -308,17 +308,17 @@ export default function ChatWidget() {
                 setMinimized(false);
                 setHasUnread(false);
               }}
-              className="absolute right-0 top-0 w-[58px] h-[58px] rounded-full flex items-center justify-center shadow-lg"
+              className="absolute right-0 top-0 w-[46px] h-[46px] md:w-[58px] md:h-[58px] rounded-full flex items-center justify-center shadow-lg"
               style={{
                 background: "linear-gradient(to bottom right, #facc15, #f59e0b)",
                 color: "#000",
                 transition: "transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 220ms ease",
-                transform: launcherOpen ? "translate(0px, -160px)" : "translate(0px, 18px)",
+                transform: launcherOpen ? "translate(0px, -124px)" : "translate(0px, 12px)",
                 opacity: launcherOpen ? 1 : 0.92,
                 zIndex: launcherOpen ? 1 : 0,
               }}
             >
-              <MessageCircle size={22} />
+              <MessageCircle size={18} />
               {!launcherOpen && hasUnread ? (
                 <span className="absolute top-2 right-2 h-3 w-3 rounded-full bg-red-500 animate-pulse" />
               ) : null}

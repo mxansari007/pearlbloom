@@ -26,9 +26,9 @@ export default async function Products() {
   )
 
   return (
-    <main className="container py-12">
+    <main className="container py-8 md:py-12">
 
-      <section className="mt-10">
+      <section className="mt-6 md:mt-10">
         {/* The client-side browser will receive `allProducts` and categories */}
         {/* It handles filtering, sorting, search and pagination on the client for instant UX */}
         <CollectionBrowser initialProducts={allProducts} categories={categories} />

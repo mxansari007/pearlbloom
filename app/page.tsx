@@ -539,7 +539,7 @@ export default async function Home() {
           return (
             <section
               key={section.id}
-              className="container mx-auto px-6 py-14"
+              className="container py-10 md:py-14"
             >
               <h2 className="text-2xl font-display">
                 {section.title}
@@ -560,7 +560,7 @@ export default async function Home() {
       </Suspense>
 
       {/* Footer subscription */}
-      <section className="container mx-auto px-6 pb-14">
+      <section className="container pb-10 md:pb-14">
         <SubscribeForm />
       </section>
     </>

@@ -178,6 +178,14 @@ a:focus {
   .container { padding-left: .75rem; padding-right: .75rem; }
 }
 
+@media (max-width: 480px) {
+  html { font-size: 15px; }
+}
+
+@media (max-width: 768px) {
+  input, textarea, select { font-size: 16px; }
+}
+
 
 /* Prevent scroll when menu open */
 .no-scroll { overflow: hidden; height: 100%; }
@@ -4150,6 +4158,17 @@ a:focus {
   background: linear-gradient(to right, #fcd34d, #fbbf24);
   border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 640px) {
+  .banner-carousel { padding: 14px 12px 6px 12px; }
+  .banner-carousel__header { gap: 10px; }
+  .banner-carousel__title { font-size: 1.05rem; }
+  .banner-carousel__track { gap: 12px; scroll-padding: 12px; padding: 6px 2px 12px 2px; }
+  .banner-carousel__slide { width: min(92vw, 440px); border-radius: 14px; }
+  .banner-carousel__track--sm { --banner-h: 120px; }
+  .banner-carousel__track--md { --banner-h: 160px; }
+  .banner-carousel__track--lg { --banner-h: 200px; }
 }
 
 @media (min-width: 1024px) {

@@ -6,17 +6,17 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
   if (!hero) return null
 
   return (
-    <section className="py-20">
+    <section className="py-12 md:py-20">
       <div className="container grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
         {/* Left content */}
-        <div className="space-y-6 max-w-xl">
+        <div className="space-y-5 md:space-y-6 max-w-xl">
           <p className="kicker text-muted">New Arrival</p>
 
-          <h1 className="text-5xl md:text-6xl font-display leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-display leading-tight">
             {hero.title}
           </h1>
 
-          <p className="text-lg text-muted">{hero.subtitle}</p>
+          <p className="text-base sm:text-lg text-muted">{hero.subtitle}</p>
 
           <div className="flex items-center gap-4 mt-4">
             <Link href={hero.ctaLink} className="btn-cta">
@@ -24,7 +24,7 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
             </Link>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-2">
+          <div className="flex flex-wrap items-center gap-2 pt-1 md:pt-2">
             {[
               "Secure payments",
               "Easy returns",
@@ -49,7 +49,7 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
         {/* Right image with shine */}
         <div className="relative">
           <div className="rounded-2xl overflow-hidden card">
-            <div className="img-wrap relative h-[520px] w-full">
+            <div className="img-wrap relative h-[340px] sm:h-[420px] md:h-[520px] w-full">
               {hero.heroImage?.url && (
                 <Image
                   src={hero.heroImage.url}

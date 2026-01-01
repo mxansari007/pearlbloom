@@ -189,7 +189,7 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="mt-auto pt-2">
             <div className="product-card__price-row">
               {/* Discounted Price */}
-              <span className="product-card__price text-xl">
+              <span className="product-card__price text-lg md:text-xl">
                 ₹{startingFinalPrice.toLocaleString("en-IN")}
               </span>
 

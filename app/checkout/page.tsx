@@ -365,7 +365,7 @@ const handlePlaceOrder = async () => {
 
   return (
     <div
-      className="min-h-screen px-6 py-12"
+      className="min-h-screen px-4 sm:px-6 py-8 md:py-12"
       style={{ background: "var(--panel-bg)", color: "var(--fg)" }}
     >
       <div className="max-w-6xl mx-auto">
@@ -382,7 +382,7 @@ const handlePlaceOrder = async () => {
 
           {/* DELIVERY ADDRESS */}
           <section
-            className="rounded-2xl p-6"
+            className="rounded-2xl p-4 sm:p-6"
             style={{
               background: "var(--panel-bg-soft)",
               border: "1px solid var(--border-subtle)",
@@ -401,7 +401,7 @@ const handlePlaceOrder = async () => {
 
           {/* ORDER ITEMS */}
           <section
-            className="rounded-2xl p-6"
+            className="rounded-2xl p-4 sm:p-6"
             style={{
               background: "var(--panel-bg-soft)",
               border: "1px solid var(--border-subtle)",
