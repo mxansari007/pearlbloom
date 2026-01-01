@@ -669,7 +669,11 @@ export default function OrderDetailsPage() {
 
               <div className="order-page__summary-row">
                 <span>Shipping</span>
-                <span className="order-page__summary-free">Free</span>
+                {order.shipping === 0 ? (
+                  <span className="order-page__summary-free">Free</span>
+                ) : (
+                  <span>₹{order.shipping.toLocaleString("en-IN")}</span>
+                )}
               </div>
 
               <div className="order-page__summary-row order-page__summary-row--total">

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useCartStore } from "@/store/useCartStore";
-import { useAuthStore } from "@/store/useAppStore";
+import { useAppConfigStore, useAuthStore } from "@/store/useAppStore";
 import { Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { track } from "@/utils/analytics";
 
@@ -14,18 +14,34 @@ export default function CartPage() {
 
   const { items, removeItem, updateQty, clear } = useCartStore();
   const { isAuthenticated, authInitialized } = useAuthStore();
+  const configLoaded = useAppConfigStore((s) => s.configLoaded);
+  const globalShippingRate = useAppConfigStore((s) => s.shippingRate);
+  const freeShippingAbove = useAppConfigStore((s) => s.freeShippingAbove);
 
-  const total = items.reduce(
+  const subtotal = items.reduce(
     (sum, i) => sum + i.price * i.quantity,
     0
   );
+
+  const eligibleForFreeShipping =
+    typeof freeShippingAbove === "number" && freeShippingAbove > 0 && subtotal >= freeShippingAbove;
+
+  const shippingBase = items.reduce(
+    (sum, i) => sum + (typeof i.shippingRate === "number" ? i.shippingRate : globalShippingRate) * i.quantity,
+    0
+  );
+
+  const shipping = configLoaded ? (eligibleForFreeShipping ? 0 : shippingBase) : 0;
+  const total = subtotal + shipping;
 
   const handleCheckout = () => {
     track("begin_checkout", {
       source: "cart_page",
       cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
       cart_unique_items: items.length,
-      cart_value: total,
+      cart_value: subtotal,
+      shipping,
+      total,
     });
     // wait until auth state is known
     if (!authInitialized) return;
@@ -43,9 +59,11 @@ export default function CartPage() {
     track("cart_viewed", {
       cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
       cart_unique_items: items.length,
-      cart_value: total,
+      cart_value: subtotal,
+      shipping,
+      total,
     });
-  }, [items, total]);
+  }, [items, shipping, subtotal, total]);
 
   return (
     <div
@@ -200,17 +218,34 @@ export default function CartPage() {
 
               <div className="flex justify-between text-sm mb-3">
                 <span>Subtotal</span>
-                <span>₹{total}</span>
+                <span>₹{subtotal.toLocaleString("en-IN")}</span>
               </div>
 
               <div className="flex justify-between text-sm mb-6">
                 <span>Shipping</span>
-                <span style={{ color: "rgb(212,175,55)" }}>Free</span>
+                {eligibleForFreeShipping || shipping === 0 ? (
+                  <span style={{ color: "rgb(212,175,55)" }}>Free</span>
+                ) : (
+                  <span>₹{shipping.toLocaleString("en-IN")}</span>
+                )}
               </div>
+
+              {configLoaded && typeof freeShippingAbove === "number" && freeShippingAbove > 0 && !eligibleForFreeShipping && (
+                <div
+                  className="text-xs mb-4 rounded-xl px-3 py-2"
+                  style={{
+                    background: "rgba(var(--gold-rgb),0.10)",
+                    border: "1px solid rgba(var(--gold-rgb),0.22)",
+                    color: "rgb(var(--gold-rgb))",
+                  }}
+                >
+                  Add ₹{Math.max(0, freeShippingAbove - subtotal).toLocaleString("en-IN")} more to unlock free shipping.
+                </div>
+              )}
 
               <div className="flex justify-between font-medium text-lg mb-6">
                 <span>Total</span>
-                <span>₹{total}</span>
+                <span>₹{total.toLocaleString("en-IN")}</span>
               </div>
 
               <button

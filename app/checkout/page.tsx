@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 import { useCartStore } from "@/store/useCartStore";
-import { useAuthStore } from "@/store/useAppStore";
+import { useAppConfigStore, useAuthStore } from "@/store/useAppStore";
 import type { Address } from "@/types/user";
 import { placeOrder } from "@/utils/placeorder";
 import { track } from "@/utils/analytics";
@@ -35,16 +35,30 @@ export default function CheckoutPage() {
 
   const { items } = useCartStore();
   const { user, isAuthenticated, authInitialized } = useAuthStore();
+  const configLoaded = useAppConfigStore((s) => s.configLoaded);
+  const globalShippingRate = useAppConfigStore((s) => s.shippingRate);
+  const freeShippingAbove = useAppConfigStore((s) => s.freeShippingAbove);
 
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [address, setAddress] = useState<Address | null>(null);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
 
-  const total = items.reduce(
+  const subtotal = items.reduce(
     (sum, i) => sum + i.price * i.quantity,
     0
   );
+
+  const eligibleForFreeShipping =
+    typeof freeShippingAbove === "number" && freeShippingAbove > 0 && subtotal >= freeShippingAbove;
+
+  const shippingBase = items.reduce(
+    (sum, i) => sum + (typeof i.shippingRate === "number" ? i.shippingRate : globalShippingRate) * i.quantity,
+    0
+  );
+
+  const shipping = configLoaded ? (eligibleForFreeShipping ? 0 : shippingBase) : 0;
+  const total = subtotal + shipping;
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -52,9 +66,11 @@ export default function CheckoutPage() {
       source: "cart_checkout",
       cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
       cart_unique_items: items.length,
-      cart_value: total,
+      cart_value: subtotal,
+      shipping,
+      total,
     });
-  }, [items, total]);
+  }, [items, shipping, subtotal, total]);
 
   /* ---------------- Auth Guard ---------------- */
 
@@ -97,7 +113,7 @@ const loadRazorpay = () =>
 
 
 const handlePlaceOrder = async () => {
-  if (!user || !address || items.length === 0) return;
+  if (!configLoaded || !user || !address || items.length === 0) return;
 
   try {
     setPlacingOrder(true);
@@ -107,7 +123,9 @@ const handlePlaceOrder = async () => {
     track("checkout_submitted", {
       cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
       cart_unique_items: items.length,
-      cart_value: total,
+      cart_value: subtotal,
+      shipping,
+      total,
     });
 
     // 1️⃣ Create order in Firestore (pending)
@@ -126,8 +144,8 @@ const handlePlaceOrder = async () => {
         sku: i.sku || "",                         // Firestore doesn't accept undefined
         slug: i.slug || "",
       })),
-      subtotal: total,
-      shipping: 0,
+      subtotal,
+      shipping,
       total,
       address,
       status: "pending",
@@ -139,7 +157,9 @@ const handlePlaceOrder = async () => {
       order_id: orderId,
       cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
       cart_unique_items: items.length,
-      cart_value: total,
+      cart_value: subtotal,
+      shipping,
+      total,
     });
 
     // 2️⃣ Load Razorpay
@@ -193,7 +213,9 @@ const handlePlaceOrder = async () => {
           verified: verifyRes.ok,
           cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
           cart_unique_items: items.length,
-          cart_value: total,
+          cart_value: subtotal,
+          shipping,
+          total,
         });
 
         const date = new Date().toISOString().split("T")[0];
@@ -220,7 +242,9 @@ const handlePlaceOrder = async () => {
                   order_id: orderId,
                   cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
                   cart_unique_items: items.length,
-                  cart_value: total,
+                  cart_value: subtotal,
+                  shipping,
+                  total,
                 });
                 setIsOrderPlaced(true); // Prevent guard from redirecting to cart
                 setTimeout(() => {
@@ -251,7 +275,9 @@ const handlePlaceOrder = async () => {
           order_id: orderId,
           cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
           cart_unique_items: items.length,
-          cart_value: total,
+          cart_value: subtotal,
+          shipping,
+          total,
         });
         
         setIsOrderPlaced(true); // Prevent guard from redirecting to cart
@@ -263,7 +289,7 @@ const handlePlaceOrder = async () => {
         router.replace(`/orders/${displayId}`);
     });
 
-    track("payment_started", { order_id: orderId, amount: total, currency: "INR" });
+    track("payment_started", { order_id: orderId, amount: total, currency: "INR", cart_value: subtotal, shipping });
     paymentObject.open();
 
   } catch (err) {
@@ -388,45 +414,66 @@ const handlePlaceOrder = async () => {
           <div className="space-y-3 text-sm mb-6">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>₹{total}</span>
+              <span>₹{subtotal.toLocaleString("en-IN")}</span>
             </div>
 
             <div className="flex justify-between">
               <span>Shipping</span>
-              <span style={{ color: "rgb(212,175,55)" }}>Free</span>
+              {eligibleForFreeShipping || shipping === 0 ? (
+                <span style={{ color: "rgb(212,175,55)" }}>Free</span>
+              ) : (
+                <span>₹{shipping.toLocaleString("en-IN")}</span>
+              )}
             </div>
+
+            {configLoaded && typeof freeShippingAbove === "number" && freeShippingAbove > 0 && !eligibleForFreeShipping && (
+              <div
+                className="text-xs rounded-xl px-3 py-2"
+                style={{
+                  background: "rgba(var(--gold-rgb),0.10)",
+                  border: "1px solid rgba(var(--gold-rgb),0.22)",
+                  color: "rgb(var(--gold-rgb))",
+                }}
+              >
+                Add ₹{Math.max(0, freeShippingAbove - subtotal).toLocaleString("en-IN")} more to unlock free shipping.
+              </div>
+            )}
 
             <div
               className="flex justify-between pt-3 mt-3 border-t"
               style={{ borderColor: "var(--border-subtle)" }}
             >
               <span className="font-medium">Total</span>
-              <span className="font-medium">₹{total}</span>
+              <span className="font-medium">₹{total.toLocaleString("en-IN")}</span>
             </div>
           </div>
 
           <button
             onClick={handlePlaceOrder}
-            disabled={!address || placingOrder}
+            disabled={!configLoaded || !address || placingOrder}
             className="w-full rounded-xl py-3 font-medium transition"
             style={{
-              background: !address
+              background: !configLoaded || !address
                 ? "rgba(0,0,0,0.2)"
                 : "linear-gradient(to right, #fcd34d, #fbbf24)",
-              color: !address ? "var(--muted)" : "#000",
-              cursor: !address ? "not-allowed" : "pointer",
+              color: !configLoaded || !address ? "var(--muted)" : "#000",
+              cursor: !configLoaded || !address ? "not-allowed" : "pointer",
             }}
           >
             {placingOrder ? "Placing order…" : "Place Order"}
           </button>
-          {!address && (
+          {!configLoaded ? (
+            <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>
+              Loading shipping rates…
+            </p>
+          ) : !address ? (
             <p
               className="text-xs mt-3"
               style={{ color: "var(--muted)" }}
             >
               Please add a delivery address to continue.
             </p>
-          )}
+          ) : null}
         </div>
       </div>
       </div>

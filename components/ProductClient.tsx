@@ -12,6 +12,7 @@ import { FaAmazon, FaShoppingBag } from "react-icons/fa";
 import { SiFlipkart } from "react-icons/si";
 import { useProductVariant } from "@/hooks/useProductVariant";
 import { track } from "@/utils/analytics";
+import { useAppConfigStore } from "@/store/useAppStore";
 
 export default function ProductClient({ product }: { product: Product }) {
   const router = useRouter();
@@ -104,6 +105,7 @@ export default function ProductClient({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.open);
   const setBuyNowItem = useBuyNowStore((s) => s.setBuyNowItem);
+  const freeShippingAbove = useAppConfigStore((s) => s.freeShippingAbove);
 
   // Build cart item with variant info
   function buildCartItem() {
@@ -121,6 +123,7 @@ export default function ProductClient({ product }: { product: Product }) {
         name: product.name,
         variantLabel,
         price,
+        shippingRate: product.shippingRate,
         image:
           (activeVariant.images?.[0] as string | undefined) ??
           product.thumbnailUrl ??
@@ -139,6 +142,7 @@ export default function ProductClient({ product }: { product: Product }) {
       name: product.name,
       variantLabel: "",
       price: finalPrice,
+      shippingRate: product.shippingRate,
       image:
         product.thumbnailUrl ??
         (Array.isArray(product.images) ? product.images[0] : undefined),
@@ -401,7 +405,9 @@ export default function ProductClient({ product }: { product: Product }) {
           Secure Payments
         </div>
         <div className="product-detail__trust-item">
-          Free Shipping
+          {typeof freeShippingAbove === "number" && freeShippingAbove > 0
+            ? `Free shipping over ₹${freeShippingAbove.toLocaleString("en-IN")}`
+            : "Fast Shipping"}
         </div>
       </div>
 

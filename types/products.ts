@@ -34,6 +34,7 @@ export type Product = {
   brand?: string;
 
   price?: number;
+  shippingRate?: number;
 
   description?: string;
   shortDescription?: string;

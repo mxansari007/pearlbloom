@@ -60,11 +60,15 @@ export const useAuthStore = create<AuthState>()(
 
 type SiteSettingsRuntimeConfig = {
   testMode?: boolean;
+  shippingRate?: number;
+  freeShippingAbove?: number;
 };
 
 interface AppConfigState {
   configLoaded: boolean;
   testMode: boolean;
+  shippingRate: number;
+  freeShippingAbove: number | null;
   lastFetchedAt: number | null;
   loadConfig: () => Promise<void>;
 }
@@ -74,6 +78,8 @@ export const useAppConfigStore = create<AppConfigState>()(
     (set) => ({
       configLoaded: false,
       testMode: false,
+      shippingRate: 0,
+      freeShippingAbove: null,
       lastFetchedAt: null,
       loadConfig: async () => {
         try {
@@ -81,9 +87,24 @@ export const useAppConfigStore = create<AppConfigState>()(
           const snap = await getDoc(ref);
           const data = snap.exists() ? (snap.data() as SiteSettingsRuntimeConfig) : null;
           const testMode = typeof data?.testMode === "boolean" ? data.testMode : false;
-          set({ configLoaded: true, testMode, lastFetchedAt: Date.now() });
+          const shippingRate = typeof data?.shippingRate === "number" ? data.shippingRate : 0;
+          const freeShippingAbove =
+            typeof data?.freeShippingAbove === "number" ? data.freeShippingAbove : null;
+          set({
+            configLoaded: true,
+            testMode,
+            shippingRate,
+            freeShippingAbove,
+            lastFetchedAt: Date.now(),
+          });
         } catch {
-          set({ configLoaded: true, testMode: false, lastFetchedAt: Date.now() });
+          set({
+            configLoaded: true,
+            testMode: false,
+            shippingRate: 0,
+            freeShippingAbove: null,
+            lastFetchedAt: Date.now(),
+          });
         }
       },
     }),
@@ -91,6 +112,8 @@ export const useAppConfigStore = create<AppConfigState>()(
       name: "pearlbloom-app-config",
       partialize: (state) => ({
         testMode: state.testMode,
+        shippingRate: state.shippingRate,
+        freeShippingAbove: state.freeShippingAbove,
         lastFetchedAt: state.lastFetchedAt,
       }),
     }

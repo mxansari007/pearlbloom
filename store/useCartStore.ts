@@ -9,6 +9,7 @@ export interface CartItem {
   name: string;            // Product name
   variantLabel: string;    // e.g. "Red / Large"
   price: number;           // Final price after discount
+  shippingRate?: number;   // Optional per-item shipping rate (falls back to global)
   image?: string;
   quantity: number;
   sku?: string;            // Variant SKU if available

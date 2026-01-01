@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Plus, Minus } from "lucide-react";
 
 import { useBuyNowStore } from "@/store/useBuyNowStore";
-import { useAuthStore } from "@/store/useAppStore";
+import { useAppConfigStore, useAuthStore } from "@/store/useAppStore";
 import type { Address } from "@/types/user";
 import { placeOrder } from "@/utils/placeorder";
 import { track } from "@/utils/analytics";
@@ -34,6 +34,9 @@ function getRazorpayConstructor(): RazorpayConstructor | null {
 export default function BuyNowCheckoutPage() {
   const router = useRouter();
   const { user, isAuthenticated, authInitialized } = useAuthStore();
+  const configLoaded = useAppConfigStore((s) => s.configLoaded);
+  const globalShippingRate = useAppConfigStore((s) => s.shippingRate);
+  const freeShippingAbove = useAppConfigStore((s) => s.freeShippingAbove);
 
   const { item, updateQty, clearBuyNowItem, getTotal } = useBuyNowStore();
 
@@ -88,19 +91,30 @@ export default function BuyNowCheckoutPage() {
     });
 
   const handlePlaceOrder = async () => {
-    if (!user || !address || !item) return;
+    if (!configLoaded || !user || !address || !item) return;
 
     try {
       setLoading(true);
 
       const now = Date.now();
-      const total = getTotal();
+      const subtotal = getTotal();
+      const eligibleForFreeShipping =
+        typeof freeShippingAbove === "number" &&
+        freeShippingAbove > 0 &&
+        subtotal >= freeShippingAbove;
+      const shippingBase =
+        (typeof item.shippingRate === "number" ? item.shippingRate : globalShippingRate) *
+        (item.quantity || 1);
+      const shipping = eligibleForFreeShipping ? 0 : shippingBase;
+      const total = subtotal + shipping;
 
       track("checkout_submitted", {
         source: "buy_now_checkout",
         cart_item_count: item.quantity || 1,
         cart_unique_items: 1,
-        cart_value: total,
+        cart_value: subtotal,
+        shipping,
+        total,
         product_id: item.productId || item.id,
         variant_id: item.variantId || item.id,
         sku: item.sku,
@@ -122,8 +136,8 @@ export default function BuyNowCheckoutPage() {
           sku: item.sku || "",
           slug: item.slug || "",
         }],
-        subtotal: total,
-        shipping: 0,
+        subtotal,
+        shipping,
         total,
         address,
         status: "pending",
@@ -136,7 +150,9 @@ export default function BuyNowCheckoutPage() {
         source: "buy_now_checkout",
         cart_item_count: item.quantity || 1,
         cart_unique_items: 1,
-        cart_value: total,
+        cart_value: subtotal,
+        shipping,
+        total,
       });
 
       // 2️⃣ Load Razorpay
@@ -195,7 +211,9 @@ export default function BuyNowCheckoutPage() {
                 source: "buy_now_checkout",
                 cart_item_count: item.quantity || 1,
                 cart_unique_items: 1,
-                cart_value: total,
+                cart_value: subtotal,
+                shipping,
+                total,
               });
               // Success!
               setIsOrderPlaced(true);
@@ -210,7 +228,9 @@ export default function BuyNowCheckoutPage() {
                 source: "buy_now_checkout",
                 cart_item_count: item.quantity || 1,
                 cart_unique_items: 1,
-                cart_value: total,
+                cart_value: subtotal,
+                shipping,
+                total,
               });
               alert("Payment verification failed. Please contact support.");
               setVerifying(false);
@@ -222,7 +242,9 @@ export default function BuyNowCheckoutPage() {
               source: "buy_now_checkout",
               cart_item_count: item.quantity || 1,
               cart_unique_items: 1,
-              cart_value: total,
+              cart_value: subtotal,
+              shipping,
+              total,
             });
             alert("Payment verification error. Please contact support.");
             setVerifying(false);
@@ -245,7 +267,9 @@ export default function BuyNowCheckoutPage() {
                    source: "buy_now_checkout",
                    cart_item_count: item.quantity || 1,
                    cart_unique_items: 1,
-                   cart_value: total,
+                   cart_value: subtotal,
+                   shipping,
+                   total,
                  });
                  setIsOrderPlaced(true); // Prevent guard from redirecting to home
                  setTimeout(() => {
@@ -276,7 +300,9 @@ export default function BuyNowCheckoutPage() {
             source: "buy_now_checkout",
             cart_item_count: item.quantity || 1,
             cart_unique_items: 1,
-            cart_value: total,
+            cart_value: subtotal,
+            shipping,
+            total,
           });
           
           setIsOrderPlaced(true); // Prevent guard from redirecting to home
@@ -288,7 +314,7 @@ export default function BuyNowCheckoutPage() {
           router.replace(`/orders/${displayId}`);
       });
 
-      track("payment_started", { order_id: orderId, amount: total, currency: "INR", source: "buy_now_checkout" });
+      track("payment_started", { order_id: orderId, amount: total, currency: "INR", source: "buy_now_checkout", cart_value: subtotal, shipping });
       paymentObject.open();
     } catch (err: unknown) {
       console.error("Checkout error:", err);
@@ -298,7 +324,18 @@ export default function BuyNowCheckoutPage() {
     }
   };
 
-  const total = getTotal();
+  const subtotal = getTotal();
+  const eligibleForFreeShipping =
+    typeof freeShippingAbove === "number" &&
+    freeShippingAbove > 0 &&
+    subtotal >= freeShippingAbove;
+  const shippingBase =
+    (item
+      ? (typeof item.shippingRate === "number" ? item.shippingRate : globalShippingRate) *
+        (item.quantity || 1)
+      : 0);
+  const shipping = configLoaded ? (eligibleForFreeShipping ? 0 : shippingBase) : 0;
+  const total = subtotal + shipping;
 
   if (!authInitialized || loading) {
     return (
@@ -411,12 +448,29 @@ export default function BuyNowCheckoutPage() {
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-sm">
                 <span style={{ color: "var(--muted)" }}>Subtotal</span>
-                <span>₹{total.toLocaleString("en-IN")}</span>
+                <span>₹{subtotal.toLocaleString("en-IN")}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span style={{ color: "var(--muted)" }}>Shipping</span>
-                <span style={{ color: "rgb(212,175,55)" }}>Free</span>
+                {eligibleForFreeShipping || shipping === 0 ? (
+                  <span style={{ color: "rgb(212,175,55)" }}>Free</span>
+                ) : (
+                  <span>₹{shipping.toLocaleString("en-IN")}</span>
+                )}
               </div>
+
+              {configLoaded && typeof freeShippingAbove === "number" && freeShippingAbove > 0 && !eligibleForFreeShipping && (
+                <div
+                  className="text-xs rounded-xl px-3 py-2"
+                  style={{
+                    background: "rgba(var(--gold-rgb),0.10)",
+                    border: "1px solid rgba(var(--gold-rgb),0.22)",
+                    color: "rgb(var(--gold-rgb))",
+                  }}
+                >
+                  Add ₹{Math.max(0, freeShippingAbove - subtotal).toLocaleString("en-IN")} more to unlock free shipping.
+                </div>
+              )}
 
               <div
                 className="flex justify-between pt-3 mt-3 border-t"
@@ -429,26 +483,30 @@ export default function BuyNowCheckoutPage() {
 
             <button
               onClick={handlePlaceOrder}
-              disabled={!address || loading}
+              disabled={!configLoaded || !address || loading}
               className="w-full rounded-xl py-3 font-medium transition"
               style={{
-                background: !address
+                background: !configLoaded || !address
                   ? "rgba(0,0,0,0.2)"
                   : "linear-gradient(to right, #fcd34d, #fbbf24)",
-                color: !address ? "var(--muted)" : "#000",
-                cursor: !address ? "not-allowed" : "pointer",
+                color: !configLoaded || !address ? "var(--muted)" : "#000",
+                cursor: !configLoaded || !address ? "not-allowed" : "pointer",
               }}
             >
               {loading ? "Placing order…" : "Place Order"}
             </button>
-            {!address && (
+            {!configLoaded ? (
+              <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>
+                Loading shipping rates…
+              </p>
+            ) : !address ? (
               <p
                 className="text-xs mt-3"
                 style={{ color: "var(--muted)" }}
               >
                 Please add a delivery address to continue.
               </p>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
