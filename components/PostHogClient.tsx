@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import posthog from "posthog-js";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useAuthStore } from "@/store/useAppStore";
+import { useAppConfigStore, useAuthStore } from "@/store/useAppStore";
 
 let initialized = false;
 
@@ -13,10 +13,14 @@ export default function PostHogClient() {
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const authInitialized = useAuthStore((s) => s.authInitialized);
+  const configLoaded = useAppConfigStore((s) => s.configLoaded);
+  const testMode = useAppConfigStore((s) => s.testMode);
 
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
     if (!key) return;
+    if (!configLoaded) return;
+    if (testMode) return;
 
     if (initialized) return;
 
@@ -29,20 +33,24 @@ export default function PostHogClient() {
       capture_pageleave: true,
     });
     initialized = true;
-  }, []);
+  }, [configLoaded, testMode]);
 
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
     if (!key) return;
+    if (!configLoaded) return;
+    if (testMode) return;
 
     const url =
       pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
     posthog.capture("$pageview", { $current_url: url });
-  }, [pathname, searchParams]);
+  }, [configLoaded, pathname, searchParams, testMode]);
 
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
     if (!key) return;
+    if (!configLoaded) return;
+    if (testMode) return;
     if (!authInitialized) return;
 
     if (isAuthenticated && user?.uid) {
@@ -72,7 +80,13 @@ export default function PostHogClient() {
     } else {
       posthog.reset();
     }
-  }, [authInitialized, isAuthenticated, user]);
+  }, [authInitialized, configLoaded, isAuthenticated, testMode, user]);
+
+  useEffect(() => {
+    if (!configLoaded) return;
+    if (!testMode) return;
+    posthog.reset();
+  }, [configLoaded, testMode]);
 
   return null;
 }

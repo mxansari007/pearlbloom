@@ -1,3 +1,7 @@
+"use client";
+
+import { useAppConfigStore } from "@/store/useAppStore";
+
 export const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID;
 
 declare global {
@@ -8,8 +12,13 @@ declare global {
   }
 }
 
+function trackingAllowed() {
+  const { configLoaded, testMode } = useAppConfigStore.getState();
+  return configLoaded && !testMode;
+}
+
 function pixelEnabled() {
-  return Boolean(FB_PIXEL_ID);
+  return Boolean(FB_PIXEL_ID) && trackingAllowed();
 }
 
 function sendFbq(...args: any[]) {

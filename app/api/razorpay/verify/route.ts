@@ -30,6 +30,22 @@ const posthog =
       })
     : null;
 
+let cachedTestMode: boolean | null = null;
+let cachedTestModeFetchedAt = 0;
+
+async function getTestMode(): Promise<boolean> {
+  const now = Date.now();
+  if (cachedTestMode !== null && now - cachedTestModeFetchedAt < 30_000) {
+    return cachedTestMode;
+  }
+
+  const snap = await dbAdmin.collection("siteSettings").doc("main").get();
+  const raw = snap.exists ? snap.get("testMode") : undefined;
+  cachedTestMode = typeof raw === "boolean" ? raw : false;
+  cachedTestModeFetchedAt = now;
+  return cachedTestMode;
+}
+
 function getNumberField(obj: unknown, key: string): number | null {
   if (!obj || typeof obj !== "object") return null;
   if (!(key in obj)) return null;
@@ -99,7 +115,8 @@ export async function POST(req: Request) {
     });
 
     const distinctId = orderData ? getStringField(orderData, "userId") : null;
-    if (posthog && distinctId) {
+    const testMode = await getTestMode();
+    if (posthog && distinctId && !testMode) {
       const items = orderData && Array.isArray(orderData.items) ? orderData.items : [];
       const itemCount = items.reduce((sum, i) => sum + getQuantity(i), 0);
       const total = orderData ? getNumberField(orderData, "total") : null;

@@ -3,7 +3,7 @@
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect } from "react";
 import { auth } from "../libs/firebase-client";
-import { useAuthStore } from "../store/useAppStore";
+import { useAppConfigStore, useAuthStore } from "../store/useAppStore";
 
 export default function AuthProvider({
   children,
@@ -11,6 +11,7 @@ export default function AuthProvider({
   children: React.ReactNode;
 }) {
   const clearUser = useAuthStore((s) => s.clearUser);
+  const loadConfig = useAppConfigStore((s) => s.loadConfig);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -21,6 +22,10 @@ export default function AuthProvider({
 
     return () => unsub();
   }, [clearUser]);
+
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
 
   return <>{children}</>;
 }

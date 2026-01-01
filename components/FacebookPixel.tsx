@@ -4,19 +4,24 @@ import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useState } from "react";
 import * as pixel from "../libs/fpixel";
+import { useAppConfigStore } from "@/store/useAppStore";
 
 const FacebookPixel = () => {
   const [loaded, setLoaded] = useState(false);
   const pathname = usePathname();
   const pixelId = pixel.FB_PIXEL_ID;
+  const configLoaded = useAppConfigStore((s) => s.configLoaded);
+  const testMode = useAppConfigStore((s) => s.testMode);
 
-  if (!pixelId) return null;
+  const shouldRender = Boolean(pixelId) && configLoaded && !testMode;
 
   useEffect(() => {
+    if (!shouldRender) return;
     if (!loaded) return;
-
     pixel.pageview();
-  }, [pathname, loaded]);
+  }, [loaded, pathname, shouldRender]);
+
+  if (!shouldRender) return null;
 
   return (
     <div>
