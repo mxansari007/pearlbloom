@@ -125,14 +125,16 @@ export async function GET(req: Request) {
       );
     }
 
-    const couriers = Array.isArray((json as any)?.data) ? (json as any).data : [];
+    const data = typeof json === "object" && json !== null ? (json as Record<string, unknown>)["data"] : null;
+    const couriers = Array.isArray(data) ? data : [];
     return NextResponse.json({
       pincode: destination,
       origin,
       serviceable: couriers.length > 0,
       couriers,
     });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Serviceability check failed" }, { status: 500 });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : null;
+    return NextResponse.json({ error: msg || "Serviceability check failed" }, { status: 500 });
   }
 }

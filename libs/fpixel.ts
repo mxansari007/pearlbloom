@@ -4,10 +4,12 @@ import { useAppConfigStore } from "@/store/useAppStore";
 
 export const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID;
 
+type FbqFn = (...args: unknown[]) => void;
+
 declare global {
   interface Window {
-    fbq?: (...args: any[]) => void;
-    __pbFbqQueue?: any[][];
+    fbq?: FbqFn;
+    __pbFbqQueue?: unknown[][];
     __pbLastPurchaseEventId?: string;
   }
 }
@@ -21,7 +23,7 @@ function pixelEnabled() {
   return Boolean(FB_PIXEL_ID) && trackingAllowed();
 }
 
-function sendFbq(...args: any[]) {
+function sendFbq(...args: unknown[]) {
   if (typeof window === "undefined") return;
   if (typeof window.fbq === "function") {
     window.fbq(...args);

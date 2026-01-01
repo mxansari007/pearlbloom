@@ -7,10 +7,12 @@ import { Plus, Minus } from "lucide-react";
 
 import { useBuyNowStore } from "@/store/useBuyNowStore";
 import { useAppConfigStore, useAuthStore } from "@/store/useAppStore";
+import { useCouponStore } from "@/store/useCouponStore";
 import type { Address } from "@/types/user";
 import { placeOrder } from "@/utils/placeorder";
 import { track } from "@/utils/analytics";
 import CheckoutAddressSection from "@/components/CheckoutAddressSection";
+import CouponPanel from "@/components/CouponPanel";
 
 type RazorpaySuccessResponse = {
   razorpay_order_id: string;
@@ -37,6 +39,8 @@ export default function BuyNowCheckoutPage() {
   const configLoaded = useAppConfigStore((s) => s.configLoaded);
   const globalShippingRate = useAppConfigStore((s) => s.shippingRate);
   const freeShippingAbove = useAppConfigStore((s) => s.freeShippingAbove);
+  const { appliedCode, status: couponStatus, discountAmount, eligibleSubtotal: couponEligibleSubtotal, coupon, revalidate } =
+    useCouponStore();
 
   const { item, updateQty, clearBuyNowItem, getTotal } = useBuyNowStore();
 
@@ -108,7 +112,24 @@ export default function BuyNowCheckoutPage() {
           : globalShippingRate;
       const shippingBase = rate * (item.quantity || 1);
       const shipping = eligibleForFreeShipping ? 0 : shippingBase;
-      const total = subtotal + shipping;
+      const discount = couponStatus === "applied" ? discountAmount : 0;
+      const total = Math.max(0, subtotal + shipping - discount);
+      const couponPayload =
+        couponStatus === "applied" && coupon
+          ? {
+              code: coupon.code,
+              title: coupon.title,
+              discountType: coupon.discountType,
+              discountValue: coupon.discountValue,
+              eligibleSubtotal: couponEligibleSubtotal,
+              discountAmount: discount,
+              scope: coupon.scope,
+            }
+          : null;
+
+      if (total <= 0) {
+        throw new Error("Order total must be greater than ₹0.");
+      }
 
       track("checkout_submitted", {
         source: "buy_now_checkout",
@@ -116,11 +137,13 @@ export default function BuyNowCheckoutPage() {
         cart_unique_items: 1,
         cart_value: subtotal,
         shipping,
+        discount,
         total,
         product_id: item.productId || item.id,
         variant_id: item.variantId || item.id,
         sku: item.sku,
         slug: item.slug,
+        ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
       });
 
       // 1️⃣ Create order in Firestore
@@ -141,6 +164,8 @@ export default function BuyNowCheckoutPage() {
         subtotal,
         shipping,
         total,
+        discount,
+        coupon: couponPayload,
         address,
         status: "pending",
         createdAt: now,
@@ -154,7 +179,9 @@ export default function BuyNowCheckoutPage() {
         cart_unique_items: 1,
         cart_value: subtotal,
         shipping,
+        discount,
         total,
+        ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
       });
 
       // 2️⃣ Load Razorpay
@@ -215,7 +242,9 @@ export default function BuyNowCheckoutPage() {
                 cart_unique_items: 1,
                 cart_value: subtotal,
                 shipping,
+                discount,
                 total,
+                ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
               });
               // Success!
               setIsOrderPlaced(true);
@@ -232,7 +261,9 @@ export default function BuyNowCheckoutPage() {
                 cart_unique_items: 1,
                 cart_value: subtotal,
                 shipping,
+                discount,
                 total,
+                ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
               });
               alert("Payment verification failed. Please contact support.");
               setVerifying(false);
@@ -246,7 +277,9 @@ export default function BuyNowCheckoutPage() {
               cart_unique_items: 1,
               cart_value: subtotal,
               shipping,
+              discount,
               total,
+              ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
             });
             alert("Payment verification error. Please contact support.");
             setVerifying(false);
@@ -271,7 +304,9 @@ export default function BuyNowCheckoutPage() {
                    cart_unique_items: 1,
                    cart_value: subtotal,
                    shipping,
+                   discount,
                    total,
+                   ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
                  });
                  setIsOrderPlaced(true); // Prevent guard from redirecting to home
                  setTimeout(() => {
@@ -304,7 +339,9 @@ export default function BuyNowCheckoutPage() {
             cart_unique_items: 1,
             cart_value: subtotal,
             shipping,
+            discount,
             total,
+            ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
           });
           
           setIsOrderPlaced(true); // Prevent guard from redirecting to home
@@ -316,7 +353,16 @@ export default function BuyNowCheckoutPage() {
           router.replace(`/orders/${displayId}`);
       });
 
-      track("payment_started", { order_id: orderId, amount: total, currency: "INR", source: "buy_now_checkout", cart_value: subtotal, shipping });
+      track("payment_started", {
+        order_id: orderId,
+        amount: total,
+        currency: "INR",
+        source: "buy_now_checkout",
+        cart_value: subtotal,
+        shipping,
+        discount,
+        ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
+      });
       paymentObject.open();
     } catch (err: unknown) {
       console.error("Checkout error:", err);
@@ -337,7 +383,19 @@ export default function BuyNowCheckoutPage() {
         (item.quantity || 1)
       : 0);
   const shipping = configLoaded ? (eligibleForFreeShipping ? 0 : shippingBase) : 0;
-  const total = subtotal + shipping;
+  const discount = couponStatus === "applied" ? discountAmount : 0;
+  const total = Math.max(0, subtotal + shipping - discount);
+
+  useEffect(() => {
+    if (!appliedCode) return;
+    if (!item) return;
+    if (!configLoaded) return;
+    revalidate({
+      items: [{ productId: item.productId || item.id, price: item.price, quantity: item.quantity || 1 }],
+      subtotal,
+      userId: user?.uid ?? null,
+    });
+  }, [appliedCode, configLoaded, item, revalidate, subtotal, user?.uid]);
 
   if (!authInitialized || loading) {
     return (
@@ -354,14 +412,14 @@ export default function BuyNowCheckoutPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 md:px-8 bg-[var(--bg-color)]">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* LEFT COLUMN: Address & Review */}
         <div className="lg:col-span-2 space-y-6">
           {/* Address Section */}
           <div
             className="rounded-2xl p-6"
             style={{
-              background: "var(--panel-bg)",
+              background: "var(--panel-bg-soft)",
               border: "1px solid var(--border-subtle)",
             }}
           >
@@ -380,7 +438,7 @@ export default function BuyNowCheckoutPage() {
           <div
             className="rounded-2xl p-6"
             style={{
-              background: "var(--panel-bg)",
+              background: "var(--panel-bg-soft)",
               border: "1px solid var(--border-subtle)",
             }}
           >
@@ -439,13 +497,13 @@ export default function BuyNowCheckoutPage() {
         {/* RIGHT COLUMN: Summary */}
         <div className="lg:col-span-1">
           <div
-            className="rounded-2xl p-6 sticky top-24"
+            className="rounded-2xl p-6 h-fit"
             style={{
-              background: "var(--panel-bg)",
+              background: "var(--panel-bg-soft)",
               border: "1px solid var(--border-subtle)",
             }}
           >
-            <h2 className="text-xl font-medium mb-4">Order Summary</h2>
+            <h2 className="text-lg font-medium mb-4">Order Summary</h2>
 
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-sm">
@@ -462,6 +520,15 @@ export default function BuyNowCheckoutPage() {
                   <span>₹{shipping.toLocaleString("en-IN")}</span>
                 )}
               </div>
+
+              {discount > 0 ? (
+                <div className="flex justify-between text-sm">
+                  <span style={{ color: "var(--muted)" }}>Discount</span>
+                  <span style={{ color: "rgb(var(--gold-rgb))" }}>
+                    -₹{discount.toLocaleString("en-IN")}
+                  </span>
+                </div>
+              ) : null}
 
               {configLoaded &&
                 typeof freeShippingAbove === "number" &&
@@ -481,7 +548,7 @@ export default function BuyNowCheckoutPage() {
               )}
 
               <div
-                className="flex justify-between pt-3 mt-3 border-t"
+                className="flex justify-between pt-3 mt-3 border-t text-lg"
                 style={{ borderColor: "var(--border-subtle)" }}
               >
                 <span className="font-medium">Total</span>
@@ -489,10 +556,25 @@ export default function BuyNowCheckoutPage() {
               </div>
             </div>
 
+            <div className="mt-6">
+              <CouponPanel
+                title="Have a coupon?"
+                items={[
+                  {
+                    productId: item.productId || item.id,
+                    price: item.price,
+                    quantity: item.quantity || 1,
+                  },
+                ]}
+                subtotal={subtotal}
+                userId={user?.uid ?? null}
+              />
+            </div>
+
             <button
               onClick={handlePlaceOrder}
               disabled={!configLoaded || !address || loading}
-              className="w-full rounded-xl py-3 font-medium transition"
+              className="w-full rounded-xl mt-4 py-3 font-medium transition"
               style={{
                 background: !configLoaded || !address
                   ? "rgba(0,0,0,0.2)"

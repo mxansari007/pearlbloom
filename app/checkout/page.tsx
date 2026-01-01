@@ -6,10 +6,12 @@ import Image from "next/image";
 
 import { useCartStore } from "@/store/useCartStore";
 import { useAppConfigStore, useAuthStore } from "@/store/useAppStore";
+import { useCouponStore } from "@/store/useCouponStore";
 import type { Address } from "@/types/user";
 import { placeOrder } from "@/utils/placeorder";
 import { track } from "@/utils/analytics";
 import CheckoutAddressSection from "@/components/CheckoutAddressSection";
+import CouponPanel from "@/components/CouponPanel";
 
 type RazorpaySuccessResponse = {
   razorpay_order_id: string;
@@ -38,6 +40,8 @@ export default function CheckoutPage() {
   const configLoaded = useAppConfigStore((s) => s.configLoaded);
   const globalShippingRate = useAppConfigStore((s) => s.shippingRate);
   const freeShippingAbove = useAppConfigStore((s) => s.freeShippingAbove);
+  const { appliedCode, status: couponStatus, discountAmount, eligibleSubtotal: couponEligibleSubtotal, coupon, revalidate } =
+    useCouponStore();
 
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [address, setAddress] = useState<Address | null>(null);
@@ -62,7 +66,19 @@ export default function CheckoutPage() {
   );
 
   const shipping = configLoaded ? (eligibleForFreeShipping ? 0 : shippingBase) : 0;
-  const total = subtotal + shipping;
+  const discount = couponStatus === "applied" ? discountAmount : 0;
+  const total = Math.max(0, subtotal + shipping - discount);
+
+  useEffect(() => {
+    if (!appliedCode) return;
+    if (items.length === 0) return;
+    if (!configLoaded) return;
+    revalidate({
+      items: items.map((i) => ({ productId: i.productId || i.id, price: i.price, quantity: i.quantity })),
+      subtotal,
+      userId: user?.uid ?? null,
+    });
+  }, [appliedCode, configLoaded, items, revalidate, subtotal, user?.uid]);
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -72,9 +88,10 @@ export default function CheckoutPage() {
       cart_unique_items: items.length,
       cart_value: subtotal,
       shipping,
+      discount,
       total,
     });
-  }, [items, shipping, subtotal, total]);
+  }, [items, shipping, subtotal, discount, total]);
 
   /* ---------------- Auth Guard ---------------- */
 
@@ -123,13 +140,31 @@ const handlePlaceOrder = async () => {
     setPlacingOrder(true);
 
     const now = Date.now();
+    const couponPayload =
+      couponStatus === "applied" && coupon
+        ? {
+            code: coupon.code,
+            title: coupon.title,
+            discountType: coupon.discountType,
+            discountValue: coupon.discountValue,
+            eligibleSubtotal: couponEligibleSubtotal,
+            discountAmount: discount,
+            scope: coupon.scope,
+          }
+        : null;
+
+    if (total <= 0) {
+      throw new Error("Order total must be greater than ₹0.");
+    }
 
     track("checkout_submitted", {
       cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
       cart_unique_items: items.length,
       cart_value: subtotal,
       shipping,
+      discount,
       total,
+      ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
     });
 
     // 1️⃣ Create order in Firestore (pending)
@@ -151,6 +186,8 @@ const handlePlaceOrder = async () => {
       subtotal,
       shipping,
       total,
+      discount,
+      coupon: couponPayload,
       address,
       status: "pending",
       createdAt: now,
@@ -163,7 +200,9 @@ const handlePlaceOrder = async () => {
       cart_unique_items: items.length,
       cart_value: subtotal,
       shipping,
+      discount,
       total,
+      ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
     });
 
     // 2️⃣ Load Razorpay
@@ -219,7 +258,9 @@ const handlePlaceOrder = async () => {
           cart_unique_items: items.length,
           cart_value: subtotal,
           shipping,
+          discount,
           total,
+          ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
         });
 
         const date = new Date().toISOString().split("T")[0];
@@ -248,7 +289,9 @@ const handlePlaceOrder = async () => {
                   cart_unique_items: items.length,
                   cart_value: subtotal,
                   shipping,
+                  discount,
                   total,
+                  ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
                 });
                 setIsOrderPlaced(true); // Prevent guard from redirecting to cart
                 setTimeout(() => {
@@ -281,7 +324,9 @@ const handlePlaceOrder = async () => {
           cart_unique_items: items.length,
           cart_value: subtotal,
           shipping,
+          discount,
           total,
+          ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
         });
         
         setIsOrderPlaced(true); // Prevent guard from redirecting to cart
@@ -293,7 +338,15 @@ const handlePlaceOrder = async () => {
         router.replace(`/orders/${displayId}`);
     });
 
-    track("payment_started", { order_id: orderId, amount: total, currency: "INR", cart_value: subtotal, shipping });
+    track("payment_started", {
+      order_id: orderId,
+      amount: total,
+      currency: "INR",
+      cart_value: subtotal,
+      shipping,
+      discount,
+      ...(couponPayload?.code ? { coupon_code: couponPayload.code } : {}),
+    });
     paymentObject.open();
 
   } catch (err) {
@@ -432,6 +485,15 @@ const handlePlaceOrder = async () => {
               )}
             </div>
 
+            {discount > 0 ? (
+              <div className="flex justify-between">
+                <span>Discount</span>
+                <span style={{ color: "rgb(var(--gold-rgb))" }}>
+                  -₹{discount.toLocaleString("en-IN")}
+                </span>
+              </div>
+            ) : null}
+
             {configLoaded &&
               typeof freeShippingAbove === "number" &&
               freeShippingAbove > 0 &&
@@ -450,7 +512,7 @@ const handlePlaceOrder = async () => {
             )}
 
             <div
-              className="flex justify-between pt-3 mt-3 border-t"
+              className="flex justify-between pt-3 mt-3 border-t text-lg"
               style={{ borderColor: "var(--border-subtle)" }}
             >
               <span className="font-medium">Total</span>
@@ -458,10 +520,19 @@ const handlePlaceOrder = async () => {
             </div>
           </div>
 
+          <div className="mt-6">
+            <CouponPanel
+              title="Have a coupon?"
+              items={items.map((i) => ({ productId: i.productId || i.id, price: i.price, quantity: i.quantity }))}
+              subtotal={subtotal}
+              userId={user?.uid ?? null}
+            />
+          </div>
+
           <button
             onClick={handlePlaceOrder}
             disabled={!configLoaded || !address || placingOrder}
-            className="w-full rounded-xl py-3 font-medium transition"
+            className="w-full rounded-xl mt-4 py-3 font-medium transition"
             style={{
               background: !configLoaded || !address
                 ? "rgba(0,0,0,0.2)"

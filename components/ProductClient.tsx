@@ -217,20 +217,22 @@ export default function ProductClient({ product }: { product: Product }) {
         `/api/shipping/nimbus/serviceability?pincode=${encodeURIComponent(pin)}`,
         { method: "GET" }
       );
-      const json = await resp.json().catch(() => ({}));
+      const json: unknown = await resp.json().catch(() => ({}));
+      const obj = typeof json === "object" && json !== null ? (json as Record<string, unknown>) : {};
       if (!resp.ok) {
-        const msg = typeof (json as any)?.error === "string" ? (json as any).error : "Failed to check pincode";
+        const msg = typeof obj.error === "string" ? obj.error : "Failed to check pincode";
         setPincodeResult({ serviceable: false, message: msg });
         return;
       }
 
-      const serviceable = Boolean((json as any)?.serviceable);
+      const serviceable = Boolean(obj.serviceable);
       setPincodeResult({
         serviceable,
         message: serviceable ? "Delivery available to this pincode." : "Delivery not available to this pincode.",
       });
-    } catch (e: any) {
-      setPincodeResult({ serviceable: false, message: e?.message || "Failed to check pincode" });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : null;
+      setPincodeResult({ serviceable: false, message: msg || "Failed to check pincode" });
     } finally {
       setCheckingPincode(false);
     }

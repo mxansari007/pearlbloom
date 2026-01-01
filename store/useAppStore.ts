@@ -98,12 +98,16 @@ export const useAppConfigStore = create<AppConfigState>()(
           const shippingRate =
             asNumberOrNull(data?.shippingRate) ??
             asNumberOrNull((data as unknown as { globalShippingRate?: unknown })?.globalShippingRate) ??
+            asNumberOrNull((data as unknown as { shippingRateInr?: unknown })?.shippingRateInr) ??
             asNumberOrNull((data as unknown as { shipping?: unknown })?.shipping) ??
+            asNumberOrNull((data as unknown as { shipping?: { rate?: unknown } })?.shipping?.rate) ??
+            asNumberOrNull((data as unknown as { shipping?: { shippingRate?: unknown } })?.shipping?.shippingRate) ??
             0;
           const freeShippingAbove =
             asNumberOrNull(data?.freeShippingAbove) ??
             asNumberOrNull((data as unknown as { free_shipping_above?: unknown })?.free_shipping_above) ??
-            asNumberOrNull((data as unknown as { freeShippingThreshold?: unknown })?.freeShippingThreshold);
+            asNumberOrNull((data as unknown as { freeShippingThreshold?: unknown })?.freeShippingThreshold) ??
+            asNumberOrNull((data as unknown as { shipping?: { freeAbove?: unknown } })?.shipping?.freeAbove);
           set({
             configLoaded: true,
             testMode,

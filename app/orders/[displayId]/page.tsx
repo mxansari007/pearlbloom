@@ -676,6 +676,15 @@ export default function OrderDetailsPage() {
                 )}
               </div>
 
+              {(order.discount ?? 0) > 0 ? (
+                <div className="order-page__summary-row">
+                  <span>
+                    Discount{order.coupon?.code ? ` (${order.coupon.code})` : ""}
+                  </span>
+                  <span>-₹{(order.discount ?? 0).toLocaleString("en-IN")}</span>
+                </div>
+              ) : null}
+
               <div className="order-page__summary-row order-page__summary-row--total">
                 <span>Total Paid</span>
                 <span>₹{order.total.toLocaleString("en-IN")}</span>

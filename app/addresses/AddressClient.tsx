@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -104,9 +104,10 @@ async function lookupPincode(pincode: string) {
     method: "GET",
     cache: "no-store",
   });
-  const json = await resp.json().catch(() => ({}));
+  const json: unknown = await resp.json().catch(() => ({}));
   if (!resp.ok) {
-    const msg = typeof (json as any)?.error === "string" ? (json as any).error : "Invalid pincode";
+    const obj = typeof json === "object" && json !== null ? (json as Record<string, unknown>) : {};
+    const msg = typeof obj.error === "string" ? obj.error : "Invalid pincode";
     throw new Error(msg);
   }
   return json as { valid: boolean; city: string; state: string; country: string };
@@ -117,12 +118,14 @@ async function checkServiceability(pincode: string) {
     `/api/shipping/nimbus/serviceability?pincode=${encodeURIComponent(pincode)}`,
     { method: "GET", cache: "no-store" }
   );
-  const json = await resp.json().catch(() => ({}));
+  const json: unknown = await resp.json().catch(() => ({}));
   if (!resp.ok) {
-    const msg = typeof (json as any)?.error === "string" ? (json as any).error : "Serviceability check failed";
+    const obj = typeof json === "object" && json !== null ? (json as Record<string, unknown>) : {};
+    const msg = typeof obj.error === "string" ? obj.error : "Serviceability check failed";
     throw new Error(msg);
   }
-  return Boolean((json as any)?.serviceable);
+  const obj = typeof json === "object" && json !== null ? (json as Record<string, unknown>) : {};
+  return Boolean(obj.serviceable);
 }
 
 export default function AddressClient() {
@@ -160,7 +163,7 @@ export default function AddressClient() {
     state: "",
     postalCode: "",
     country: "India",
-    createdAt: Date.now(),
+    createdAt: 0,
   });
 
   /* ---------------- Protect route ---------------- */
@@ -173,7 +176,7 @@ export default function AddressClient() {
 
   /* ---------------- Load addresses ---------------- */
 
-  const loadAddresses = async () => {
+  const loadAddresses = useCallback(async () => {
     if (!user) return;
 
     const q = query(
@@ -188,11 +191,11 @@ export default function AddressClient() {
     }));
 
     setAddresses(list);
-  };
+  }, [user]);
 
   useEffect(() => {
     loadAddresses();
-  }, [user]);
+  }, [loadAddresses]);
 
 //   if (loading) {
 //     return (
@@ -204,10 +207,6 @@ export default function AddressClient() {
 //       </div>
 //     );
 //   }
-
-  if (!user) return null;
-
-  const primaryAddress = addresses.find((a) => a.isDefault);
 
   useEffect(() => {
     if (!showForm) return;
@@ -239,9 +238,10 @@ export default function AddressClient() {
         }));
         setPincodeStatus({ state: "valid" });
       })
-      .catch((e: any) => {
+      .catch((e: unknown) => {
         if (cancelled) return;
-        setPincodeStatus({ state: "invalid", message: e?.message || "Invalid pincode" });
+        const msg = e instanceof Error ? e.message : null;
+        setPincodeStatus({ state: "invalid", message: msg || "Invalid pincode" });
         setServiceabilityStatus({ state: "idle" });
       });
 
@@ -249,6 +249,10 @@ export default function AddressClient() {
       cancelled = true;
     };
   }, [form.postalCode, showForm]);
+
+  if (!user) return null;
+
+  const primaryAddress = addresses.find((a) => a.isDefault);
 
   /* ---------------- Set primary address ---------------- */
 

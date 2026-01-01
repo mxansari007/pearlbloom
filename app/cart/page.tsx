@@ -6,17 +6,20 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useCartStore } from "@/store/useCartStore";
 import { useAppConfigStore, useAuthStore } from "@/store/useAppStore";
+import { useCouponStore } from "@/store/useCouponStore";
 import { Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { track } from "@/utils/analytics";
+import CouponPanel from "@/components/CouponPanel";
 
 export default function CartPage() {
   const router = useRouter();
 
   const { items, removeItem, updateQty, clear } = useCartStore();
-  const { isAuthenticated, authInitialized } = useAuthStore();
+  const { user, isAuthenticated, authInitialized } = useAuthStore();
   const configLoaded = useAppConfigStore((s) => s.configLoaded);
   const globalShippingRate = useAppConfigStore((s) => s.shippingRate);
   const freeShippingAbove = useAppConfigStore((s) => s.freeShippingAbove);
+  const { appliedCode, status: couponStatus, discountAmount, revalidate } = useCouponStore();
 
   const subtotal = items.reduce(
     (sum, i) => sum + i.price * i.quantity,
@@ -36,7 +39,19 @@ export default function CartPage() {
   );
 
   const shipping = configLoaded ? (eligibleForFreeShipping ? 0 : shippingBase) : 0;
-  const total = subtotal + shipping;
+  const discount = couponStatus === "applied" ? discountAmount : 0;
+  const total = Math.max(0, subtotal + shipping - discount);
+
+  useEffect(() => {
+    if (!appliedCode) return;
+    if (items.length === 0) return;
+    if (!configLoaded) return;
+    revalidate({
+      items: items.map((i) => ({ productId: i.productId || i.id, price: i.price, quantity: i.quantity })),
+      subtotal,
+      userId: user?.uid ?? null,
+    });
+  }, [appliedCode, configLoaded, items, revalidate, subtotal, user?.uid]);
 
   const handleCheckout = () => {
     track("begin_checkout", {
@@ -45,6 +60,7 @@ export default function CartPage() {
       cart_unique_items: items.length,
       cart_value: subtotal,
       shipping,
+      discount,
       total,
     });
     // wait until auth state is known
@@ -236,6 +252,15 @@ export default function CartPage() {
                 )}
               </div>
 
+              {discount > 0 ? (
+                <div className="flex justify-between text-sm mb-6">
+                  <span>Discount</span>
+                  <span style={{ color: "rgb(var(--gold-rgb))" }}>
+                    -₹{discount.toLocaleString("en-IN")}
+                  </span>
+                </div>
+              ) : null}
+
               {configLoaded &&
                 typeof freeShippingAbove === "number" &&
                 freeShippingAbove > 0 &&
@@ -258,11 +283,20 @@ export default function CartPage() {
                 <span>₹{total.toLocaleString("en-IN")}</span>
               </div>
 
+              <div className="mt-6">
+                <CouponPanel
+                  title="Have a coupon?"
+                  items={items.map((i) => ({ productId: i.productId || i.id, price: i.price, quantity: i.quantity }))}
+                  subtotal={subtotal}
+                  userId={user?.uid ?? null}
+                />
+              </div>
+
               <button
                 onClick={handleCheckout}
                 className="w-full rounded-xl
                            bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
-                           py-3 text-black font-medium
+                           mt-4 py-3 text-black font-medium
                            hover:brightness-110 transition"
               >
                 Proceed to Checkout

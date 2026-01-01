@@ -28,7 +28,17 @@ export interface Order {
 
   subtotal: number;
   shipping: number;
+  discount?: number;
   total: number;
+  coupon?: {
+    code: string;
+    title: string | null;
+    discountType: "percent" | "flat";
+    discountValue: number;
+    eligibleSubtotal: number;
+    discountAmount: number;
+    scope: "all" | "products" | "collections" | "categories";
+  } | null;
 
   address: {
     fullName: string;
