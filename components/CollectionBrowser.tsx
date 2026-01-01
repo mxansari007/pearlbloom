@@ -304,15 +304,21 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
         </div>
 
         <div className="mb-6">
-          <div className={
-            viewMode === 'grid' 
-              ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-1 sm:gap-4 lg:gap-8"
-              : "flex flex-col gap-6 list-view-container"
-          }>
-            {visible.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
+          {viewMode === 'grid' ? (
+            <div className="bg-[var(--card-border)] p-px sm:bg-transparent sm:p-0">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-px sm:gap-4 lg:gap-8">
+                {visible.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6 list-view-container">
+              {visible.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="collection-page__load-more">

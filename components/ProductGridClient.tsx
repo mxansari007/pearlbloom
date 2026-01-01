@@ -60,15 +60,17 @@ function ProductGridClient({
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} />
-        ))}
-
-        {loading &&
-          Array.from({ length: 4 }).map((_, i) => (
-            <ProductCardSkeleton key={`loading-${i}`} />
+      <div className="bg-[var(--card-border)] p-px sm:bg-transparent sm:p-0">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-px sm:gap-6">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} />
           ))}
+
+          {loading &&
+            Array.from({ length: 4 }).map((_, i) => (
+              <ProductCardSkeleton key={`loading-${i}`} />
+            ))}
+        </div>
       </div>
 
       {cursor && (
