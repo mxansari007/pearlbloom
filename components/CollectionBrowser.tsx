@@ -12,13 +12,185 @@ type Props = {
   categories?: string[]
 }
 
+const sortOptions = ['featured', 'price-asc', 'price-desc', 'newest'] as const
+type SortOption = typeof sortOptions[number]
+
+type FiltersContentProps = {
+  compact?: boolean
+  query: string
+  onQueryChange: (value: string) => void
+  categories: string[]
+  selectedCats: string[]
+  onToggleCategory: (cat: string) => void
+  countsByCategory: Map<string, number>
+  formatINR: (value: number) => string
+  priceBounds: { min: number; max: number }
+  selectedMin: number
+  selectedMax: number
+  minPrice: number | ''
+  maxPrice: number | ''
+  onResetPrice: () => void
+  minPercentClamped: number
+  maxPercentClamped: number
+  splitPercentClamped: number
+  step: number
+  sliderDisabled: boolean
+  onMinSliderChange: (value: number) => void
+  onMaxSliderChange: (value: number) => void
+  sort: SortOption
+  onSortChange: (value: SortOption) => void
+}
+
+function FiltersContent({
+  compact,
+  query,
+  onQueryChange,
+  categories,
+  selectedCats,
+  onToggleCategory,
+  countsByCategory,
+  formatINR,
+  priceBounds,
+  selectedMin,
+  selectedMax,
+  minPrice,
+  maxPrice,
+  onResetPrice,
+  minPercentClamped,
+  maxPercentClamped,
+  splitPercentClamped,
+  step,
+  sliderDisabled,
+  onMinSliderChange,
+  onMaxSliderChange,
+  sort,
+  onSortChange,
+}: FiltersContentProps) {
+  return (
+    <div className={compact ? 'space-y-4' : 'space-y-6'}>
+      <div className="card p-4">
+        <label className="block">
+          <span className="text-sm text-muted">Search</span>
+          <input
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+            placeholder="Search designs, metals, stones..."
+            className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
+          />
+        </label>
+      </div>
+
+      <div className="card p-4">
+        <div className="mb-3 text-sm font-medium">Categories</div>
+        <div className="sidebar-scroll space-y-2">
+          {categories.length === 0 && <div className="text-sm text-muted">—</div>}
+          {categories.map((c) => {
+            const active = selectedCats.includes(c)
+            return (
+              <button
+                key={c}
+                onClick={() => onToggleCategory(c)}
+                className={`w-full text-left rounded-md px-3 py-2 transition border flex items-center justify-between ${active ? 'bg-[rgba(212,175,55,0.08)] border-[rgba(212,175,55,0.14)]' : 'border-[var(--input-border)] hover:bg-[var(--glass)]'}`}
+              >
+                <span>{c}</span>
+                <span className="text-sm text-muted">{countsByCategory.get(c) ?? 0}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="card p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-sm font-medium">Price</div>
+            <div className="mt-1 text-xs text-muted">
+              {formatINR(selectedMin)} — {formatINR(selectedMax)}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            disabled={minPrice === '' && maxPrice === ''}
+            onClick={onResetPrice}
+            className="px-3 py-1.5 rounded-md border border-[var(--input-border)] text-xs text-muted transition-all hover:bg-[var(--glass)] hover:border-[rgba(212,175,55,0.25)] disabled:opacity-50 disabled:pointer-events-none"
+          >
+            Reset
+          </button>
+        </div>
+
+        <div className="mt-4 price-range">
+          <div className="price-range__track">
+            <div
+              className="price-range__fill"
+              style={{
+                left: `${minPercentClamped}%`,
+                right: `${Math.max(0, Math.min(100, 100 - maxPercentClamped))}%`,
+              }}
+            />
+          </div>
+
+          <input
+            type="range"
+            min={priceBounds.min}
+            max={priceBounds.max}
+            step={step}
+            value={selectedMin}
+            disabled={sliderDisabled}
+            onChange={(e) => onMinSliderChange(Number(e.target.value))}
+            className="price-range__input price-range__input--min"
+            style={{
+              clipPath: `inset(0 ${Math.max(0, 100 - splitPercentClamped)}% 0 0)`,
+            }}
+            aria-label="Minimum price"
+          />
+          <input
+            type="range"
+            min={priceBounds.min}
+            max={priceBounds.max}
+            step={step}
+            value={selectedMax}
+            disabled={sliderDisabled}
+            onChange={(e) => onMaxSliderChange(Number(e.target.value))}
+            className="price-range__input price-range__input--max"
+            style={{
+              clipPath: `inset(0 0 0 ${splitPercentClamped}%)`,
+            }}
+            aria-label="Maximum price"
+          />
+        </div>
+
+        <div className="mt-3 flex items-center justify-between text-xs text-muted">
+          <span>{formatINR(priceBounds.min)}</span>
+          <span>{formatINR(priceBounds.max)}</span>
+        </div>
+      </div>
+
+      <div className="card p-4">
+        <div className="mb-2 text-sm font-medium">Sort</div>
+        <select
+          value={sort}
+          onChange={(e) => {
+            const value = e.target.value
+            if (sortOptions.includes(value as SortOption)) onSortChange(value as SortOption)
+          }}
+          className="w-full rounded-lg bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] p-3 outline-none focus:border-[rgb(var(--gold-rgb))] transition-all"
+        >
+          <option value="newest">Newest</option>
+          <option value="featured">Featured</option>
+          <option value="price-asc">Price: Low → High</option>
+          <option value="price-desc">Price: High → Low</option>
+        </select>
+      </div>
+    </div>
+  )
+}
+
 export default function CollectionBrowser({ initialProducts, categories = [] }: Props) {
   const gridInitialCount = 9
   const listInitialCount = 24
   const [query, setQuery] = useState('')
   const [selectedCats, setSelectedCats] = useState<string[]>([])
-  const sortOptions = ['featured', 'price-asc', 'price-desc', 'newest'] as const
-  type SortOption = typeof sortOptions[number]
   const [sort, setSort] = useState<SortOption>('newest')
   const [minPrice, setMinPrice] = useState<number | ''>('')
   const [maxPrice, setMaxPrice] = useState<number | ''>('')
@@ -129,135 +301,37 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
     'price-desc': 'Price: High → Low',
   }
 
-  function FiltersContent({ compact }: { compact?: boolean }) {
-    return (
-      <div className={compact ? 'space-y-4' : 'space-y-6'}>
-        <div className="card p-4">
-          <label className="block">
-            <span className="text-sm text-muted">Search</span>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search designs, metals, stones..."
-              className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
-            />
-          </label>
-        </div>
-
-        <div className="card p-4">
-          <div className="mb-3 text-sm font-medium">Categories</div>
-          <div className="sidebar-scroll space-y-2">
-            {categories.length === 0 && <div className="text-sm text-muted">—</div>}
-            {categories.map((c) => {
-              const active = selectedCats.includes(c)
-              return (
-                <button
-                  key={c}
-                  onClick={() => toggleCategory(c)}
-                  className={`w-full text-left rounded-md px-3 py-2 transition border flex items-center justify-between ${active ? 'bg-[rgba(212,175,55,0.08)] border-[rgba(212,175,55,0.14)]' : 'border-[var(--input-border)] hover:bg-[var(--glass)]'}`}
-                >
-                  <span>{c}</span>
-                  <span className="text-sm text-muted">{countsByCategory.get(c) ?? 0}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className="card p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="text-sm font-medium">Price</div>
-              <div className="mt-1 text-xs text-muted">
-                {formatINR(selectedMin)} — {formatINR(selectedMax)}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              disabled={minPrice === '' && maxPrice === ''}
-              onClick={() => {
-                setMinPrice('')
-                setMaxPrice('')
-              }}
-              className="px-3 py-1.5 rounded-md border border-[var(--input-border)] text-xs text-muted transition-all hover:bg-[var(--glass)] hover:border-[rgba(212,175,55,0.25)] disabled:opacity-50 disabled:pointer-events-none"
-            >
-              Reset
-            </button>
-          </div>
-
-          <div className="mt-4 price-range">
-            <div className="price-range__track">
-              <div
-                className="price-range__fill"
-                style={{
-                  left: `${minPercentClamped}%`,
-                  right: `${Math.max(0, Math.min(100, 100 - maxPercentClamped))}%`,
-                }}
-              />
-            </div>
-
-            <input
-              type="range"
-              min={priceBounds.min}
-              max={priceBounds.max}
-              step={step}
-              value={selectedMin}
-              disabled={sliderDisabled}
-              onChange={(e) => setMinFromSlider(Number(e.target.value))}
-              className="price-range__input price-range__input--min"
-              style={{
-                clipPath: `inset(0 ${Math.max(0, 100 - splitPercentClamped)}% 0 0)`,
-              }}
-              aria-label="Minimum price"
-            />
-            <input
-              type="range"
-              min={priceBounds.min}
-              max={priceBounds.max}
-              step={step}
-              value={selectedMax}
-              disabled={sliderDisabled}
-              onChange={(e) => setMaxFromSlider(Number(e.target.value))}
-              className="price-range__input price-range__input--max"
-              style={{
-                clipPath: `inset(0 0 0 ${splitPercentClamped}%)`,
-              }}
-              aria-label="Maximum price"
-            />
-          </div>
-
-          <div className="mt-3 flex items-center justify-between text-xs text-muted">
-            <span>{formatINR(priceBounds.min)}</span>
-            <span>{formatINR(priceBounds.max)}</span>
-          </div>
-        </div>
-
-        <div className="card p-4">
-          <div className="mb-2 text-sm font-medium">Sort</div>
-          <select
-            value={sort}
-            onChange={(e) => {
-              const value = e.target.value
-              if (sortOptions.includes(value as SortOption)) setSort(value as SortOption)
-            }}
-            className="w-full rounded-lg bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] p-3 outline-none focus:border-[rgb(var(--gold-rgb))] transition-all"
-          >
-            <option value="newest">Newest</option>
-            <option value="featured">Featured</option>
-            <option value="price-asc">Price: Low → High</option>
-            <option value="price-desc">Price: High → Low</option>
-          </select>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div id="browse" className="grid grid-cols-1 lg:grid-cols-5 gap-8 pb-24 lg:pb-0"> {/* wider gap, extra column for breathing */}
       {/* Sidebar filters (1 column) */}
       <aside className="lg:col-span-1 lg:sticky lg:top-24 h-fit hidden lg:block">
-        <FiltersContent />
+        <FiltersContent
+          query={query}
+          onQueryChange={setQuery}
+          categories={categories}
+          selectedCats={selectedCats}
+          onToggleCategory={toggleCategory}
+          countsByCategory={countsByCategory}
+          formatINR={formatINR}
+          priceBounds={priceBounds}
+          selectedMin={selectedMin}
+          selectedMax={selectedMax}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          onResetPrice={() => {
+            setMinPrice('')
+            setMaxPrice('')
+          }}
+          minPercentClamped={minPercentClamped}
+          maxPercentClamped={maxPercentClamped}
+          splitPercentClamped={splitPercentClamped}
+          step={step}
+          sliderDisabled={sliderDisabled}
+          onMinSliderChange={setMinFromSlider}
+          onMaxSliderChange={setMaxFromSlider}
+          sort={sort}
+          onSortChange={setSort}
+        />
       </aside>
 
       {/* Main product area (4 columns) */}
@@ -418,7 +492,34 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
             </div>
 
             <div className="px-4 overflow-y-auto" style={{ maxHeight: "calc(85vh - 60px)" }}>
-              <FiltersContent compact />
+              <FiltersContent
+                compact
+                query={query}
+                onQueryChange={setQuery}
+                categories={categories}
+                selectedCats={selectedCats}
+                onToggleCategory={toggleCategory}
+                countsByCategory={countsByCategory}
+                formatINR={formatINR}
+                priceBounds={priceBounds}
+                selectedMin={selectedMin}
+                selectedMax={selectedMax}
+                minPrice={minPrice}
+                maxPrice={maxPrice}
+                onResetPrice={() => {
+                  setMinPrice('')
+                  setMaxPrice('')
+                }}
+                minPercentClamped={minPercentClamped}
+                maxPercentClamped={maxPercentClamped}
+                splitPercentClamped={splitPercentClamped}
+                step={step}
+                sliderDisabled={sliderDisabled}
+                onMinSliderChange={setMinFromSlider}
+                onMaxSliderChange={setMaxFromSlider}
+                sort={sort}
+                onSortChange={setSort}
+              />
             </div>
           </div>
         </div>

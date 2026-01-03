@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import { useProductVariant } from '../hooks/useProductVariant'
+import { ChevronLeft, ChevronRight, ZoomIn, X } from 'lucide-react'
 
 type Props = {
   images?: string[]
@@ -18,6 +19,20 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
   const [index, setIndex] = useState(0)
   const [open, setOpen] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
+  
+  // Touch handling
+  const touchStartX = useRef<number | null>(null)
+  const touchEndX = useRef<number | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOffset, setDragOffset] = useState(0)
+
+  const minSwipeDistance = 50
+
+  // Reset index when images change
+  useEffect(() => {
+    setIndex(0)
+  }, [currentImages.length, variantSelected])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -44,15 +59,50 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
 
   const safeIndex = Math.min(index, Math.max(0, currentImages.length - 1))
 
-  if (!currentImages.length) {
-    return (
-      <div className="gallery-empty">
-        <svg className="w-16 h-16 text-muted opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <p className="text-muted mt-3">No images available</p>
-      </div>
-    )
+  const next = useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setIndex((i) => (i + 1) % currentImages.length)
+  }, [currentImages.length])
+
+  const prev = useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setIndex((i) => (i - 1 + currentImages.length) % currentImages.length)
+  }, [currentImages.length])
+
+  // Touch handlers for swipe
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchEndX.current = null
+    touchStartX.current = e.targetTouches[0].clientX
+    setIsDragging(true)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartX.current) return
+    touchEndX.current = e.targetTouches[0].clientX
+    const diff = touchEndX.current - touchStartX.current
+    // Limit drag offset
+    const maxDrag = 100
+    setDragOffset(Math.max(-maxDrag, Math.min(maxDrag, diff)))
+  }
+
+  const onTouchEnd = () => {
+    setIsDragging(false)
+    setDragOffset(0)
+    
+    if (!touchStartX.current || !touchEndX.current) return
+    const distance = touchStartX.current - touchEndX.current
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    if (isLeftSwipe && currentImages.length > 1) {
+      next()
+    }
+    if (isRightSwipe && currentImages.length > 1) {
+      prev()
+    }
+
+    touchStartX.current = null
+    touchEndX.current = null
   }
 
   function openAt(i: number) {
@@ -60,46 +110,59 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
     setOpen(true)
   }
 
-  function next(e?: React.MouseEvent) {
-    e?.stopPropagation()
-    setIndex((i) => (i + 1) % currentImages.length)
-  }
-
-  function prev(e?: React.MouseEvent) {
-    e?.stopPropagation()
-    setIndex((i) => (i - 1 + currentImages.length) % currentImages.length)
+  if (!currentImages.length) {
+    return (
+      <div className="gallery-empty">
+        <svg className="w-16 h-16 opacity-40" style={{ color: 'var(--muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <p className="mt-3" style={{ color: 'var(--muted)' }}>No images available</p>
+      </div>
+    )
   }
 
   return (
     <div className="gallery">
-      {/* Main Image */}
-      <div className="gallery__main">
+      {/* Main Image with Swipe Support */}
+      <div 
+        ref={containerRef}
+        className="gallery__main"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         <button
           onClick={() => openAt(safeIndex)}
           aria-label="Open image in lightbox"
           className="gallery__main-btn"
         >
-          <div className="gallery__main-image">
+          <div 
+            className="gallery__main-image"
+            style={{
+              transform: isDragging ? `translateX(${dragOffset}px)` : 'translateX(0)',
+              transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+            }}
+          >
             <Image
               key={currentImages[safeIndex]}
               src={currentImages[safeIndex]}
-              alt={alt || `Product image ${index + 1}`}
+              alt={alt || `Product image ${safeIndex + 1}`}
               fill
               priority
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
+              draggable={false}
             />
-            {/* Zoom indicator */}
-            <div className="gallery__zoom-hint">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-              </svg>
-              <span>Click to zoom</span>
-            </div>
           </div>
         </button>
 
-        {/* Navigation arrows on main image */}
+        {/* Zoom Hint - Hidden on touch devices */}
+        <div className="gallery__zoom-hint">
+          <ZoomIn size={16} />
+          <span>Tap to zoom</span>
+        </div>
+
+        {/* Navigation arrows */}
         {currentImages.length > 1 && (
           <>
             <button
@@ -107,31 +170,43 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
               aria-label="Previous image"
               className="gallery__nav gallery__nav--prev"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft size={20} />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); next(); }}
               aria-label="Next image"
               className="gallery__nav gallery__nav--next"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight size={20} />
             </button>
           </>
         )}
 
-        {/* Image counter */}
+        {/* Dots indicator (mobile-friendly) */}
         {currentImages.length > 1 && (
-          <div className="gallery__counter">
-            {safeIndex + 1} / {currentImages.length}
+          <div className="gallery__dots">
+            {currentImages.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); setIndex(i); }}
+                aria-label={`Go to image ${i + 1}`}
+                className={`gallery__dot ${i === safeIndex ? 'gallery__dot--active' : ''}`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Swipe hint for mobile */}
+        {currentImages.length > 1 && (
+          <div className="gallery__swipe-hint">
+            <ChevronLeft size={14} />
+            <span>Swipe</span>
+            <ChevronRight size={14} />
           </div>
         )}
       </div>
 
-      {/* Thumbnails */}
+      {/* Thumbnails (hidden on very small screens) */}
       {currentImages.length > 1 && (
         <div className="gallery__thumbs">
           {currentImages.map((src, i) => (
@@ -161,6 +236,9 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
           aria-modal="true"
           className="lightbox"
           onClick={() => setOpen(false)}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
           {/* Backdrop blur */}
           <div className="lightbox__backdrop" />
@@ -173,14 +251,19 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
             <div 
               className={`lightbox__image ${isZoomed ? 'lightbox__image--zoomed' : ''}`}
               onClick={() => setIsZoomed(!isZoomed)}
+              style={{
+                transform: isDragging && !isZoomed ? `translateX(${dragOffset}px)` : 'translateX(0)',
+                transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+              }}
             >
               <Image
                 key={currentImages[safeIndex]}
                 src={currentImages[safeIndex]}
-                alt={alt || `Product image ${index + 1}`}
+                alt={alt || `Product image ${safeIndex + 1}`}
                 fill
                 sizes="100vw"
                 className={`object-contain transition-transform duration-300 ${isZoomed ? 'scale-150 cursor-zoom-out' : 'cursor-zoom-in'}`}
+                draggable={false}
               />
             </div>
 
@@ -190,9 +273,7 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
               aria-label="Close lightbox"
               className="lightbox__close"
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X size={24} />
             </button>
 
             {/* Navigation */}
@@ -203,21 +284,22 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
                   aria-label="Previous image"
                   className="lightbox__nav lightbox__nav--prev"
                 >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+                  <ChevronLeft size={24} />
                 </button>
                 <button
                   onClick={next}
                   aria-label="Next image"
                   className="lightbox__nav lightbox__nav--next"
                 >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <ChevronRight size={24} />
                 </button>
               </>
             )}
+
+            {/* Image counter */}
+            <div className="lightbox__counter">
+              {safeIndex + 1} / {currentImages.length}
+            </div>
 
             {/* Thumbnails in lightbox */}
             {currentImages.length > 1 && (

@@ -1,3 +1,5 @@
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { dbAdmin } from "./firebase-admin";
 import { serializeFirestore } from "./serialize";
 import type { Product } from "@/types/products";
@@ -101,9 +103,58 @@ async function readCatalogSlugs(): Promise<string[]> {
 }
 
 /* ----------------------------------
-   Get ALL products (cached)
+   Slug-to-ID Cache (5 minute cache)
+   This reduces repeated slug queries by caching the mapping
 ----------------------------------- */
-export const getAllProducts = async (): Promise<Product[]> => {
+const getProductIdBySlugCached = unstable_cache(
+  async (slug: string): Promise<string | null> => {
+    try {
+      const snap = await dbAdmin
+        .collection("products")
+        .where("slug", "==", slug)
+        .select() // Only fetch document reference, not data
+        .limit(1)
+        .get();
+
+      if (snap.empty) return null;
+      return snap.docs[0].id;
+    } catch (error) {
+      console.error("getProductIdBySlug failed:", error);
+      return null;
+    }
+  },
+  ["product-slug-to-id"],
+  { revalidate: 300, tags: ["products"] } // 5 minute cache
+);
+
+/* ----------------------------------
+   Get product by ID (direct lookup - 1 read)
+   Wrapped with cache() for request deduplication
+----------------------------------- */
+const getProductByIdRaw = async (id: string): Promise<Product | null> => {
+  try {
+    const doc = await dbAdmin.collection("products").doc(id).get();
+    if (!doc.exists) return null;
+
+    const product = serializeFirestore({
+      id: doc.id,
+      ...(doc.data() as Omit<Product, "id">),
+    }) as Product;
+
+    return normalizeProduct(product);
+  } catch (error) {
+    console.error("getProductById failed:", error);
+    return null;
+  }
+};
+
+// React cache() deduplicates within same request
+export const getProductById = cache(getProductByIdRaw);
+
+/* ----------------------------------
+   Get ALL products (cached with unstable_cache)
+----------------------------------- */
+const getAllProductsRaw = async (): Promise<Product[]> => {
   try {
     const snap = await dbAdmin.collection("products").get();
 
@@ -118,13 +169,31 @@ export const getAllProducts = async (): Promise<Product[]> => {
     console.error("getAllProducts failed:", error);
     return readCatalogProducts();
   }
-}
+};
+
+// Use unstable_cache for cross-request caching (60 seconds)
+export const getAllProducts = unstable_cache(
+  getAllProductsRaw,
+  ["all-products"],
+  { revalidate: 60, tags: ["products"] }
+);
 
 /* ----------------------------------
-   Get product by slug (cached)
+   Get product by slug (optimized)
+   1. Check slug-to-ID cache (cached, no read if hit)
+   2. Fetch by ID (1 read, deduplicated within request)
 ----------------------------------- */
-export const getProductBySlug = async (slug: string): Promise<Product | null> => {
+const getProductBySlugRaw = async (slug: string): Promise<Product | null> => {
   try {
+    // First try the cached slug-to-ID mapping
+    const productId = await getProductIdBySlugCached(slug);
+    
+    if (productId) {
+      // Direct document lookup - only 1 read
+      return await getProductById(productId);
+    }
+
+    // Fallback: query by slug (if cache miss or new product)
     const snap = await dbAdmin
       .collection("products")
       .where("slug", "==", slug)
@@ -143,12 +212,15 @@ export const getProductBySlug = async (slug: string): Promise<Product | null> =>
     const products = await readCatalogProducts();
     return products.find((p) => p.slug === slug) ?? null;
   }
-}
+};
+
+// React cache() for request deduplication - multiple calls in same request = 1 fetch
+export const getProductBySlug = cache(getProductBySlugRaw);
 
 /* ----------------------------------
    Get products by IDs (cached)
 ----------------------------------- */
-export const getProductsByIds = async (ids: string[]): Promise<Product[]> => {
+export const getProductsByIds = cache(async (ids: string[]): Promise<Product[]> => {
   try {
     if (!ids.length) return [];
 
@@ -171,12 +243,12 @@ export const getProductsByIds = async (ids: string[]): Promise<Product[]> => {
     const idSet = new Set(ids);
     return products.filter((p) => idSet.has(p.id));
   }
-}
+});
 
 /* ----------------------------------
-   Get featured products (cached)
+   Get featured products (cached cross-request)
 ----------------------------------- */
-export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
+const getFeaturedProductsRaw = async (limit = 6): Promise<Product[]> => {
   try {
     const snap = await dbAdmin
       .collection("products")
@@ -196,12 +268,18 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     const products = await readCatalogProducts();
     return products.slice(0, Math.max(0, limit));
   }
-}
+};
+
+export const getFeaturedProducts = unstable_cache(
+  getFeaturedProductsRaw,
+  ["featured-products"],
+  { revalidate: 60, tags: ["products"] }
+);
 
 /* ----------------------------------
-   Get all slugs (cached)
+   Get all slugs (cached cross-request)
 ----------------------------------- */
-export const getAllSlugs = async (): Promise<string[]> => {
+const getAllSlugsRaw = async (): Promise<string[]> => {
   try {
     const snap = await dbAdmin
       .collection("products")
@@ -218,19 +296,54 @@ export const getAllSlugs = async (): Promise<string[]> => {
     console.error("getAllSlugs failed:", error);
     return readCatalogSlugs();
   }
-}
+};
 
+export const getAllSlugs = unstable_cache(
+  getAllSlugsRaw,
+  ["all-slugs"],
+  { revalidate: 300, tags: ["products"] }
+);
 
+/* ----------------------------------
+   Get random products (for related products - avoids fetching all)
+----------------------------------- */
+const getRandomProductsRaw = async (excludeSlug: string, limit = 4): Promise<Product[]> => {
+  try {
+    // Fetch a small batch more than needed for randomization
+    const snap = await dbAdmin
+      .collection("products")
+      .limit(20)
+      .get();
+
+    const products = snap.docs
+      .map((d) => {
+        const product = serializeFirestore({
+          id: d.id,
+          ...(d.data() as Omit<Product, "id">),
+        }) as Product;
+        return normalizeProduct(product);
+      })
+      .filter((p) => p.slug !== excludeSlug);
+
+    // Shuffle and take limit
+    const shuffled = products.sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, limit);
+  } catch (error) {
+    console.error("getRandomProducts failed:", error);
+    return [];
+  }
+};
+
+export const getRandomProducts = cache(getRandomProductsRaw);
 
 /* ----------------------------------
    Get products by collection (paginated)
+   Uses collectionId for direct query (indexed)
 ----------------------------------- */
 export async function getProductsByCollectionId(
   collectionId: string,
   cursor?: string
 ): Promise<{ products: Product[]; nextCursor: string | null }> {
-  // ⛔ pagination should stay dynamic
-  // This is OK — not used on initial navigation
   try {
     let query = dbAdmin
       .collection("products")

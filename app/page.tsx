@@ -71,18 +71,34 @@ function SectionSkeleton({ title }: { title?: string }) {
   return (
     <section className="container mx-auto px-6 py-14 animate-pulse">
       {title && (
-        <div className="h-8 w-64 bg-white/10 rounded mb-6" />
+        <div 
+          className="h-8 w-64 rounded mb-6" 
+          style={{ background: "var(--glass)" }} 
+        />
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-2xl bg-neutral-900/60 border border-white/5 p-4"
+            className="rounded-2xl p-4"
+            style={{ 
+              background: "var(--glass)",
+              border: "1px solid var(--glass-hover)",
+            }}
           >
-            <div className="aspect-[3/4] rounded-xl bg-white/10" />
-            <div className="mt-4 h-4 w-3/4 bg-white/10 rounded" />
-            <div className="mt-2 h-4 w-1/2 bg-white/10 rounded" />
+            <div 
+              className="aspect-[3/4] rounded-xl" 
+              style={{ background: "var(--glass-hover)" }}
+            />
+            <div 
+              className="mt-4 h-4 w-3/4 rounded" 
+              style={{ background: "var(--glass-hover)" }}
+            />
+            <div 
+              className="mt-2 h-4 w-1/2 rounded" 
+              style={{ background: "var(--glass-hover)" }}
+            />
           </div>
         ))}
       </div>
@@ -94,14 +110,18 @@ function CollectionsSkeleton({ title }: { title?: string }) {
   return (
     <section className="container mx-auto px-6 py-14 animate-pulse">
       {title && (
-        <div className="h-7 w-56 bg-white/10 rounded mb-6" />
+        <div 
+          className="h-7 w-56 rounded mb-6"
+          style={{ background: "var(--glass)" }}
+        />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="h-56 rounded-xl bg-white/10"
+            className="h-56 rounded-xl"
+            style={{ background: "var(--glass)" }}
           />
         ))}
       </div>
@@ -125,10 +145,36 @@ async function FeaturedProductsSection({
   if (!products.length) return null;
 
   return (
-    <section className="container mx-auto px-6 py-14">
-      <h2 className="text-3xl font-display mb-6">
-        {section.title}
-      </h2>
+    <section className="container mx-auto px-6 py-16 md:py-20">
+      {/* Section Header */}
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
+        <div>
+          <span 
+            className="inline-block text-xs font-semibold uppercase tracking-widest mb-3"
+            style={{ color: "rgb(var(--gold-rgb))" }}
+          >
+            Curated for You
+          </span>
+          <h2 className="text-3xl md:text-4xl font-display">
+            {section.title}
+          </h2>
+        </div>
+        <Link 
+          href="/products"
+          className="group inline-flex items-center gap-2 text-sm font-medium transition-colors hover:text-amber-400"
+          style={{ color: "var(--muted)" }}
+        >
+          View All Products
+          <svg 
+            className="w-4 h-4 transition-transform group-hover:translate-x-1" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </Link>
+      </div>
 
       <ProductGrid products={products} />
     </section>
@@ -149,10 +195,25 @@ async function CollectionsRowSection({
   if (!collections.length) return null;
 
   return (
-    <section className="container mx-auto px-6 py-14">
-      <h2 className="text-2xl font-display mb-6">
-        {section.title}
-      </h2>
+    <section className="container mx-auto px-6 py-16 md:py-20">
+      {/* Section Header */}
+      <div className="text-center mb-12">
+        <span 
+          className="inline-block text-xs font-semibold uppercase tracking-widest mb-3"
+          style={{ color: "rgb(var(--gold-rgb))" }}
+        >
+          Shop by Category
+        </span>
+        <h2 className="text-3xl md:text-4xl font-display">
+          {section.title}
+        </h2>
+        <p 
+          className="mt-3 text-base max-w-lg mx-auto text-center"
+          style={{ color: "var(--muted)" }}
+        >
+          Explore our carefully curated collections, each designed to complement your unique style.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {collections.map((c) => (
@@ -430,57 +491,82 @@ async function OffersSection() {
   if (!offers.length) return null;
 
   return (
-    <section className="container mx-auto px-6 py-14">
-      <div className="flex items-end justify-between gap-6 mb-6">
-        <div>
-          <h2 className="text-2xl font-display">Current Offers</h2>
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
-            Apply these at cart or checkout.
-          </p>
-        </div>
+    <section className="container mx-auto px-6 py-16 md:py-20">
+      {/* Section Header */}
+      <div className="text-center mb-12">
+        <span 
+          className="inline-block text-xs font-semibold uppercase tracking-widest mb-3"
+          style={{ color: "rgb(var(--gold-rgb))" }}
+        >
+          Limited Time
+        </span>
+        <h2 className="text-3xl md:text-4xl font-display">Current Offers</h2>
+        <p 
+          className="mt-3 text-base max-w-lg mx-auto text-center"
+          style={{ color: "var(--muted)" }}
+        >
+          Exclusive deals curated just for you. Apply at checkout.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div 
+        className={`grid gap-6 ${
+          offers.length === 1 
+            ? 'grid-cols-1 max-w-md mx-auto' 
+            : offers.length === 2 
+              ? 'grid-cols-1 md:grid-cols-2 max-w-2xl mx-auto' 
+              : 'grid-cols-1 md:grid-cols-3'
+        }`}
+      >
         {offers.map((o) => (
           <div
             key={o.id}
-            className="rounded-2xl p-5"
+            className="group rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02]"
             style={{
-              background: "var(--panel-bg-soft)",
-              border: "1px solid var(--border-subtle)",
+              background: "linear-gradient(135deg, rgba(var(--gold-rgb), 0.08), rgba(var(--gold-rgb), 0.02))",
+              border: "1px solid rgba(var(--gold-rgb), 0.15)",
             }}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <div className="text-xs mb-1" style={{ color: "var(--muted)" }}>
-                  Coupon code
+                <div 
+                  className="text-[10px] uppercase tracking-widest mb-2"
+                  style={{ color: "var(--muted)" }}
+                >
+                  Use Code
                 </div>
-                <div className="text-lg font-medium truncate">{o.code}</div>
+                <div 
+                  className="text-xl font-bold tracking-wide"
+                  style={{ color: "rgb(var(--gold-rgb))" }}
+                >
+                  {o.code}
+                </div>
                 {o.title ? (
-                  <div className="text-sm mt-1" style={{ color: "var(--muted)" }}>
+                  <div className="text-sm mt-2" style={{ color: "var(--fg)" }}>
                     {o.title}
                   </div>
                 ) : null}
               </div>
               <div
-                className="shrink-0 text-xs px-2.5 py-1 rounded-full"
+                className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{
-                  background: "rgba(var(--gold-rgb),0.12)",
-                  border: "1px solid rgba(var(--gold-rgb),0.22)",
-                  color: "rgb(var(--gold-rgb))",
+                  background: "rgba(var(--gold-rgb), 0.15)",
                 }}
-                title={o.terms}
               >
-                Details
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="rgb(var(--gold-rgb))">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
             </div>
 
-            <div className="mt-4 text-sm" style={{ color: "rgb(var(--gold-rgb))" }}>
+            <div 
+              className="mt-6 pt-4 text-lg font-semibold"
+              style={{ 
+                color: "rgb(var(--gold-rgb))",
+                borderTop: "1px solid rgba(var(--gold-rgb), 0.15)",
+              }}
+            >
               {o.summary}
-            </div>
-
-            <div className="mt-4 text-xs" style={{ color: "var(--muted)" }}>
-              Hover “Details” for terms.
             </div>
           </div>
         ))}

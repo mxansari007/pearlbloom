@@ -20,10 +20,12 @@ export default function InfiniteProductGrid({
   initialProducts,
   initialCursor,
   collectionSlug,
+  collectionId,
 }: {
   initialProducts: Product[];
   initialCursor: string | null;
   collectionSlug: string;
+  collectionId: string; // Now required - avoids slug lookups on pagination
 }) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [cursor, setCursor] = useState<string | null>(initialCursor);
@@ -35,8 +37,9 @@ export default function InfiniteProductGrid({
     setLoading(true);
 
     try {
+      // Pass collectionId to avoid slug lookup on server
       const res = await fetch(
-        `/api/collections/${collectionSlug}/products?cursor=${cursor}`
+        `/api/collections/${collectionSlug}/products?cursor=${cursor}&collectionId=${collectionId}`
       );
 
       if (!res.ok) throw new Error("Failed to load");

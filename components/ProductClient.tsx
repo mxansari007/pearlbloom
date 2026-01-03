@@ -327,9 +327,12 @@ export default function ProductClient({ product }: { product: Product }) {
 
         {pincodeResult?.message && (
           <div
-            className={`mt-3 text-sm ${
-              pincodeResult.serviceable ? "text-green-400" : "text-red-300"
-            }`}
+            className="mt-3 text-sm"
+            style={{
+              color: pincodeResult.serviceable 
+                ? "var(--success-color, #22c55e)" 
+                : "var(--error-color, #ef4444)"
+            }}
           >
             {pincodeResult.message}
           </div>

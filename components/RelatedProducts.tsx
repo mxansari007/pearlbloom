@@ -1,8 +1,7 @@
 // src/components/RelatedProducts.tsx
 import { Suspense } from "react";
-import { getAllProducts } from "../libs/products.server";
+import { getRandomProducts } from "../libs/products.server";
 import ProductCard from "./ProductCard";
-import type { Product } from "../types/products";
 
 /* --------------------------- Skeleton --------------------------- */
 
@@ -36,11 +35,8 @@ async function RelatedProductsStream({
 }: {
   currentSlug: string;
 }) {
-  const products: Product[] = await getAllProducts();
-
-  const suggestions = products
-    .filter((p) => p.slug !== currentSlug)
-    .slice(0, 4);
+  // Only fetches ~20 products max instead of ALL products
+  const suggestions = await getRandomProducts(currentSlug, 4);
 
   if (!suggestions.length) return null;
 

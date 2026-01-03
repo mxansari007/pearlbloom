@@ -10,7 +10,6 @@ export async function GET(
     params: Promise<{ slug: string }>;
   }
 ) {
-  // ✅ unwrap params FIRST
   const { slug } = await params;
 
   if (!slug) {
@@ -22,20 +21,29 @@ export async function GET(
 
   const { searchParams } = new URL(req.url);
   const cursor = searchParams.get("cursor") ?? undefined;
+  
+  // Check if collectionId was passed directly (optimization for pagination)
+  const collectionIdParam = searchParams.get("collectionId");
 
-  const collection = await getCollectionBySlug(slug);
+  let collectionId: string | null = collectionIdParam;
 
-  if (!collection) {
-    return NextResponse.json({
-      products: [],
-      nextCursor: null,
-    });
+  // Only fetch collection if we don't have the ID
+  if (!collectionId) {
+    const collection = await getCollectionBySlug(slug);
+    if (!collection) {
+      return NextResponse.json({
+        products: [],
+        nextCursor: null,
+      });
+    }
+    collectionId = collection.id;
   }
 
-  const data = await getProductsByCollectionId(
-    collection.id,
-    cursor
-  );
+  const data = await getProductsByCollectionId(collectionId, cursor);
 
-  return NextResponse.json(data);
+  // Include collectionId in response for future pagination calls
+  return NextResponse.json({
+    ...data,
+    collectionId,
+  });
 }

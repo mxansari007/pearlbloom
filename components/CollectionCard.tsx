@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-
+import { ArrowRight } from "lucide-react";
 
 /* ---------------- Types ---------------- */
 
@@ -15,7 +14,7 @@ type CloudinaryImage = {
 type CollectionCardProps = {
   title: string;
   slug: string;
-  thumbnail?: CloudinaryImage; // ✅ updated
+  thumbnail?: CloudinaryImage;
 };
 
 export default function CollectionCard({
@@ -23,79 +22,87 @@ export default function CollectionCard({
   slug,
   thumbnail,
 }: CollectionCardProps) {
-  const [hover, setHover] = useState(false);
-
-
   return (
     <Link
       href={`/collections/${slug}`}
-      className={`
-        group block relative overflow-hidden rounded-xl cursor-pointer 
-        border border-white/5 transition-all duration-500 will-change-transform
-        hover:-translate-y-1 hover:border-yellow-500/40
-      `}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      className="group block relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500"
     >
-      {/* ✨ Glow overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none transition-opacity duration-700"
+      {/* Card Container */}
+      <div 
+        className="relative h-72 md:h-80 overflow-hidden rounded-2xl"
         style={{
-          opacity: hover ? 0.45 : 0,
-          backgroundImage: `
-            radial-gradient(circle at 20% 25%, rgba(212,175,55,0.25), transparent 60%),
-            radial-gradient(circle at 70% 65%, rgba(212,175,55,0.18), transparent 65%),
-            radial-gradient(circle at 40% 80%, rgba(212,175,55,0.12), transparent 55%)
-          `,
+          border: "1px solid rgba(255, 255, 255, 0.08)",
         }}
-      />
-
-      {/* ✨ Sparkles layer */}
-      <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-80 sparkle-layer" />
-
-      {/* Image */}
-      <div className="relative w-full h-52 overflow-hidden">
+      >
+        {/* Image */}
         {thumbnail?.url ? (
           <Image
             src={thumbnail.url}
             alt={title}
             fill
             sizes="(max-width: 768px) 100vw, 33vw"
-            className="
-              object-cover
-              transition-all duration-700 ease-out 
-              group-hover:scale-105 group-hover:brightness-110
-            "
+            className="object-cover transition-all duration-700 ease-out group-hover:scale-110"
           />
         ) : (
-          <div className="w-full h-full bg-neutral-900 flex items-center justify-center text-xs text-neutral-500">
-            No image
+          <div 
+            className="w-full h-full flex items-center justify-center"
+            style={{ background: "var(--panel-bg-soft)" }}
+          >
+            <span className="text-sm" style={{ color: "var(--muted)" }}>No image</span>
           </div>
         )}
 
-        {/* soft gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-      </div>
+        {/* Gradient Overlay - stronger for better text readability */}
+        <div 
+          className="absolute inset-0 transition-opacity duration-500"
+          style={{
+            background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.15) 100%)",
+          }}
+        />
 
-      {/* Content */}
-      <div className="p-4 relative z-10">
-        <h3
-          className="
-            font-medium text-lg font-display transition-colors duration-500
-            group-hover:text-yellow-400
-          "
-        >
-          {title}
-        </h3>
+        {/* Gold Accent Overlay on Hover */}
+        <div 
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+          style={{
+            background: "linear-gradient(135deg, rgba(var(--gold-rgb), 0.2), transparent 60%)",
+          }}
+        />
 
-        <p
-          className="
-            text-sm text-muted mt-2 transition-all duration-500
-            group-hover:opacity-100 group-hover:translate-x-1 opacity-70 translate-x-0
-          "
-        >
-          Explore the collection →
-        </p>
+        {/* Content */}
+        <div className="absolute inset-x-0 bottom-0 p-6 z-10">
+          {/* Title */}
+          <h3 
+            className="text-xl md:text-2xl font-display font-bold text-white mb-2.5 transition-transform duration-300 group-hover:-translate-y-1"
+            style={{
+              textShadow: "0 2px 8px rgba(0,0,0,0.5)",
+            }}
+          >
+            {title}
+          </h3>
+
+          {/* CTA */}
+          <div 
+            className="inline-flex items-center gap-2 text-sm font-semibold transition-all duration-300 group-hover:gap-3"
+            style={{ 
+              color: "rgb(var(--gold-rgb))",
+              textShadow: "0 1px 4px rgba(0,0,0,0.3)",
+            }}
+          >
+            <span>Explore Collection</span>
+            <ArrowRight 
+              size={16} 
+              className="transition-transform duration-300 group-hover:translate-x-1" 
+            />
+          </div>
+        </div>
+
+        {/* Border Glow on Hover */}
+        <div 
+          className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+          style={{
+            boxShadow: "inset 0 0 0 1px rgba(var(--gold-rgb), 0.3), 0 10px 40px rgba(var(--gold-rgb), 0.1)",
+          }}
+        />
       </div>
     </Link>
   );
