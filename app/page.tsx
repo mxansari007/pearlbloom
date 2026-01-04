@@ -645,10 +645,6 @@ export default async function Home() {
         <BannerCarouselSection placement="home_bottom" />
       </Suspense>
 
-      {/* Footer subscription */}
-      <section className="container pb-10 md:pb-14">
-        <SubscribeForm />
-      </section>
     </>
   );
 }

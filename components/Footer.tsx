@@ -144,7 +144,7 @@ export default function Footer() {
       {/* Newsletter Section */}
       <div className="container relative z-10 pb-16">
         <div 
-          className="rounded-3xl p-8 md:p-12 text-center"
+          className="rounded-3xl p-8 md:p-12 text-center flex flex-col items-center"
           style={{
             background: "linear-gradient(135deg, rgba(var(--gold-rgb), 0.08), rgba(var(--gold-rgb), 0.02))",
             border: "1px solid rgba(var(--gold-rgb), 0.15)",
@@ -162,7 +162,7 @@ export default function Footer() {
           <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "var(--muted)" }}>
             Be the first to know about new arrivals, exclusive offers, and styling tips.
           </p>
-          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+          <form className="flex flex-col sm:flex-row gap-3 max-w-md w-full">
             <input
               type="email"
               placeholder="Enter your email"
