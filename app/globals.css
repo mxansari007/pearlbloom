@@ -292,10 +292,10 @@ html[data-theme="light"] li {
 }
 
 /* Collection card titles in light theme */
-:root[data-theme="light"] .group h3 {
+/* :root[data-theme="light"] .group h3 {
   color: white !important;
   text-shadow: 0 2px 8px rgba(255,255,255,0.5) !important;
-}
+} */
 
 /* Section kickers/labels in light theme */
 :root[data-theme="light"] [style*="color: rgb(var(--gold-rgb))"] {
@@ -336,9 +336,9 @@ html[data-theme="light"] li {
   color: #666;
 }
 
-.hero_sec_para_text {
+/* .hero_sec_para_text {
   color: white !important;
-}
+} */
 
 /* ===============================
    HEADER THEME TOKENS (FIXED)
