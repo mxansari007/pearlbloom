@@ -197,18 +197,18 @@ async function CollectionsRowSection({
   return (
     <section className="container mx-auto px-6 py-16 md:py-20">
       {/* Section Header */}
-      <div className="text-center mb-12">
+      <div className="flex flex-col items-center text-center mb-12">
         <span 
           className="inline-block text-xs font-semibold uppercase tracking-widest mb-3"
           style={{ color: "rgb(var(--gold-rgb))" }}
         >
           Shop by Category
         </span>
-        <h2 className="text-3xl md:text-4xl font-display">
+        <h2 className="text-3xl md:text-4xl font-display max-w-2xl">
           {section.title}
         </h2>
         <p 
-          className="mt-3 text-base max-w-lg mx-auto text-center"
+          className="mt-3 max-w-lg mx-auto text-center"
           style={{ color: "var(--muted)" }}
         >
           Explore our carefully curated collections, each designed to complement your unique style.
@@ -493,14 +493,14 @@ async function OffersSection() {
   return (
     <section className="container mx-auto px-6 py-16 md:py-20">
       {/* Section Header */}
-      <div className="text-center mb-12">
+      <div className="flex flex-col items-center text-center mb-12">
         <span 
           className="inline-block text-xs font-semibold uppercase tracking-widest mb-3"
           style={{ color: "rgb(var(--gold-rgb))" }}
         >
           Limited Time
         </span>
-        <h2 className="text-3xl md:text-4xl font-display">Current Offers</h2>
+        <h2 className="text-3xl md:text-4xl font-display max-w-2xl">Current Offers</h2>
         <p 
           className="mt-3 text-base max-w-lg mx-auto text-center"
           style={{ color: "var(--muted)" }}

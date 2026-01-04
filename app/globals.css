@@ -291,6 +291,12 @@ html[data-theme="light"] li {
   color: #1a1a1a;
 }
 
+/* Collection card titles in light theme */
+:root[data-theme="light"] .group h3 {
+  color: white !important;
+  text-shadow: 0 2px 8px rgba(255,255,255,0.5) !important;
+}
+
 /* Section kickers/labels in light theme */
 :root[data-theme="light"] [style*="color: rgb(var(--gold-rgb))"] {
   filter: brightness(0.85);

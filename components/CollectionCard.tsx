@@ -54,7 +54,7 @@ export default function CollectionCard({
 
         {/* Gradient Overlay - stronger for better text readability */}
         <div 
-          className="absolute inset-0 transition-opacity duration-500"
+          className="absolute inset-0 transition-opacity duration-500 dark:opacity-100 opacity-30"
           style={{
             background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.15) 100%)",
           }}
@@ -72,9 +72,10 @@ export default function CollectionCard({
         <div className="absolute inset-x-0 bottom-0 p-6 z-10">
           {/* Title */}
           <h3 
-            className="text-xl md:text-2xl font-display font-bold text-white mb-2.5 transition-transform duration-300 group-hover:-translate-y-1"
+            className="collection_title text-xl md:text-2xl font-display font-bold mb-2.5 transition-transform duration-300 group-hover:-translate-y-1"
             style={{
-              textShadow: "0 2px 8px rgba(0,0,0,0.5)",
+              color: "white",
+              textShadow: "0 2px 8px rgba(0,0,0,0.2)",
             }}
           >
             {title}
