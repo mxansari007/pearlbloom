@@ -171,7 +171,7 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
                     >
                       Featured
                     </p>
-                    <p className="text-white font-bold text-lg mt-1">Limited Edition</p>
+                    <p className="hero_sec_para_text text-white font-bold text-lg mt-1">Limited Edition</p>
                   </div>
                   <Link
                     href={hero.ctaLink}
