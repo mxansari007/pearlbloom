@@ -19,8 +19,11 @@ import {
   MapPin,
   Phone,
   ArrowUpRight,
-  Sparkles
+  Sparkles,
+  
 } from 'lucide-react';
+
+import {FaWhatsapp} from 'react-icons/fa';
 
 type FooterLink = {
   label: string
@@ -253,7 +256,7 @@ export default function Footer() {
                       color: "#25D366",
                     }}
                   >
-                    <span className="text-xs font-bold">WA</span>
+                    <FaWhatsapp size={18} />
                   </a>
                 )}
               </div>
