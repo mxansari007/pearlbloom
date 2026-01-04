@@ -336,9 +336,9 @@ html[data-theme="light"] li {
   color: #666;
 }
 
-/* .hero_sec_para_text {
+.hero_sec_para_text {
   color: white !important;
-} */
+}
 
 /* ===============================
    HEADER THEME TOKENS (FIXED)
