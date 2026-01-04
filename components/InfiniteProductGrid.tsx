@@ -68,15 +68,17 @@ export default function InfiniteProductGrid({
 
   return (
     <>
-      <div className="collection-page__grid">
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} />
-        ))}
-
-        {loading &&
-          Array.from({ length: 4 }).map((_, i) => (
-            <ProductCardSkeleton key={`loading-${i}`} />
+      <div className="-mx-5 sm:mx-0 bg-[var(--grid-divider)] p-px sm:bg-transparent sm:p-0">
+        <div className="collection-page__grid">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} />
           ))}
+
+          {loading &&
+            Array.from({ length: 4 }).map((_, i) => (
+              <ProductCardSkeleton key={`loading-${i}`} />
+            ))}
+        </div>
       </div>
 
       {cursor && (
