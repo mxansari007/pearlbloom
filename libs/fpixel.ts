@@ -81,7 +81,9 @@ export const trackFromPosthog = (eventName: string, props: Record<string, unknow
 
   if (eventName === "payment_succeeded") {
     const orderId = typeof props.order_id === "string" ? props.order_id : undefined;
-    const purchaseValue = getNumber(props.cart_value) ?? value;
+    // Priority: total (final amount) > cart_value (subtotal) > value (fallback)
+    const purchaseValue = getNumber(props.total) ?? getNumber(props.cart_value) ?? value;
+    if (!purchaseValue) return; // Don't send if no value
     if (orderId) {
       const eventId = `purchase_${orderId}`;
       if (window.__pbLastPurchaseEventId === eventId) return;
