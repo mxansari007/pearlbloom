@@ -13,7 +13,7 @@ import { SiFlipkart } from "react-icons/si";
 import { useProductVariant } from "@/hooks/useProductVariant";
 import { track } from "@/utils/analytics";
 import { useAppConfigStore } from "@/store/useAppStore";
-import { CreditCard, Landmark, ShieldCheck, Smartphone, Wallet } from "lucide-react";
+import { CreditCard, Landmark, ShieldCheck, Smartphone, Wallet, RotateCcw, Truck, PackageCheck } from "lucide-react";
 
 export default function ProductClient({ product }: { product: Product }) {
   const router = useRouter();
@@ -70,8 +70,8 @@ export default function ProductClient({ product }: { product: Product }) {
       typeof mv.discountPercent === "number"
         ? mv.discountPercent
         : byFlat !== undefined
-        ? Math.round((1 - final / original) * 100)
-        : undefined;
+          ? Math.round((1 - final / original) * 100)
+          : undefined;
     return { final, original, discountPercent, hasDiscount: final < original };
   }
 
@@ -88,8 +88,8 @@ export default function ProductClient({ product }: { product: Product }) {
       typeof mp.inventory?.discountPercent === "number"
         ? mp.inventory.discountPercent
         : byFlat !== undefined
-        ? Math.round((1 - final / original) * 100)
-        : undefined;
+          ? Math.round((1 - final / original) * 100)
+          : undefined;
     return { final, original, discountPercent, hasDiscount: final < original };
   }
 
@@ -243,23 +243,23 @@ export default function ProductClient({ product }: { product: Product }) {
     <div className="product-detail">
       {/* Price Block */}
       <div className="product-detail__price-block">
-      <span className="product-detail__price">
-        ₹{finalPrice.toLocaleString("en-IN")}
-      </span>
+        <span className="product-detail__price">
+          ₹{finalPrice.toLocaleString("en-IN")}
+        </span>
 
-      {hasDiscount && (
-        <div className="product-detail__price-meta">
-          <span className="product-detail__price-original">
-            ₹{originalPrice.toLocaleString("en-IN")}
-          </span>
-          <span className="product-detail__discount-badge">
-            {typeof discountPercent === "number"
-              ? `(${discountPercent}% OFF)`
-              : `(₹${(originalPrice - finalPrice).toLocaleString("en-IN")} OFF)`}
-          </span>
-        </div>
-      )}
-    </div>
+        {hasDiscount && (
+          <div className="product-detail__price-meta">
+            <span className="product-detail__price-original">
+              ₹{originalPrice.toLocaleString("en-IN")}
+            </span>
+            <span className="product-detail__discount-badge">
+              {typeof discountPercent === "number"
+                ? `(${discountPercent}% OFF)`
+                : `(₹${(originalPrice - finalPrice).toLocaleString("en-IN")} OFF)`}
+            </span>
+          </div>
+        )}
+      </div>
 
 
       {/* Stock Status */}
@@ -284,6 +284,13 @@ export default function ProductClient({ product }: { product: Product }) {
           </span>
         )}
       </div>
+
+      {/* Short Description */}
+      {product.shortDescription && (
+        <p className="product-detail__short-description">
+          {product.shortDescription}
+        </p>
+      )}
 
       {/* Divider */}
       <div className="product-detail__divider" />
@@ -329,8 +336,8 @@ export default function ProductClient({ product }: { product: Product }) {
           <div
             className="mt-3 text-sm"
             style={{
-              color: pincodeResult.serviceable 
-                ? "var(--success-color, #22c55e)" 
+              color: pincodeResult.serviceable
+                ? "var(--success-color, #22c55e)"
                 : "var(--error-color, #ef4444)"
             }}
           >
@@ -342,19 +349,19 @@ export default function ProductClient({ product }: { product: Product }) {
       {/* Primary Actions */}
       <div className="product-detail__actions">
         <button
-          onClick={handleBuyNow}
-          disabled={outOfStock}
+          onClick={handleAddToCart}
+          disabled={outOfStock || isAdding}
           className="product-detail__btn-primary"
         >
-          Buy Now
+          {isAdding ? "Adding..." : "Add to Cart"}
         </button>
 
         <button
-          onClick={handleAddToCart}
-          disabled={outOfStock || isAdding}
+          onClick={handleBuyNow}
+          disabled={outOfStock}
           className="product-detail__btn-secondary"
         >
-          {isAdding ? "Adding..." : "Add to Cart"}
+          Buy Now
         </button>
       </div>
 
@@ -362,104 +369,102 @@ export default function ProductClient({ product }: { product: Product }) {
       {(product.marketplaces?.amazon ||
         product.marketplaces?.flipkart ||
         product.marketplaces?.meesho) && (
-        <div className="product-detail__marketplaces">
-          <span className="product-detail__label">Also available on</span>
-          <div className="product-detail__marketplace-links">
-            {product.marketplaces?.amazon && (
-              <a
-                href={product.marketplaces.amazon}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="product-detail__marketplace-btn product-detail__marketplace-btn--amazon"
-              >
-                <FaAmazon className="w-5 h-5" />
-                Amazon
-              </a>
-            )}
-            {product.marketplaces?.flipkart && (
-              <a
-                href={product.marketplaces.flipkart}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="product-detail__marketplace-btn product-detail__marketplace-btn--flipkart"
-              >
-                <SiFlipkart className="w-5 h-5" />
-                Flipkart
-              </a>
-            )}
-            {product.marketplaces?.meesho && (
-              <a
-                href={product.marketplaces.meesho}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="product-detail__marketplace-btn product-detail__marketplace-btn--meesho"
-              >
-                <FaShoppingBag className="w-4 h-4" />
-                Meesho
-              </a>
-            )}
+          <div className="product-detail__marketplaces">
+            <span className="product-detail__label">Also available on</span>
+            <div className="product-detail__marketplace-links">
+              {product.marketplaces?.amazon && (
+                <a
+                  href={product.marketplaces.amazon}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="product-detail__marketplace-btn product-detail__marketplace-btn--amazon"
+                >
+                  <FaAmazon className="w-5 h-5" />
+                  Amazon
+                </a>
+              )}
+              {product.marketplaces?.flipkart && (
+                <a
+                  href={product.marketplaces.flipkart}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="product-detail__marketplace-btn product-detail__marketplace-btn--flipkart"
+                >
+                  <SiFlipkart className="w-5 h-5" />
+                  Flipkart
+                </a>
+              )}
+              {product.marketplaces?.meesho && (
+                <a
+                  href={product.marketplaces.meesho}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="product-detail__marketplace-btn product-detail__marketplace-btn--meesho"
+                >
+                  <FaShoppingBag className="w-4 h-4" />
+                  Meesho
+                </a>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Trust Indicators */}
-      <div className="product-detail__trust">
-        <div
-          className="product-detail__trust-item"
-          style={{
-            background: "rgba(var(--gold-rgb),0.12)",
-            border: "1px solid rgba(var(--gold-rgb),0.28)",
-            color: "rgb(var(--gold-rgb))",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 10,
-            flexWrap: "wrap",
-            padding: "10px 12px",
-            borderRadius: 14,
-          }}
-        >
-          <span className="flex items-center gap-2">
-            <ShieldCheck size={16} />
-            Secure payments via Razorpay
-          </span>
-          <span
-            className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto"
-            style={{ color: "var(--fg)" }}
-          >
-            <span className="flex items-center gap-1 text-xs">
+      <div className="product-detail__trust-section">
+        {/* Secure Payment Card */}
+        <div className="product-detail__payment-card">
+          <div className="product-detail__payment-header">
+            <ShieldCheck size={18} />
+            <span>Secure Payments via Razorpay</span>
+          </div>
+          <div className="product-detail__payment-methods">
+            <div className="product-detail__payment-method">
               <Smartphone size={14} />
-              UPI
-            </span>
-            <span className="flex items-center gap-1 text-xs">
+              <span>UPI</span>
+            </div>
+            <div className="product-detail__payment-method">
               <CreditCard size={14} />
-              Cards
-            </span>
-            <span className="flex items-center gap-1 text-xs">
+              <span>Cards</span>
+            </div>
+            <div className="product-detail__payment-method">
               <Landmark size={14} />
-              Netbanking
-            </span>
-            <span className="flex items-center gap-1 text-xs">
+              <span>Netbanking</span>
+            </div>
+            <div className="product-detail__payment-method">
               <Wallet size={14} />
-              Wallets
-            </span>
-          </span>
+              <span>Wallets</span>
+            </div>
+          </div>
         </div>
-        <div className="product-detail__trust-item">Easy returns & quick refunds</div>
-        <div className="product-detail__trust-item">Transparent delivery timelines</div>
-        <div className="product-detail__trust-item">
-          {typeof freeShippingAbove === "number" && freeShippingAbove > 0
-            ? `Free shipping over ₹${freeShippingAbove.toLocaleString("en-IN")}`
-            : "Fast shipping across India"}
-        </div>
-      </div>
 
-      <div className="text-xs mt-3" style={{ color: "var(--muted)" }}>
-        <a href="/shipping-and-delivery" className="underline underline-offset-2">Shipping</a>
-        {" • "}
-        <a href="/returns-and-refunds" className="underline underline-offset-2">Returns</a>
-        {" • "}
-        <a href="/warranty-and-care" className="underline underline-offset-2">Warranty</a>
+        {/* Trust Grid */}
+        <div className="product-detail__trust-grid">
+          <div className="product-detail__trust-card">
+            <RotateCcw size={20} />
+            <span>Easy Returns & Quick Refunds</span>
+          </div>
+          <div className="product-detail__trust-card">
+            <Truck size={20} />
+            <span>Transparent Delivery Timelines</span>
+          </div>
+          <div className="product-detail__trust-card">
+            <PackageCheck size={20} />
+            <span>
+              {typeof freeShippingAbove === "number" && freeShippingAbove > 0
+                ? `Free Shipping Over ₹${freeShippingAbove.toLocaleString("en-IN")}`
+                : "Fast Shipping Across India"}
+            </span>
+          </div>
+        </div>
+
+        {/* Policy Links */}
+        <div className="product-detail__policy-links">
+          <a href="/shipping-and-delivery">Shipping Policy</a>
+          <span className="product-detail__policy-divider">•</span>
+          <a href="/returns-and-refunds">Returns & Refunds</a>
+          <span className="product-detail__policy-divider">•</span>
+          <a href="/warranty-and-care">Warranty & Care</a>
+        </div>
       </div>
 
       {/* Wishlist / Share */}
