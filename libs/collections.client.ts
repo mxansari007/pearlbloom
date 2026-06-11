@@ -9,19 +9,14 @@ import {
   limit,
 } from "firebase/firestore";
 import { dbClient } from "./firebase-client";
+// Use the shared Collection type so client and server agree on the shape.
+// The local copy was missing `priority`/`isFeatured` (which navigation relies
+// on), so mapping a doc through it silently dropped those fields.
+import type { Collection } from "@/types/collections";
 
 /* ---------------- Types ---------------- */
 
-export type Collection = {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  thumbnail?: {
-    url: string;
-    public_id: string;
-  };
-};
+export type { Collection };
 
 /* ---------------- In-memory cache for client-side ---------------- */
 
