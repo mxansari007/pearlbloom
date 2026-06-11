@@ -150,7 +150,17 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     return getProductById(cachedId);
   }
 
-  // Fallback to query
+  // Products are keyed by their slug, so the slug IS the document id — a
+  // single direct read, no index or collection scan.
+  const directSnap = await getDoc(doc(dbClient, "products", slug));
+  if (directSnap.exists()) {
+    const product = mapProductDoc(directSnap as QueryDocumentSnapshot<DocumentData>);
+    cacheProduct(product);
+    return product;
+  }
+
+  // Fallback for legacy products not yet re-keyed to their slug. Safe to
+  // delete once scripts/migrate-product-slugs.ts has run everywhere.
   const q = query(
     collection(dbClient, "products"),
     where("slug", "==", slug),

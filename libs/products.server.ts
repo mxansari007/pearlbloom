@@ -185,28 +185,18 @@ export const getAllProducts = unstable_cache(
 ----------------------------------- */
 const getProductBySlugRaw = async (slug: string): Promise<Product | null> => {
   try {
-    // First try the cached slug-to-ID mapping
+    // Products are keyed by their slug, so the slug IS the document id —
+    // a direct doc(slug) get (1 read, no index, request-deduped by getProductById).
+    const direct = await getProductById(slug);
+    if (direct) return direct;
+
+    // Fallback for legacy products not yet re-keyed to their slug. Safe to
+    // delete (along with getProductIdBySlugCached) once
+    // scripts/migrate-product-slugs.ts has run everywhere.
     const productId = await getProductIdBySlugCached(slug);
-    
-    if (productId) {
-      // Direct document lookup - only 1 read
-      return await getProductById(productId);
-    }
+    if (productId) return await getProductById(productId);
 
-    // Fallback: query by slug (if cache miss or new product)
-    const snap = await dbAdmin
-      .collection("products")
-      .where("slug", "==", slug)
-      .limit(1)
-      .get();
-
-    if (snap.empty) return null;
-
-    const product = serializeFirestore({
-      id: snap.docs[0].id,
-      ...(snap.docs[0].data() as Omit<Product, "id">),
-    }) as Product;
-    return normalizeProduct(product);
+    return null;
   } catch (error) {
     console.error("getProductBySlug failed:", error);
     const products = await readCatalogProducts();
