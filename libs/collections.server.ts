@@ -5,27 +5,34 @@ import { serializeFirestore } from "./serialize";
 import type { Collection } from "@/types/collections";
 
 /* ----------------------------------
-   Slug-to-ID Cache (5 minute cache)
-   Reduces repeated slug queries
+   Slug → collection (single cached query, 5 minute cache)
+   One where-query per slug. On a hit the full document is already in the
+   cache (no extra doc read); on a miss the cached null avoids re-querying.
+   This replaces the old select()-only id cache + live fallback, which ran
+   the same slug query twice on a true miss.
 ----------------------------------- */
-const getCollectionIdBySlugCached = unstable_cache(
-  async (slug: string): Promise<string | null> => {
+const getCollectionBySlugQueryCached = unstable_cache(
+  async (slug: string): Promise<Collection | null> => {
     try {
       const snap = await dbAdmin
         .collection("collections")
         .where("slug", "==", slug)
-        .select() // Only fetch document reference, not data
         .limit(1)
         .get();
 
       if (snap.empty) return null;
-      return snap.docs[0].id;
+
+      const doc = snap.docs[0];
+      return serializeFirestore({
+        id: doc.id,
+        ...(doc.data() as Omit<Collection, "id">),
+      });
     } catch (error) {
-      console.error("getCollectionIdBySlug failed:", error);
+      console.error("getCollectionBySlugQuery failed:", error);
       return null;
     }
   },
-  ["collection-slug-to-id"],
+  ["collection-by-slug"],
   { revalidate: 300, tags: ["collections"] }
 );
 
@@ -69,10 +76,12 @@ const getAllCollectionsRaw = async (): Promise<Collection[]> => {
   }
 };
 
+// Nav reads the whole collection list; collections change rarely, so cache it
+// for 5 minutes (tag-busted on writes) rather than re-scanning every minute.
 export const getAllCollections = unstable_cache(
   getAllCollectionsRaw,
   ["all-collections"],
-  { revalidate: 60, tags: ["collections"] }
+  { revalidate: 300, tags: ["collections"] }
 );
 
 /* ----------------------------------
@@ -106,36 +115,8 @@ export const getCollectionsByIds = cache(async (ids: string[]): Promise<Collecti
    2. Fetch by ID (1 read, deduplicated within request)
 ----------------------------------- */
 const getCollectionBySlugRaw = async (slug: string): Promise<Collection | null> => {
-  try {
-    if (!slug) return null;
-
-    // First try the cached slug-to-ID mapping
-    const collectionId = await getCollectionIdBySlugCached(slug);
-    
-    if (collectionId) {
-      // Direct document lookup - only 1 read
-      return await getCollectionById(collectionId);
-    }
-
-    // Fallback: query by slug (if cache miss or new collection)
-    const snap = await dbAdmin
-      .collection("collections")
-      .where("slug", "==", slug)
-      .limit(1)
-      .get();
-
-    if (snap.empty) return null;
-
-    const doc = snap.docs[0];
-
-    return serializeFirestore({
-      id: doc.id,
-      ...(doc.data() as Omit<Collection, "id">),
-    });
-  } catch (error) {
-    console.error("getCollectionBySlug failed:", error);
-    return null;
-  }
+  if (!slug) return null;
+  return getCollectionBySlugQueryCached(slug);
 };
 
 // React cache() for request deduplication - multiple calls in same request = 1 fetch
