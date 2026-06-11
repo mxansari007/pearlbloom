@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/libs/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { PostHog } from "posthog-node";
 
 function resolvePostHogIngestionHost(): string {
@@ -96,13 +97,32 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Payment verified → mark order paid using Admin SDK
+    // Load the order and bind the payment to it. The signature alone proves a
+    // valid Razorpay payment exists, but NOT that it belongs to this order —
+    // so we require razorpay_order_id to match the one /order stored on this
+    // doc. Without this check a valid signature for a cheaper order could be
+    // replayed to mark a different order paid.
     const orderRef = dbAdmin.collection("orders").doc(orderId);
-    
-    // Fetch order to get displayId
     const orderSnap = await orderRef.get();
-    const orderData = orderSnap.exists ? (orderSnap.data() as Record<string, unknown>) : null;
-    const displayId = orderData ? getStringField(orderData, "displayId") : null;
+    if (!orderSnap.exists) {
+      return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
+    }
+    const orderData = orderSnap.data() as Record<string, unknown>;
+    const displayId = getStringField(orderData, "displayId");
+
+    const boundRazorpayOrderId = getStringField(orderData, "razorpayOrderId");
+    if (boundRazorpayOrderId && boundRazorpayOrderId !== razorpay_order_id) {
+      return NextResponse.json(
+        { success: false, error: "Payment does not match this order" },
+        { status: 400 }
+      );
+    }
+
+    // Idempotent: a re-submitted callback (double-click, retry) for an
+    // already-paid order is a no-op success.
+    if (getStringField(orderData, "status") === "paid") {
+      return NextResponse.json({ success: true, displayId });
+    }
 
     await orderRef.update({
       status: "paid",
@@ -111,7 +131,7 @@ export async function POST(req: Request) {
         razorpayPaymentId: razorpay_payment_id,
         razorpaySignature: razorpay_signature,
       },
-      updatedAt: Date.now(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     const distinctId = orderData ? getStringField(orderData, "userId") : null;
