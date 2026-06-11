@@ -1,5 +1,23 @@
 import { NextResponse } from "next/server";
-import { dbAdmin } from "@/libs/firebase-admin";
+import { dbAdmin, authAdmin } from "@/libs/firebase-admin";
+
+/**
+ * Resolve the caller's uid from a verified Firebase ID token in the
+ * Authorization header. We never trust a client-sent `userId` for usage
+ * limits — otherwise an attacker could pass a fresh fake id on every request
+ * to reset their per-user count, or another user's id to probe their orders.
+ */
+async function verifiedUid(req: Request): Promise<string | null> {
+  const header = req.headers.get("authorization") ?? req.headers.get("Authorization");
+  const token = header?.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : null;
+  if (!token) return null;
+  try {
+    const decoded = await authAdmin.verifyIdToken(token);
+    return decoded.uid;
+  } catch {
+    return null;
+  }
+}
 
 type DiscountType = "percent" | "flat";
 type ApplyScope = "all" | "products" | "collections" | "categories";
@@ -324,7 +342,8 @@ export async function POST(req: Request) {
       .filter((i) => i.productId && i.price >= 0 && i.quantity > 0);
 
     const subtotal = asNumberOrNull(body.subtotal) ?? items.reduce((s, i) => s + i.price * i.quantity, 0);
-    const userId = asStringOrNull(body.userId);
+    // The uid is taken ONLY from a verified ID token, never from the body.
+    const userId = await verifiedUid(req);
 
     const byId = await dbAdmin.collection("coupons").doc(code).get();
     const snap = byId.exists

@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { auth } from "@/libs/firebase-client";
 
 export type DiscountType = "percent" | "flat";
 export type ApplyScope = "all" | "products" | "collections" | "categories";
@@ -93,9 +94,16 @@ export const useCouponStore = create<CouponState>()(
 
         set({ status: "applying", error: null, appliedCode: normalized });
 
+        // Send a verified ID token so the server can trust who's redeeming
+        // (per-user limits depend on it). userId in the body is ignored server-side.
+        const idToken = await auth.currentUser?.getIdToken().catch(() => null);
+
         const resp = await fetch("/api/coupons/validate", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+          },
           body: JSON.stringify({ code: normalized, items, subtotal, userId: userId ?? null }),
         });
 
