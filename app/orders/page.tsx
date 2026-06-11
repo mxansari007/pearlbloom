@@ -10,6 +10,7 @@ import {
   getDocs,
   orderBy,
   query,
+  where,
 } from "firebase/firestore";
 
 import { dbClient } from "@/libs/firebase-client";
@@ -26,14 +27,19 @@ export default function OrdersPage() {
   const { data: orders = [], error, isLoading } = useSWR(
     authInitialized && isAuthenticated && user?.uid ? ["orders", user.uid] : null,
     async ([, uid]: [string, string]) => {
-      const q = query(collection(dbClient, "orders"), orderBy("createdAt", "desc"));
+      // Scope the query to this user. Required by Firestore security rules
+      // (which only allow reading your own orders) and avoids downloading the
+      // entire orders collection just to filter it client-side.
+      const q = query(
+        collection(dbClient, "orders"),
+        where("userId", "==", uid),
+        orderBy("createdAt", "desc")
+      );
       const snap = await getDocs(q);
-      return snap.docs
-        .map((d) => ({
-          id: d.id,
-          ...(d.data() as Order),
-        }))
-        .filter((o) => o.userId === uid);
+      return snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Order),
+      }));
     }
   );
 

@@ -81,11 +81,16 @@ export default function OrderDetailsPage() {
   /* ---------------- Load Order by displayId ---------------- */
 
   const loadOrder = async () => {
+    if (!user?.uid) return;
     try {
       setLoading(true);
 
+      // Scope to the signed-in user. Firestore rules only allow reading your
+      // own orders, so the query must constrain userId (the displayId filter
+      // alone would be rejected). The ownership check below is kept as defence.
       const q = query(
         collection(dbClient, "orders"),
+        where("userId", "==", user.uid),
         where("displayId", "==", displayId)
       );
 

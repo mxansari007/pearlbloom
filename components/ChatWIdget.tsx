@@ -102,6 +102,9 @@ export default function ChatWidget() {
 
       if (!snap.exists()) {
         await setDoc(ref, {
+          // uid lets Firestore rules scope this chat to its owner (the chatId
+          // is phone-derived, which rules can't tie to the caller on their own).
+          uid: user?.uid ?? null,
           status: "open",
           createdAt: serverTimestamp(),
           lastMessage: "",
