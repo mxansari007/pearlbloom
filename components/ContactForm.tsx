@@ -16,7 +16,10 @@ type FormState = {
 
 const STORAGE_KEY = 'contact:draft:v1'
 
-export default function ContactForm({ contactEmail = 'hello@aurum.example' }: Props) {
+// All contact-form messages are addressed to this inbox.
+const CONTACT_RECIPIENT = 'info@pearlbloom.in'
+
+export default function ContactForm({ contactEmail = CONTACT_RECIPIENT }: Props) {
   const [form, setForm] = useState<FormState>({ name: '', email: '', subject: '', message: '' })
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
@@ -50,9 +53,10 @@ export default function ContactForm({ contactEmail = 'hello@aurum.example' }: Pr
   }
 
   function openMailClient() {
+    const recipient = contactEmail?.trim() || CONTACT_RECIPIENT
     const subject = encodeURIComponent(form.subject)
     const body = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)
-    window.location.href = `mailto:${contactEmail}?subject=${subject}&body=${body}`
+    window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -115,7 +119,7 @@ export default function ContactForm({ contactEmail = 'hello@aurum.example' }: Pr
       </div>
 
       <div className="text-sm text-muted mt-2">
-        By contacting us you agree to our <a href="/privacy" className="underline">Privacy Policy</a>. We typically respond within 1–2 business days.
+        By contacting us you agree to our <a href="/privacy-policy" className="underline">Privacy Policy</a>. We typically respond within 1–2 business days.
       </div>
     </form>
   )

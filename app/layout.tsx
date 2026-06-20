@@ -30,17 +30,40 @@ const inter = Inter({
   display: 'swap',
 })
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://pearlbloom.in'
+
 export const metadata = {
-  title: 'Pearl Bloom — Exquisite Jewelry',
-  description: 'jewelry — rings, necklaces, earrings. Luxury designs and timeless pieces.',
+  metadataBase: new URL(SITE),
+  title: 'Pearl Bloom — Affordable Anti-Tarnish Earrings for Women',
+  description:
+    'Pearl Bloom — affordable, anti-tarnish, skin-safe artificial earrings for women. Shop studs, hoops, jhumkas and more for daily, office, party and bridal wear.',
+  keywords: ['artificial earrings', 'anti-tarnish earrings', 'earrings for women', 'gold-plated earrings', 'jhumka earrings', 'Pearl Bloom'],
+  applicationName: 'Pearl Bloom',
   icons: {
     icon: '/logo.svg',
+  },
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: 'website',
+    siteName: 'Pearl Bloom',
+    locale: 'en_IN',
+    title: 'Pearl Bloom — Affordable Anti-Tarnish Earrings for Women',
+    description:
+      'Affordable, anti-tarnish, skin-safe artificial earrings for women — studs, hoops, jhumkas and more.',
+    images: [{ url: '/earring.png', width: 665, height: 597, alt: 'Pearl Bloom artificial earrings' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Pearl Bloom — Affordable Anti-Tarnish Earrings for Women',
+    description: 'Affordable, anti-tarnish, skin-safe artificial earrings for women.',
+    images: ['/earring.png'],
   },
 }
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: '#5b1a23',
 }
 
 
@@ -55,6 +78,43 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="preconnect" href="https://pearlboom-74976.firebaseapp.com" />
         <link rel="preconnect" href="https://www.googleapis.com" />
         <link rel="preconnect" href="https://apis.google.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap"
+          rel="stylesheet"
+        />
+        {/* Sitewide Organization + WebSite structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "Pearl Bloom",
+                url: SITE,
+                logo: `${SITE}/logo.svg`,
+                description:
+                  "Affordable anti-tarnish, skin-safe artificial earrings for women in India.",
+                email: "info@pearlbloom.in",
+                contactPoint: {
+                  "@type": "ContactPoint",
+                  email: "info@pearlbloom.in",
+                  contactType: "customer service",
+                  areaServed: "IN",
+                  availableLanguage: ["en", "hi"],
+                },
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: "Pearl Bloom",
+                url: SITE,
+              },
+            ]),
+          }}
+        />
       </head>
       <body className="min-h-screen bg-[--background] text-[--foreground] font-sans">
         <FacebookPixel />

@@ -330,79 +330,105 @@ export default function ChatWidget() {
         </div>
       )}
 
-      {/* Chat Window */}
+      {/* Chat Window — clean floating panel (cream + maroon + gold) */}
       {!minimized && (
         <div
-          className="w-80 rounded-xl shadow-xl overflow-hidden"
+          className="w-[340px] max-w-[calc(100vw-2rem)] rounded-[24px] overflow-hidden"
           style={{
-            background: "var(--chat-bg)",
-            border: "1px solid var(--chat-border)",
-            color: "var(--fg)",
+            background: "linear-gradient(180deg, #fdf8f6 0%, #f6e6e1 100%)",
+            border: "1px solid rgba(94,24,48,0.12)",
+            boxShadow: "0 30px 80px -28px rgba(44,10,20,0.55)",
+            color: "#3d0f1a",
           }}
         >
           {/* Header */}
           <div
-            className="p-3 flex justify-between items-center"
-            style={{
-              borderBottom: "1px solid var(--chat-border)",
-            }}
+            className="px-4 py-3 flex justify-between items-center"
+            style={{ borderBottom: "1px solid rgba(94,24,48,0.10)" }}
           >
-            <span className="font-medium">Chat with us</span>
+            <div className="flex items-center gap-2.5">
+              <span
+                className="grid place-items-center w-8 h-8 rounded-full text-white"
+                style={{
+                  background: "linear-gradient(135deg, #7a1e2b 0%, #5e1830 100%)",
+                }}
+              >
+                <MessageCircle size={16} />
+              </span>
+              <span className="font-medium" style={{ color: "#5e1830" }}>
+                Chat with us
+              </span>
+            </div>
             <button
               onClick={() => {
                 setMinimized(true);
                 setLauncherOpen(false);
               }}
-              style={{ color: "var(--chat-muted)" }}
+              aria-label="Minimize chat"
+              className="grid place-items-center w-8 h-8 rounded-full transition hover:opacity-70"
+              style={{
+                background: "#ffffff",
+                color: "#5e1830",
+                border: "1px solid rgba(94,24,48,0.12)",
+                lineHeight: 1,
+              }}
             >
-              —
+              <span style={{ marginTop: -2 }}>—</span>
             </button>
           </div>
 
           {/* AUTH / CONTENT */}
           {!authInitialized ? (
-            <div className="p-4 text-sm" style={{ color: "var(--chat-muted)" }}>
+            <div className="p-4 text-sm" style={{ color: "rgba(61,15,26,0.62)" }}>
               Loading chat…
             </div>
           ) : !isAuthenticated ? (
-            <div className="p-4 space-y-3 text-sm">
-              <p>Please login to start chatting.</p>
+            <div className="p-5 space-y-4 text-sm">
+              <p style={{ color: "rgba(61,15,26,0.7)" }}>
+                Please login to start chatting.
+              </p>
               <button
                 onClick={() => (window.location.href = "/login")}
-                className="w-full bg-yellow-500 text-black py-2 rounded font-medium"
+                className="w-full py-2.5 rounded-full font-semibold text-black
+                           bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
+                           hover:brightness-110 transition"
+                style={{ boxShadow: "0 12px 26px -14px rgba(180,140,40,0.7)" }}
               >
                 Login
               </button>
             </div>
           ) : !chatReady ? (
-            <div className="p-4 text-sm" style={{ color: "var(--chat-muted)" }}>
+            <div className="p-4 text-sm" style={{ color: "rgba(61,15,26,0.62)" }}>
               Initializing chat…
             </div>
           ) : (
             <>
               {/* Messages */}
-              <div className="p-3 h-64 overflow-y-auto space-y-2 text-sm">
+              <div className="p-4 h-64 overflow-y-auto space-y-2.5 text-sm">
                 {messages.map((m, i) => (
                   <div
                     key={i}
                     className={`flex ${
-                      m.sender === "user"
-                        ? "justify-end"
-                        : "justify-start"
+                      m.sender === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
-                      className="px-3 py-2 rounded-2xl max-w-[75%]"
-                      style={{
-                        background:
-                          m.sender === "user"
-                            ? "rgb(234 179 8)" // yellow
-                            : "var(--chat-admin-bg)",
-                        color:
-                          m.sender === "user"
-                            ? "#000"
-                            : "var(--fg)",
-                      }}
+                      className="px-3.5 py-2 rounded-2xl max-w-[75%]"
+                      style={
+                        m.sender === "user"
+                          ? {
+                              background:
+                                "linear-gradient(135deg, #facc15, #f59e0b)",
+                              color: "#3d0f1a",
+                              borderBottomRightRadius: 6,
+                            }
+                          : {
+                              background: "#ffffff",
+                              color: "#3d0f1a",
+                              border: "1px solid rgba(94,24,48,0.10)",
+                              borderBottomLeftRadius: 6,
+                            }
+                      }
                     >
                       {m.text}
                     </div>
@@ -413,21 +439,27 @@ export default function ChatWidget() {
 
               {/* Input */}
               <div
-                className="p-3 flex gap-2"
-                style={{
-                  borderTop: "1px solid var(--chat-border)",
-                }}
+                className="p-3 flex gap-2 items-center"
+                style={{ borderTop: "1px solid rgba(94,24,48,0.10)" }}
               >
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && send()}
                   placeholder="Type your message…"
-                  className="flex-1 px-3 py-2 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--input-text)] placeholder-[var(--input-placeholder)] text-sm focus:outline-none focus:border-[rgb(var(--gold-rgb))] focus:ring-1 focus:ring-[rgb(var(--gold-rgb))] transition-all"
+                  className="flex-1 px-4 py-2.5 rounded-full text-sm focus:outline-none transition-all"
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid rgba(94,24,48,0.14)",
+                    color: "#3d0f1a",
+                  }}
                 />
                 <button
                   onClick={send}
-                  className="bg-yellow-500 px-3 rounded text-sm font-medium text-black"
+                  aria-label="Send message"
+                  className="px-5 py-2.5 rounded-full text-sm font-semibold text-black
+                             bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
+                             hover:brightness-110 transition"
                 >
                   Send
                 </button>

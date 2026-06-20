@@ -11,6 +11,13 @@ import { Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { track } from "@/utils/analytics";
 import CouponPanel from "@/components/CouponPanel";
 
+/* Brand palette (cream + maroon + gold) — matches CartDrawer's FinSet look */
+const WINE = "#5e1830";
+const WINE_TEXT = "#3d0f1a";
+const WINE_LINE = "rgba(94,24,48,0.12)";
+const WINE_MUTED = "rgba(61,15,26,0.62)";
+const BLUSH = "#f6e6e1";
+
 export default function CartPage() {
   const router = useRouter();
 
@@ -88,25 +95,28 @@ export default function CartPage() {
   return (
     <div
       className="min-h-screen relative overflow-hidden"
-      style={{ background: "var(--panel-bg)", color: "var(--fg)" }}
+      style={{
+        background: "linear-gradient(180deg, #fdf8f6 0%, #f6e6e1 100%)",
+        color: WINE_TEXT,
+      }}
     >
-      {/* Glow */}
-      <div className="glow-bg">
-        <span className="glow-orb" />
-        <span className="glow-orb" />
-        <span className="glow-orb" />
-      </div>
-
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-10 md:py-16">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 md:mb-10">
           <div className="flex items-center gap-3 sm:gap-4">
-            <h1 className="text-2xl font-semibold">Shopping Cart</h1>
+            <h1 className="text-3xl font-display" style={{ color: WINE }}>
+              Shopping Cart
+            </h1>
             {items.length > 0 && (
               <button
                 onClick={clear}
-                className="text-xs text-red-400 hover:text-red-300 transition flex items-center gap-1 border border-red-400/20 px-3 py-1 rounded-full hover:bg-red-400/10"
+                className="text-xs transition flex items-center gap-1 px-3 py-1 rounded-full hover:opacity-70"
+                style={{
+                  color: "#b1465a",
+                  background: "#ffffff",
+                  border: `1px solid ${WINE_LINE}`,
+                }}
               >
                 <Trash2 size={12} />
                 Clear Cart
@@ -115,8 +125,8 @@ export default function CartPage() {
           </div>
           <Link
             href="/"
-            className="text-sm transition"
-            style={{ color: "rgb(212,175,55)" }}
+            className="text-sm font-medium transition hover:opacity-70"
+            style={{ color: WINE }}
           >
             Continue Shopping →
           </Link>
@@ -125,20 +135,26 @@ export default function CartPage() {
         {/* Empty */}
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-20 h-20 rounded-full bg-[var(--input-bg)] flex items-center justify-center mb-6 text-muted">
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
+              style={{ background: BLUSH, color: WINE }}
+            >
               <ShoppingBag size={32} strokeWidth={1.5} />
             </div>
-            <h3 className="text-xl font-medium mb-3">Your cart is empty</h3>
-            <p className="text-muted mb-8 max-w-md mx-auto">
+            <h3 className="text-xl font-medium mb-3" style={{ color: WINE }}>
+              Your cart is empty
+            </h3>
+            <p className="mb-8 max-w-md mx-auto" style={{ color: WINE_MUTED }}>
               Looks like you haven&apos;t added any items to your cart yet.
               Explore our collections to find your perfect piece.
             </p>
             <Link
-              href="/products"
-              className="inline-block rounded-xl
+              href="/earrings"
+              className="inline-block rounded-full
                          bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
-                         px-8 py-3 text-black font-medium
-                         hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-all"
+                         px-8 py-3 text-black font-semibold
+                         hover:brightness-110 transition-all"
+              style={{ boxShadow: "0 14px 30px -14px rgba(180,140,40,0.7)" }}
             >
               Start Shopping
             </Link>
@@ -153,16 +169,14 @@ export default function CartPage() {
                   key={item.id}
                   className="flex gap-4 rounded-2xl p-4"
                   style={{
-                    background: "var(--panel-bg-soft)",
-                    border: "1px solid var(--border-subtle)",
+                    background: "#ffffff",
+                    border: `1px solid ${WINE_LINE}`,
+                    boxShadow: "0 10px 30px -22px rgba(44,10,20,0.5)",
                   }}
                 >
                   <div
-                    className="relative w-24 h-24 rounded-xl overflow-hidden"
-                    style={{
-                      background: "var(--panel-bg)",
-                      border: "1px solid var(--border-subtle)",
-                    }}
+                    className="relative w-24 h-24 rounded-xl overflow-hidden shrink-0"
+                    style={{ background: BLUSH }}
                   >
                     <Image
                       src={item.image || ""}
@@ -175,38 +189,45 @@ export default function CartPage() {
 
                   <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                      <p className="font-medium text-lg">{item.name}</p>
+                      <p className="font-medium text-lg" style={{ color: WINE_TEXT }}>
+                        {item.name}
+                      </p>
                       {item.variantLabel && (
-                        <p
-                          className="text-sm mt-1"
-                          style={{ color: "rgb(212,175,55)" }}
-                        >
+                        <p className="text-sm mt-1 font-medium" style={{ color: "#9a7b1f" }}>
                           {item.variantLabel}
                         </p>
                       )}
-                      <p
-                        className="text-sm mt-2 font-medium"
-                      >
+                      <p className="text-sm mt-2 font-semibold" style={{ color: WINE }}>
                         ₹{item.price.toLocaleString("en-IN")}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                      {/* Quantity Controls */}
-                      <div className="flex items-center gap-3 bg-[var(--input-bg)] rounded-lg px-3 py-1.5 border border-[var(--input-border)]">
+                    <div className="flex items-center gap-4">
+                      {/* Quantity Controls — pill */}
+                      <div
+                        className="flex items-center gap-3 rounded-full px-3 py-1.5"
+                        style={{ background: BLUSH, border: `1px solid ${WINE_LINE}` }}
+                      >
                         <button
                           onClick={() => {
                             if (item.quantity > 1) updateQty(item.id, item.quantity - 1);
                             else removeItem(item.id);
                           }}
-                          className="text-muted hover:text-foreground transition p-1"
+                          className="transition hover:opacity-60 p-1"
+                          style={{ color: WINE }}
                         >
                           <Minus size={14} />
                         </button>
-                        <span className="text-sm w-6 text-center font-medium">{item.quantity}</span>
+                        <span
+                          className="text-sm w-6 text-center font-semibold"
+                          style={{ color: WINE_TEXT }}
+                        >
+                          {item.quantity}
+                        </span>
                         <button
                           onClick={() => updateQty(item.id, item.quantity + 1)}
-                          className="text-muted hover:text-foreground transition p-1"
+                          className="transition hover:opacity-60 p-1"
+                          style={{ color: WINE }}
                         >
                           <Plus size={14} />
                         </button>
@@ -214,8 +235,8 @@ export default function CartPage() {
 
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="text-sm transition flex items-center gap-1 hover:text-red-400"
-                        style={{ color: "var(--muted)" }}
+                        className="text-sm transition flex items-center gap-1 hover:opacity-60"
+                        style={{ color: WINE_MUTED }}
                       >
                         <Trash2 size={16} />
                         <span className="hidden md:inline">Remove</span>
@@ -230,32 +251,35 @@ export default function CartPage() {
             <div
               className="rounded-2xl p-6 h-fit"
               style={{
-                background: "var(--panel-bg-soft)",
-                border: "1px solid var(--border-subtle)",
+                background: "#ffffff",
+                border: `1px solid ${WINE_LINE}`,
+                boxShadow: "0 20px 50px -30px rgba(44,10,20,0.45)",
               }}
             >
-              <h2 className="text-lg font-medium mb-4">Order Summary</h2>
+              <h2 className="text-lg font-semibold mb-4" style={{ color: WINE }}>
+                Order Summary
+              </h2>
 
               <div className="flex justify-between text-sm mb-3">
-                <span>Subtotal</span>
-                <span>₹{subtotal.toLocaleString("en-IN")}</span>
+                <span style={{ color: WINE_MUTED }}>Subtotal</span>
+                <span style={{ color: WINE_TEXT }}>₹{subtotal.toLocaleString("en-IN")}</span>
               </div>
 
               <div className="flex justify-between text-sm mb-6">
-                <span>Shipping</span>
+                <span style={{ color: WINE_MUTED }}>Shipping</span>
                 {!configLoaded ? (
-                  <span style={{ color: "var(--muted)" }}>—</span>
+                  <span style={{ color: WINE_MUTED }}>—</span>
                 ) : eligibleForFreeShipping ? (
-                  <span style={{ color: "rgb(212,175,55)" }}>Free</span>
+                  <span className="font-semibold" style={{ color: "#9a7b1f" }}>Free</span>
                 ) : (
-                  <span>₹{shipping.toLocaleString("en-IN")}</span>
+                  <span style={{ color: WINE_TEXT }}>₹{shipping.toLocaleString("en-IN")}</span>
                 )}
               </div>
 
               {discount > 0 ? (
                 <div className="flex justify-between text-sm mb-6">
-                  <span>Discount</span>
-                  <span style={{ color: "rgb(var(--gold-rgb))" }}>
+                  <span style={{ color: WINE_MUTED }}>Discount</span>
+                  <span className="font-semibold" style={{ color: "#9a7b1f" }}>
                     -₹{discount.toLocaleString("en-IN")}
                   </span>
                 </div>
@@ -269,18 +293,21 @@ export default function CartPage() {
                 <div
                   className="text-xs mb-4 rounded-xl px-3 py-2"
                   style={{
-                    background: "rgba(var(--gold-rgb),0.10)",
-                    border: "1px solid rgba(var(--gold-rgb),0.22)",
-                    color: "rgb(var(--gold-rgb))",
+                    background: BLUSH,
+                    border: `1px solid ${WINE_LINE}`,
+                    color: WINE,
                   }}
                 >
                   Add ₹{Math.max(0, freeShippingAbove - subtotal).toLocaleString("en-IN")} more to unlock free shipping.
                 </div>
               )}
 
-              <div className="flex justify-between font-medium text-lg mb-6">
-                <span>Total</span>
-                <span>₹{total.toLocaleString("en-IN")}</span>
+              <div
+                className="flex justify-between font-semibold text-lg mb-6 pt-4"
+                style={{ borderTop: `1px solid ${WINE_LINE}` }}
+              >
+                <span style={{ color: WINE_TEXT }}>Total</span>
+                <span style={{ color: WINE }}>₹{total.toLocaleString("en-IN")}</span>
               </div>
 
               <div className="mt-6">
@@ -294,10 +321,11 @@ export default function CartPage() {
 
               <button
                 onClick={handleCheckout}
-                className="w-full rounded-xl
+                className="w-full rounded-full
                            bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
-                           mt-4 py-3 text-black font-medium
+                           mt-4 py-3.5 text-black font-semibold
                            hover:brightness-110 transition"
+                style={{ boxShadow: "0 14px 30px -14px rgba(180,140,40,0.7)" }}
               >
                 Proceed to Checkout
               </button>

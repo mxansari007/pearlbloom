@@ -1,201 +1,197 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Sparkles, Shield, Truck, MessageCircle } from "lucide-react";
+import { ArrowRight, Check, Star, Sparkles, User } from "lucide-react";
 import type { HeroData } from "../libs/hero.server";
 
-const trustBadges = [
-  { icon: Shield, label: "Secure Checkout" },
-  { icon: Truck, label: "Free Shipping" },
-  { icon: MessageCircle, label: "24/7 Support" },
+// Hidden until we have REAL customer reviews. When real ratings exist, set this
+// to true and replace the placeholder numbers (4.8 / 1,420+) below with real data.
+const SHOW_SOCIAL_PROOF = false;
+
+const features = ["Skin-Safe", "Anti-Tarnish", "Water-Resistant"];
+const avatarGradients = [
+  "linear-gradient(135deg,#e8c9a0,#b98a5e)",
+  "linear-gradient(135deg,#d8b48c,#a87d52)",
+  "linear-gradient(135deg,#e3c1a6,#caa477)",
 ];
 
 export default function Hero({ hero }: { hero: HeroData | null }) {
-  if (!hero) return null;
+  // The hero CTA link is admin-configurable. Treat blank or the legacy
+  // "/products" value as the redesigned catalog so the button never points at
+  // the old page; any other custom link the admin sets is respected.
+  const rawCta = hero?.ctaLink?.trim();
+  const ctaLink = !rawCta || rawCta === "/products" ? "/earrings" : rawCta;
 
   return (
-    <section className="relative overflow-hidden">
-      {/* Ambient Background */}
+    <section
+      className="relative overflow-hidden"
+      style={{ background: "linear-gradient(135deg, var(--hero-grad-1), var(--hero-grad-2))" }}
+    >
+      {/* soft ambient glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-radial from-amber-500/8 via-transparent to-transparent blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-radial from-amber-400/6 via-transparent to-transparent blur-3xl" />
+        <div
+          className="absolute -top-24 right-1/3 w-[520px] h-[520px] rounded-full blur-3xl opacity-40"
+          style={{ background: "radial-gradient(circle, rgba(var(--gold-rgb),0.16), transparent 70%)" }}
+        />
       </div>
 
-      <div className="container relative z-10 py-16 md:py-24 lg:py-28">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          
-          {/* Content Column */}
-          <div className="order-2 lg:order-1 space-y-6 max-w-xl text-center lg:text-left mx-auto lg:mx-0">
-            {/* Kicker */}
-            <div 
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full animate-fade-in-up"
-              style={{
-                background: "rgba(var(--gold-rgb), 0.1)",
-                border: "1px solid rgba(var(--gold-rgb), 0.2)",
-                animationDelay: "0.1s",
-              }}
+      <div className="container relative z-10 py-14 md:py-20 lg:py-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          {/* Text */}
+          <div className="max-w-xl">
+            {/* Pill kicker */}
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-7 animate-fade-in-up"
+              style={{ border: "1px solid var(--hero-card-border)", background: "var(--hero-card)" }}
             >
-              <Sparkles size={14} style={{ color: "rgb(var(--gold-rgb))" }} />
-              <span 
-                className="text-xs font-semibold uppercase tracking-widest"
-                style={{ color: "rgb(var(--gold-rgb))" }}
+              <Sparkles size={13} style={{ color: "rgb(var(--bronze-rgb))" }} />
+              <span
+                className="text-[11px] font-semibold uppercase tracking-[0.16em]"
+                style={{ color: "rgb(var(--bronze-rgb))" }}
               >
-                New Collection
+                Skin-Safe. Lightweight. Anti-Tarnish.
               </span>
             </div>
 
-            {/* Main Heading */}
-            <h1 
-              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-display leading-[1.05] tracking-tight animate-fade-in-up"
-              style={{ animationDelay: "0.2s" }}
+            {/* Headline */}
+            <h1
+              className="font-display tracking-tight leading-[1.08] text-4xl sm:text-5xl lg:text-[3.4rem] animate-fade-in-up"
+              style={{ color: "var(--fg)", fontWeight: 400, animationDelay: "0.1s" }}
             >
-              <span className="block">{hero.title.split(' ').slice(0, 2).join(' ')}</span>
-              <span 
-                className="block bg-gradient-to-r from-amber-200 via-amber-400 to-amber-300 bg-clip-text text-transparent"
-              >
-                {hero.title.split(' ').slice(2).join(' ') || 'Elegance'}
-              </span>
+              Wear the <span className="italic">Warmth</span> of{" "}
+              <span style={{ color: "rgb(var(--gold-soft-rgb))" }}>Everyday Gold</span>{" "}
+              <span className="italic">Comfort.</span>
             </h1>
 
             {/* Subtitle */}
-            <p 
-              className="text-lg lg:text-xl leading-relaxed animate-fade-in-up"
-              style={{ 
-                color: "var(--muted)",
-                animationDelay: "0.3s",
-              }}
+            <p
+              className="mt-6 text-base sm:text-lg leading-relaxed max-w-lg animate-fade-in-up"
+              style={{ color: "var(--muted)", animationDelay: "0.2s" }}
             >
-              {hero.subtitle}
+              Gold-tone earrings made to be kind to sensitive ears — anti-tarnish, lightweight and
+              water-resistant for real daily life. Skin-safe, hypoallergenic and honestly priced, with
+              no luxury markups.
             </p>
 
-            {/* CTA Buttons */}
-            <div 
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-4 animate-fade-in-up"
-              style={{ animationDelay: "0.4s" }}
+            {/* Feature checks */}
+            <div
+              className="mt-7 flex flex-wrap items-center gap-x-8 gap-y-3 animate-fade-in-up"
+              style={{ animationDelay: "0.3s" }}
             >
-              <Link 
-                href={hero.ctaLink} 
-                className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold text-black overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_20px_40px_rgba(212,175,55,0.3)] active:scale-[0.98]"
-                style={{
-                  background: "linear-gradient(135deg, rgb(var(--gold-rgb)), #f5c542)",
-                }}
-              >
-                <span className="relative z-10">{hero.ctaLabel}</span>
-                <ArrowRight size={18} className="relative z-10 transition-transform group-hover:translate-x-1" />
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-300 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </Link>
-              
-              <Link 
-                href="/products"
-                className="inline-flex items-center gap-2 px-6 py-4 rounded-2xl font-medium transition-all duration-300 hover:scale-[1.02]"
-                style={{ 
-                  color: "var(--fg)",
-                  background: "var(--glass-hover)",
-                  border: "1px solid var(--glass-hover)",
-                }}
-              >
-                <span>View All</span>
-                <ArrowRight size={16} className="opacity-70" />
-              </Link>
-            </div>
-
-            {/* Trust Badges */}
-            <div 
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-5 pt-4 animate-fade-in-up"
-              style={{ animationDelay: "0.5s" }}
-            >
-              {trustBadges.map(({ icon: Icon, label }) => (
-                <div 
-                  key={label}
-                  className="flex items-center gap-2 text-sm"
-                  style={{ color: "var(--muted)" }}
-                >
-                  <div 
-                    className="w-8 h-8 rounded-xl flex items-center justify-center"
-                    style={{
-                      background: "rgba(var(--gold-rgb), 0.12)",
-                      border: "1px solid rgba(var(--gold-rgb), 0.2)",
-                    }}
+              {features.map((f) => (
+                <div key={f} className="inline-flex items-center gap-2">
+                  <Check size={15} strokeWidth={2.5} style={{ color: "rgb(var(--bronze-rgb))" }} />
+                  <span
+                    className="text-[12px] font-semibold uppercase tracking-wider"
+                    style={{ color: "rgb(var(--bronze-rgb))" }}
                   >
-                    <Icon size={14} style={{ color: "rgb(var(--gold-rgb))" }} />
-                  </div>
-                  <span className="font-medium hidden sm:inline">{label}</span>
+                    {f}
+                  </span>
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* Image Column */}
-          <div className="order-1 lg:order-2 relative animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-            {/* Decorative Ring */}
-            <div 
-              className="absolute -inset-4 rounded-[32px] opacity-50"
-              style={{
-                background: "linear-gradient(135deg, rgba(var(--gold-rgb), 0.15), transparent 50%, rgba(var(--gold-rgb), 0.1))",
-              }}
-            />
-            
-            {/* Main Image Container */}
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-              
-              {/* Image */}
-              <div className="relative aspect-[4/5] lg:aspect-[3/4]">
-                {hero.heroImage?.url && (
-                  <Image
-                    src={hero.heroImage.url}
-                    alt={hero.title}
-                    fill
-                    priority
-                    fetchPriority="high"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover transition-transform duration-700 hover:scale-105"
-                  />
-                )}
-              </div>
-
-              {/* Floating Badge */}
-              <div 
-                className="absolute bottom-6 left-6 right-6 z-20 p-5 rounded-2xl backdrop-blur-xl"
-                style={{
-                  background: "rgba(0, 0, 0, 0.75)",
-                  border: "1px solid rgba(255, 255, 255, 0.15)",
-                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-                }}
+            {/* Buttons */}
+            <div
+              className="mt-8 flex flex-wrap items-center gap-3.5 animate-fade-in-up"
+              style={{ animationDelay: "0.4s" }}
+            >
+              <Link
+                href={ctaLink}
+                className="group inline-flex items-center gap-2.5 rounded-lg px-7 py-4 text-sm font-bold uppercase tracking-wider text-white transition-all duration-300 hover:opacity-75 hover:-translate-y-0.5"
+                style={{ background: "rgb(var(--bronze-rgb))", boxShadow: "0 14px 30px rgba(var(--bronze-rgb), 0.30)" }}
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p 
-                      className="text-[10px] uppercase tracking-widest font-semibold"
-                      style={{ color: "rgb(var(--gold-rgb))" }}
-                    >
-                      Featured
-                    </p>
-                    <p className="hero_sec_para_text text-white font-bold text-lg mt-1">Limited Edition</p>
-                  </div>
-                  <Link
-                    href={hero.ctaLink}
-                    className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 hover:scale-105"
-                    style={{
-                      background: "rgb(var(--gold-rgb))",
-                      color: "#000",
-                    }}
-                  >
-                    Shop Now
-                  </Link>
-                </div>
-              </div>
+                Browse Full Catalog
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+
+              <Link
+                href="/earrings/best-sellers"
+                className="btn-best-sellers inline-flex items-center rounded-lg px-7 py-4 text-sm font-bold uppercase tracking-wider hover:-translate-y-0.5"
+                style={{ background: "var(--panel)" }}
+              >
+                Best Sellers
+              </Link>
             </div>
 
-            {/* Decorative Elements */}
-            <div 
-              className="absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl opacity-40"
-              style={{ background: "rgb(var(--gold-rgb))" }}
-            />
-            <div 
-              className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full blur-3xl opacity-30"
-              style={{ background: "rgb(var(--gold-rgb))" }}
-            />
+            {/* Social proof — gated by SHOW_SOCIAL_PROOF (top of file). */}
+            {SHOW_SOCIAL_PROOF && (
+            <div
+              className="mt-8 inline-flex items-center gap-4 rounded-2xl px-4 py-3 animate-fade-in-up"
+              style={{
+                border: "1px solid var(--hero-card-border)",
+                background: "var(--hero-card)",
+                boxShadow: "0 12px 30px rgba(0,0,0,0.06)",
+                animationDelay: "0.5s",
+              }}
+            >
+              {/* Avatars */}
+              <div className="flex -space-x-2.5">
+                {avatarGradients.map((bg, i) => (
+                  <span
+                    key={i}
+                    className="h-9 w-9 rounded-full border-2 flex items-center justify-center shadow-sm"
+                    style={{ borderColor: "var(--hero-card)", background: bg }}
+                  >
+                    <User size={15} className="text-white/90" />
+                  </span>
+                ))}
+                <span
+                  className="h-9 w-9 rounded-full border-2 flex items-center justify-center text-[10px] font-bold tracking-tight"
+                  style={{
+                    borderColor: "var(--hero-card)",
+                    background: "rgba(var(--gold-rgb),0.16)",
+                    color: "rgb(var(--bronze-rgb))",
+                  }}
+                >
+                  1k+
+                </span>
+              </div>
+
+              {/* Divider */}
+              <span className="self-stretch w-px my-0.5" style={{ background: "var(--hero-card-border)" }} />
+
+              {/* Rating */}
+              <div className="flex flex-col items-center text-center pt-[10px]">
+                <div className="flex items-center gap-1.5">
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} size={14} className="fill-current" style={{ color: "rgb(var(--gold-rgb))" }} />
+                    ))}
+                  </div>
+                  <span className="text-[15px] font-bold leading-none" style={{ color: "var(--fg)" }}>
+                    4.8
+                  </span>
+                </div>
+                <p className="text-[11px] tracking-wide mt-1.5" style={{ color: "var(--muted)" }}>
+                  Vetted by{" "}
+                  <span className="font-semibold" style={{ color: "rgb(var(--bronze-rgb))" }}>
+                    1,420+
+                  </span>{" "}
+                  buyers
+                </p>
+              </div>
+            </div>
+            )}
+          </div>
+
+          {/* Image — user-provided earring.png (label is built into the image) */}
+          <div className="relative animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+            <div className="relative mx-auto w-full max-w-lg">
+              <div
+                className="relative aspect-[665/597] rounded-[1.6rem] overflow-hidden"
+                style={{ background: "#ffffff", border: "1px solid var(--hero-card-border)", boxShadow: "0 30px 70px rgba(0,0,0,0.12)" }}
+              >
+                <Image
+                  src="/newearring.png"
+                  alt="Featured earring — Riviera ridged Gold Hoops"
+                  fill
+                  priority
+                  fetchPriority="high"
+                  sizes="(max-width: 1024px) 90vw, 45vw"
+                  className="object-cover"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

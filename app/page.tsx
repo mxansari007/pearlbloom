@@ -5,17 +5,37 @@ import Image from "next/image";
 import Link from "next/link";
 
 import Hero from "../components/Hero";
+import ShopByStyle from "../components/ShopByStyle";
+import OccasionsFinishes from "../components/OccasionsFinishes";
+import AlternativeSection from "../components/AlternativeSection";
+import ReviewsSection from "../components/ReviewsSection";
 import ProductGrid from "../components/ProductGrid";
 import CollectionCard from "../components/CollectionCard";
 import SubscribeForm from "../components/SubscriptionForm";
 
 import { getHomepageSections } from "../libs/homepage.server";
-import { getProductsByIds } from "../libs/products.server";
+import { getProductsByIds, getAllProducts, getFeaturedProducts } from "../libs/products.server";
 import { getCollectionsByIds } from "../libs/collections.server";
 import { getHeroData } from "../libs/hero.server";
 import { dbAdmin } from "../libs/firebase-admin";
 
 import type { Product } from "../types/products";
+
+export const metadata = {
+  title: "Pearl Bloom — Anti-Tarnish Artificial Earrings for Women",
+  description:
+    "Shop affordable, anti-tarnish, skin-safe artificial earrings for women at Pearl Bloom — studs, hoops, jhumkas, chandbalis and more for daily, office, party, festive and bridal wear.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "Pearl Bloom",
+    locale: "en_IN",
+    url: "/",
+    title: "Pearl Bloom — Anti-Tarnish Artificial Earrings for Women",
+    description: "Affordable, anti-tarnish, skin-safe artificial earrings for women — studs, hoops, jhumkas and more.",
+    images: [{ url: "/earring.png", width: 665, height: 597, alt: "Pearl Bloom artificial earrings" }],
+  },
+};
 
 type FeaturedProductsSectionData = {
   id: string;
@@ -159,8 +179,8 @@ async function FeaturedProductsSection({
             {section.title}
           </h2>
         </div>
-        <Link 
-          href="/products"
+        <Link
+          href="/earrings"
           className="group inline-flex items-center gap-2 text-sm font-medium transition-colors hover:text-amber-400"
           style={{ color: "var(--muted)" }}
         >
@@ -211,7 +231,7 @@ async function CollectionsRowSection({
           className="mt-3 max-w-lg mx-auto text-center"
           style={{ color: "var(--muted)" }}
         >
-          Explore our carefully curated collections, each designed to complement your unique style.
+          Find your next favourite pair, grouped the way you like to shop.
         </p>
       </div>
 
@@ -505,7 +525,7 @@ async function OffersSection() {
           className="mt-3 text-base max-w-lg mx-auto text-center"
           style={{ color: "var(--muted)" }}
         >
-          Exclusive deals curated just for you. Apply at checkout.
+          Real savings on real pieces. Apply the code at checkout.
         </p>
       </div>
 
@@ -575,6 +595,77 @@ async function OffersSection() {
   );
 }
 
+async function NewArrivalsSection() {
+  const all = await getAllProducts();
+  const products = [...all]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 8);
+
+  if (!products.length) return null;
+
+  return (
+    <section className="container mx-auto px-6 py-16 md:py-20">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
+        <div>
+          <span
+            className="inline-block text-xs font-semibold uppercase tracking-widest mb-3"
+            style={{ color: "rgb(var(--bronze-rgb))" }}
+          >
+            Just In
+          </span>
+          <h2 className="text-3xl md:text-4xl font-display">New Arrivals</h2>
+        </div>
+        <Link
+          href="/earrings/new-arrivals"
+          className="view-all-link group inline-flex items-center gap-2 text-sm font-medium"
+        >
+          View All
+          <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </Link>
+      </div>
+      <ProductGrid products={products} />
+    </section>
+  );
+}
+
+async function BestSellersSection() {
+  let products = await getFeaturedProducts(8);
+  if (!products.length) {
+    const all = await getAllProducts();
+    products = all.slice(0, 8);
+  }
+
+  if (!products.length) return null;
+
+  return (
+    <section className="container mx-auto px-6 py-16 md:py-20">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
+        <div>
+          <span
+            className="inline-block text-xs font-semibold uppercase tracking-widest mb-3"
+            style={{ color: "rgb(var(--bronze-rgb))" }}
+          >
+            Most Loved
+          </span>
+          <h2 className="text-3xl md:text-4xl font-display">Best Sellers</h2>
+        </div>
+        <Link
+          href="/earrings/best-sellers"
+          className="view-all-link group inline-flex items-center gap-2 text-sm font-medium"
+        >
+          View All
+          <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </Link>
+      </div>
+      <ProductGrid products={products} />
+    </section>
+  );
+}
+
 /* ---------------------------------------------------------------- */
 /* Page */
 /* ---------------------------------------------------------------- */
@@ -593,23 +684,28 @@ export default async function Home() {
       {/* Hero renders immediately (blocking LCP) */}
       <Hero hero={hero} />
 
+      {/* Shop by style — directory section below hero */}
+      <ShopByStyle />
+
+      {/* Shop by occasion + Explore our finishes */}
+      <OccasionsFinishes />
+
       <Suspense fallback={null}>
         <BannerCarouselSection placement="home_top" />
       </Suspense>
 
-      {/* Stream each section independently */}
-      {(sections as HomepageSection[]).map((section) => {
-        if (section.type === "featuredProducts") {
-          return (
-            <Suspense
-              key={section.id}
-              fallback={<SectionSkeleton title={section.title} />}
-            >
-              <FeaturedProductsSection section={section} />
-            </Suspense>
-          );
-        }
+      {/* New Arrivals — replaces the old "Premium Anti-Tarnish" featured section */}
+      <Suspense fallback={<SectionSkeleton title="New Arrivals" />}>
+        <NewArrivalsSection />
+      </Suspense>
 
+      {/* Best Sellers — replaces the old "Featured Products" section */}
+      <Suspense fallback={<SectionSkeleton title="Best Sellers" />}>
+        <BestSellersSection />
+      </Suspense>
+
+      {/* Stream remaining configured sections (featured-product sections handled above) */}
+      {(sections as HomepageSection[]).map((section) => {
         if (section.type === "collectionsRow") {
           return (
             <Suspense
@@ -636,6 +732,12 @@ export default async function Home() {
 
         return null;
       })}
+
+      {/* Why pay too much — the smart alternative */}
+      <AlternativeSection />
+
+      {/* Customer reviews / social proof */}
+      <ReviewsSection />
 
       <Suspense fallback={null}>
         <OffersSection />

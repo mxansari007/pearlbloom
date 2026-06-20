@@ -1,41 +1,23 @@
 // src/components/RelatedProducts.tsx
-import { Suspense } from "react";
 import { getRandomProducts } from "../libs/products.server";
 import ProductCard from "./ProductCard";
 
-/* --------------------------- Skeleton --------------------------- */
+/* --------------------------- Export --------------------------- */
 
-function RelatedProductsSkeleton() {
-  return (
-    <div className="-mx-5 sm:mx-0 bg-[var(--grid-divider)] p-px sm:bg-transparent sm:p-0">
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-px sm:gap-6">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-2xl bg-neutral-900/60 border border-white/5 p-4 animate-pulse"
-        >
-          <div className="aspect-[3/4] rounded-xl bg-white/10" />
-          <div className="mt-4 h-4 w-3/4 bg-white/10 rounded" />
-          <div className="mt-2 h-4 w-1/2 bg-white/10 rounded" />
-          <div className="mt-4 flex gap-3">
-            <div className="h-9 w-20 bg-white/10 rounded" />
-            <div className="ml-auto h-9 w-24 bg-white/10 rounded" />
-          </div>
-        </div>
-      ))}
-      </div>
-    </div>
-  );
-}
-
-/* --------------------------- Stream --------------------------- */
-
-async function RelatedProductsStream({
+/**
+ * "You May Also Like" — rendered directly in the product page's server tree
+ * (NO Suspense boundary). Related products sit below the fold and
+ * getRandomProducts is timeout-bounded, so folding this into the page shell
+ * keeps the whole route in a single, reliable render pass. Previously this was
+ * an out-of-order streamed Suspense boundary that could get stuck on its
+ * skeleton and never hydrate in some environments.
+ */
+export default async function RelatedProducts({
   currentSlug,
 }: {
   currentSlug: string;
 }) {
-  // Only fetches ~20 products max instead of ALL products
+  // Only fetches ~20 products max instead of ALL products.
   const suggestions = await getRandomProducts(currentSlug, 4);
 
   if (!suggestions.length) return null;
@@ -48,19 +30,5 @@ async function RelatedProductsStream({
         ))}
       </div>
     </div>
-  );
-}
-
-/* --------------------------- Export --------------------------- */
-
-export default function RelatedProducts({
-  currentSlug,
-}: {
-  currentSlug: string;
-}) {
-  return (
-    <Suspense fallback={<RelatedProductsSkeleton />}>
-      <RelatedProductsStream currentSlug={currentSlug} />
-    </Suspense>
   );
 }

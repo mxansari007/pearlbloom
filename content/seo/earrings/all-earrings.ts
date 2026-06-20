@@ -1,0 +1,95 @@
+import type { CollectionSeo } from "./types";
+
+export const ALL_EARRINGS_SEO: CollectionSeo = {
+  tier: 1,
+  metaTitle: "Earrings for Women Online | Pearl Bloom",
+  metaDescription:
+    "Shop earrings for women online at Pearl Bloom — studs, hoops, jhumkas and more in anti-tarnish, skin-safe gold-tone. Affordable everyday-to-bridal styles.",
+  primaryKeyword: "earrings for women",
+  secondaryKeywords: [
+    "artificial earrings",
+    "imitation earrings",
+    "fashion earrings",
+    "anti-tarnish earrings online",
+  ],
+  h1: "Artificial Earrings for Women",
+  lede: "Every style, finish and occasion in one place — affordable, anti-tarnish, skin-safe earrings made for everyday Indian wear.",
+  heroAlt: "Assortment of Pearl Bloom artificial gold-tone earrings — studs, hoops and jhumkas — on a warm cream background",
+  assignedBlog: "types-of-earrings-guide",
+  intro: [
+    "Welcome to the complete Pearl Bloom earrings collection — a curated home for affordable, everyday-to-occasion fashion jewellery made for real Indian wear. Every pair here is artificial (imitation) jewellery designed to look luxe without the fine-jewellery price tag: lightweight on the lobe, skin-safe and hypoallergenic, and finished with anti-tarnish coatings so your gold-tone shine stays bright wear after wear.",
+    [
+      "The catalogue spans thirteen distinct silhouettes. Reach for minimal ",
+      { text: "stud earrings", href: "/earrings/style/stud" },
+      " and everyday ",
+      { text: "hoop earrings", href: "/earrings/style/hoop" },
+      " when you want something fuss-free, or make a statement with traditional ",
+      { text: "jhumka earrings", href: "/earrings/style/jhumka" },
+      " and regal ",
+      { text: "chandbali earrings", href: "/earrings/style/chandbali" },
+      " for festive and bridal moments.",
+    ],
+    [
+      "Your finish matters just as much as the shape. Choose warm ",
+      { text: "gold-plated", href: "/earrings/finish/gold-plated" },
+      " shine, cool ",
+      { text: "silver-tone", href: "/earrings/finish/silver-tone" },
+      " brilliance, or antique ",
+      { text: "oxidised", href: "/earrings/finish/oxidised" },
+      " depth for ethnic and boho looks — each one built to resist tarnish and stay kind to sensitive ears.",
+    ],
+    [
+      "Shopping for a particular moment? Browse the ",
+      { text: "daily wear", href: "/earrings/occasion/daily-wear" },
+      ", ",
+      { text: "office wear", href: "/earrings/occasion/office-wear" },
+      ", ",
+      { text: "party wear", href: "/earrings/occasion/party-wear" },
+      " and ",
+      { text: "wedding wear", href: "/earrings/occasion/wedding-wear" },
+      " edits, or see what has just landed in ",
+      { text: "New Arrivals", href: "/earrings/new-arrivals" },
+      " and our most-loved ",
+      { text: "Best Sellers", href: "/earrings/best-sellers" },
+      ".",
+    ],
+    "Every design is priced as honest value for money — beautiful pieces you can wear every day without a second thought, and replace or restyle as trends move. New to fashion earrings, or not sure where to begin? Start with our complete guide to the different types of earrings, then filter by the look, finish or occasion that fits your day.",
+  ],
+  internalLinks: [
+    { label: "Stud Earrings", href: "/earrings/style/stud" },
+    { label: "Hoop Earrings", href: "/earrings/style/hoop" },
+    { label: "Jhumka Earrings", href: "/earrings/style/jhumka" },
+    { label: "Gold Plated", href: "/earrings/finish/gold-plated" },
+    { label: "Oxidised", href: "/earrings/finish/oxidised" },
+    { label: "Daily Wear", href: "/earrings/occasion/daily-wear" },
+    { label: "Party Wear", href: "/earrings/occasion/party-wear" },
+    { label: "New Arrivals", href: "/earrings/new-arrivals" },
+    { label: "Best Sellers", href: "/earrings/best-sellers" },
+  ],
+  faqs: [
+    {
+      q: "Are Pearl Bloom earrings made of real gold?",
+      a: "No. Pearl Bloom earrings are gold-tone and gold-plated fashion jewellery — artificial (imitation) pieces that give a luxe gold look at an affordable price. They are not solid gold and are not hallmarked.",
+    },
+    {
+      q: "Are these earrings anti-tarnish and skin-safe?",
+      a: "Yes. Most pairs use anti-tarnish coatings and skin-safe, hypoallergenic materials, so they stay bright longer and suit sensitive ears for daily wear.",
+    },
+    {
+      q: "Can I wear Pearl Bloom earrings in water or while showering?",
+      a: "Many designs are waterproof and resist sweat and splashes. We still recommend removing heavily embellished or stone-set pairs before swimming or long showers to extend their life.",
+    },
+    {
+      q: "How much do the earrings cost?",
+      a: "Pearl Bloom is positioned as affordable, everyday-to-occasion fashion jewellery, with prices shown in ₹ on every product. You get a premium look at value-for-money prices.",
+    },
+    {
+      q: "How do I choose the right pair of earrings?",
+      a: "Browse by style (the shape), by finish (the colour and material) or by occasion (when you will wear them). If you are unsure, our Types of Earrings guide explains each option in plain language.",
+    },
+    {
+      q: "Do you sell earring sets or combos?",
+      a: "Yes. Visit the Earrings Set collection for curated combo and stacking packs that make it easy to build a coordinated, multi-pierced look for less.",
+    },
+  ],
+};

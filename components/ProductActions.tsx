@@ -1,22 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import type { Product, Variant } from '../types/products'
-import { useWishlistStore } from '@/store/useWishlistStore'
-import { getProductPriceInfo, getStartingVariantPriceInfo, getVariantPriceInfo } from '../libs/pricing'
+import type { Product } from '../types/products'
 import { track } from '@/utils/analytics'
 
-export default function ProductActions({
-  product,
-  selectedVariant,
-}: {
-  product: Product
-  selectedVariant?: Variant
-}) {
-  const toggleWishlistStore = useWishlistStore((s) => s.toggle)
-  const isWishlisted = useWishlistStore((s) =>
-    s.items.some((i) => i.id === product.id)
-  )
+export default function ProductActions({ product }: { product: Product }) {
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
 
@@ -35,33 +23,6 @@ export default function ProductActions({
       })
       showNotification('Link copied to clipboard')
     }
-  }
-
-  function toggleWishlist() {
-    const basePrice =
-      selectedVariant
-        ? getVariantPriceInfo(selectedVariant, product.inventory?.discountPercent).final
-        : (getStartingVariantPriceInfo(product)?.final ?? getProductPriceInfo(product).final) ?? 0
-
-    toggleWishlistStore({
-      id: product.id,
-      name: product.name,
-      price: basePrice,
-      image:
-        selectedVariant?.images?.[0] ??
-        product.thumbnailUrl ??
-        product.images?.[0],
-      slug: product.slug,
-    })
-
-    track(isWishlisted ? 'wishlist_item_removed' : 'wishlist_item_added', {
-      product_id: product.id,
-      slug: product.slug,
-      price: basePrice,
-      source: 'product_page',
-    })
-
-    showNotification(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist')
   }
 
   function shareProduct() {
@@ -83,18 +44,6 @@ export default function ProductActions({
   return (
     <>
       <div className="product-actions">
-        <button
-          type="button"
-          onClick={toggleWishlist}
-          aria-pressed={isWishlisted}
-          className={`product-actions__btn ${isWishlisted ? 'product-actions__btn--active' : ''}`}
-        >
-          <svg className="w-5 h-5" fill={isWishlisted ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-          <span>{isWishlisted ? 'Saved' : 'Save'}</span>
-        </button>
-
         <button
           type="button"
           onClick={shareProduct}

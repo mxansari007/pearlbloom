@@ -136,6 +136,13 @@ export default function OrdersPage() {
           </Link>
         </header>
 
+        <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginBottom: "1.25rem" }}>
+          Need help with an order? Email{" "}
+          <a href="mailto:orders@pearlbloom.in" style={{ color: "rgb(var(--gold-rgb))", textDecoration: "underline" }}>
+            orders@pearlbloom.in
+          </a>
+        </p>
+
         {/* EMPTY STATE */}
         {orders.length === 0 ? (
           <div className="orders-page__empty">

@@ -52,7 +52,7 @@ export default function WishlistClient({ allProducts }: { allProducts: Product[]
           <div className="h-10 w-48 bg-[var(--card-bg-soft)] rounded animate-pulse mb-12"></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
              {[1,2,3,4].map(i => (
-                <div key={i} className="aspect-[4/5] bg-[var(--card-bg-soft)] rounded-xl animate-pulse"></div>
+                <div key={i} className="aspect-square bg-[var(--card-bg-soft)] rounded-xl animate-pulse"></div>
              ))}
           </div>
         </div>
@@ -80,7 +80,7 @@ export default function WishlistClient({ allProducts }: { allProducts: Product[]
             <p className="text-muted mt-2">Saved items for later</p>
           </div>
           <Link
-            href="/products"
+            href="/earrings"
             className="text-sm transition flex items-center gap-2 hover:opacity-80"
             style={{ color: "rgb(212,175,55)" }}
           >
@@ -99,7 +99,7 @@ export default function WishlistClient({ allProducts }: { allProducts: Product[]
               Start adding your favorite pieces to create your personal collection of exquisite jewelry.
             </p>
             <Link
-              href="/products"
+              href="/earrings"
               className="btn-cta inline-flex items-center gap-2"
             >
               Explore Collection
@@ -134,13 +134,13 @@ export default function WishlistClient({ allProducts }: { allProducts: Product[]
                 className="group relative flex flex-col rounded-xl overflow-hidden card transition-all duration-300 hover:-translate-y-1"
               >
                 {/* Image */}
-                <Link href={item.slug ? `/product/${item.slug}` : '#'} className="relative aspect-[4/5] overflow-hidden bg-[var(--panel)] block">
+                <Link href={item.slug ? `/product/${item.slug}` : '#'} className="relative aspect-square overflow-hidden bg-[var(--panel)] block">
                    <Image
                       src={item.image || "/images/placeholder.svg"}
                       alt={item.name}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="object-contain transition-transform duration-700 group-hover:scale-110"
                     />
                     
                     {/* Overlay Gradient */}

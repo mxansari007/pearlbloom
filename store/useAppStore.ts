@@ -62,6 +62,12 @@ type SiteSettingsRuntimeConfig = {
   testMode?: boolean;
   shippingRate?: number | string;
   freeShippingAbove?: number | string;
+  giftSleevePrice?: number | string;
+  codEnabled?: boolean;
+  returnDays?: number | string;
+  exchangeDays?: number | string;
+  ugcImages?: unknown;
+  instagramUrl?: string;
 };
 
 interface AppConfigState {
@@ -69,6 +75,13 @@ interface AppConfigState {
   testMode: boolean;
   shippingRate: number;
   freeShippingAbove: number | null;
+  // PDP trust + gifting + UGC config — all optional, gated on real values.
+  giftSleevePrice: number | null;
+  codEnabled: boolean;
+  returnDays: number | null;
+  exchangeDays: number | null;
+  ugcImages: string[];
+  instagramUrl: string | null;
   lastFetchedAt: number | null;
   loadConfig: () => Promise<void>;
 }
@@ -80,6 +93,12 @@ export const useAppConfigStore = create<AppConfigState>()(
       testMode: false,
       shippingRate: 0,
       freeShippingAbove: null,
+      giftSleevePrice: null,
+      codEnabled: false,
+      returnDays: null,
+      exchangeDays: null,
+      ugcImages: [],
+      instagramUrl: null,
       lastFetchedAt: null,
       loadConfig: async () => {
         try {
@@ -94,6 +113,10 @@ export const useAppConfigStore = create<AppConfigState>()(
             }
             return null;
           };
+          const asStringArray = (value: unknown): string[] =>
+            Array.isArray(value)
+              ? value.filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+              : [];
           const testMode = typeof data?.testMode === "boolean" ? data.testMode : false;
           const shippingRate =
             asNumberOrNull(data?.shippingRate) ??
@@ -113,6 +136,12 @@ export const useAppConfigStore = create<AppConfigState>()(
             testMode,
             shippingRate,
             freeShippingAbove,
+            giftSleevePrice: asNumberOrNull(data?.giftSleevePrice),
+            codEnabled: data?.codEnabled === true,
+            returnDays: asNumberOrNull(data?.returnDays),
+            exchangeDays: asNumberOrNull(data?.exchangeDays),
+            ugcImages: asStringArray(data?.ugcImages),
+            instagramUrl: typeof data?.instagramUrl === "string" ? data.instagramUrl : null,
             lastFetchedAt: Date.now(),
           });
         } catch {
@@ -121,6 +150,12 @@ export const useAppConfigStore = create<AppConfigState>()(
             testMode: false,
             shippingRate: 0,
             freeShippingAbove: null,
+            giftSleevePrice: null,
+            codEnabled: false,
+            returnDays: null,
+            exchangeDays: null,
+            ugcImages: [],
+            instagramUrl: null,
             lastFetchedAt: Date.now(),
           });
         }
@@ -132,6 +167,12 @@ export const useAppConfigStore = create<AppConfigState>()(
         testMode: state.testMode,
         shippingRate: state.shippingRate,
         freeShippingAbove: state.freeShippingAbove,
+        giftSleevePrice: state.giftSleevePrice,
+        codEnabled: state.codEnabled,
+        returnDays: state.returnDays,
+        exchangeDays: state.exchangeDays,
+        ugcImages: state.ugcImages,
+        instagramUrl: state.instagramUrl,
         lastFetchedAt: state.lastFetchedAt,
       }),
     }

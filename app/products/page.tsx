@@ -2,19 +2,31 @@
 export const revalidate = 60;
 
 import type { Metadata } from 'next'
-import { getAllProducts } from '../../libs/products.server'
+import { getAllProducts, attachRatings } from '../../libs/products.server'
 import CollectionHero from '../../components/CollectionHero'
 import CollectionBrowser from '../../components/CollectionBrowser'
 import type { Product } from '../../types/products'
 
 export const metadata: Metadata = {
-  title: 'Products- PearlBloom',
-  description: 'Explore Aurum’s curated collections: rings, necklaces, earrings and more. Handcrafted, ethically sourced, heirloom quality.'
+  title: 'Shop All Earrings | Pearl Bloom',
+  description:
+    'Browse the full Pearl Bloom collection of affordable, anti-tarnish, skin-safe artificial earrings for women — studs, hoops, jhumkas, chandbalis and more. Filter by style, finish, price and sort.',
+  keywords: ['earrings for women', 'artificial earrings', 'anti-tarnish earrings', 'gold-plated earrings', 'Pearl Bloom'],
+  alternates: { canonical: '/products' },
+  openGraph: {
+    title: 'Shop All Earrings | Pearl Bloom',
+    description: 'Affordable, anti-tarnish, skin-safe artificial earrings for women — studs, hoops, jhumkas and more.',
+    url: '/products',
+    siteName: 'Pearl Bloom',
+    type: 'website',
+    images: [{ url: '/earring.png', width: 665, height: 597, alt: 'Pearl Bloom artificial earrings' }],
+  },
+  twitter: { card: 'summary_large_image', title: 'Shop All Earrings | Pearl Bloom', description: 'Affordable anti-tarnish earrings for women.', images: ['/earring.png'] },
 }
 
 export default async function Products() {
   // server-side fetch of all catalog products (fast local JSON)
-  const allProducts: Product[] = await getAllProducts()
+  const allProducts: Product[] = await attachRatings(await getAllProducts())
   allProducts.sort(
     (a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

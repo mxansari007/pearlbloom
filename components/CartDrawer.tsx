@@ -7,15 +7,22 @@ import { ShoppingBag, Trash2, Plus, Minus, X } from "lucide-react";
 import { track } from "@/utils/analytics";
 import { useAppConfigStore } from "@/store/useAppStore";
 
+/* Brand palette (cream + maroon + gold) — laid out in the clean, floating
+   "FinSet" sidebar style: rounded panel, soft shadow, white item cards,
+   pill controls, airy spacing. */
+const WINE = "#5e1830";
+const WINE_TEXT = "#3d0f1a";
+const WINE_LINE = "rgba(94,24,48,0.12)";
+const WINE_MUTED = "rgba(61,15,26,0.62)";
+const BLUSH = "#f6e6e1";
+
 export default function CartDrawer() {
   const { items, isOpen, close, removeItem, updateQty, clear } = useCartStore();
   const configLoaded = useAppConfigStore((s) => s.configLoaded);
   const freeShippingAbove = useAppConfigStore((s) => s.freeShippingAbove);
 
-  const subtotal = items.reduce(
-    (sum, i) => sum + i.price * i.quantity,
-    0
-  );
+  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
   return (
     <div
@@ -26,87 +33,97 @@ export default function CartDrawer() {
       {/* Backdrop */}
       <div
         onClick={close}
-        className={`absolute inset-0 transition-opacity ${
+        className={`absolute inset-0 transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "opacity-0"
         }`}
-        style={{
-          background: "var(--overlay-bg)",
-        }}
+        style={{ background: "rgba(44,10,20,0.45)", backdropFilter: "blur(2px)" }}
       />
 
-      {/* Drawer */}
+      {/* Floating drawer (slides fully off, gap included) */}
       <div
-        className={`absolute right-0 top-0 h-full w-full max-w-md
-        transform transition-transform ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-        style={{
-          background: "var(--panel-bg)",
-          borderLeft: "1px solid var(--border-subtle)",
-          color: "var(--fg)",
-        }}
+        className="absolute right-0 top-0 h-full w-full max-w-md p-3
+                   transition-transform duration-300 ease-out"
+        style={{ transform: isOpen ? "translateX(0)" : "translateX(110%)" }}
       >
-        {/* 🔴 Glow Background */}
-        <div className="glow-bg">
-          <span className="glow-orb" />
-          <span className="glow-orb" />
-          <span className="glow-orb" />
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col h-full">
-
+        <div
+          className="flex flex-col h-full overflow-hidden rounded-[28px]"
+          style={{
+            background: "linear-gradient(180deg, #fdf8f6 0%, #f6e6e1 100%)",
+            border: `1px solid ${WINE_LINE}`,
+            boxShadow: "0 30px 80px -30px rgba(44,10,20,0.55)",
+            color: WINE_TEXT,
+          }}
+        >
           {/* Header */}
-          <div
-            className="flex items-center justify-between px-6 py-4"
-            style={{
-              borderBottom: "1px solid var(--border-subtle)",
-            }}
-          >
+          <div className="flex items-center justify-between px-6 pt-6 pb-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-medium">Your Cart</h2>
+              <h2 className="text-2xl font-display" style={{ color: WINE }}>
+                Your Cart
+              </h2>
               {items.length > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--input-bg)] border border-[var(--input-border)] text-muted">
-                  {items.reduce((s, i) => s + i.quantity, 0)} items
+                <span
+                  className="text-[11px] px-2.5 py-1 rounded-full font-semibold"
+                  style={{
+                    background: "#ffffff",
+                    color: WINE,
+                    border: `1px solid ${WINE_LINE}`,
+                  }}
+                >
+                  {itemCount} {itemCount === 1 ? "item" : "items"}
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2.5">
               {items.length > 0 && (
                 <button
                   onClick={clear}
-                  className="text-xs text-red-400 hover:text-red-300 transition flex items-center gap-1"
+                  className="text-xs font-medium flex items-center gap-1 transition hover:opacity-70"
+                  style={{ color: "#b1465a" }}
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={13} />
                   Clear
                 </button>
               )}
               <button
                 onClick={close}
                 aria-label="Close cart"
-                className="transition hover:rotate-90"
-                style={{ color: "var(--muted)" }}
+                className="grid place-items-center w-9 h-9 rounded-full transition hover:rotate-90"
+                style={{
+                  background: "#ffffff",
+                  color: WINE,
+                  border: `1px solid ${WINE_LINE}`,
+                }}
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
           </div>
 
           {/* Items */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <div className="flex-1 overflow-y-auto px-6 py-2 space-y-3.5">
             {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                <div className="w-16 h-16 rounded-full bg-[var(--input-bg)] flex items-center justify-center mb-4 text-muted">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                  style={{ background: BLUSH, color: WINE }}
+                >
                   <ShoppingBag size={24} strokeWidth={1.5} />
                 </div>
-                <h3 className="text-lg font-medium mb-2">Your cart is empty</h3>
-                <p className="text-sm text-muted mb-6 max-w-[200px]">
+                <h3 className="text-lg font-medium mb-2" style={{ color: WINE }}>
+                  Your cart is empty
+                </h3>
+                <p
+                  className="text-sm mb-6 max-w-[220px]"
+                  style={{ color: WINE_MUTED }}
+                >
                   Looks like you haven&apos;t added any items to your cart yet.
                 </p>
                 <Link
-                  href="/products"
+                  href="/earrings"
                   onClick={close}
-                  className="btn-cta text-sm px-6 py-2.5"
+                  className="rounded-full px-7 py-3 text-sm font-semibold text-black
+                             bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
+                             hover:brightness-110 transition"
                 >
                   Start Shopping
                 </Link>
@@ -115,13 +132,17 @@ export default function CartDrawer() {
               items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-4 rounded-xl p-3"
+                  className="flex gap-4 rounded-2xl p-3"
                   style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid var(--border-subtle)",
+                    background: "#ffffff",
+                    border: `1px solid ${WINE_LINE}`,
+                    boxShadow: "0 10px 30px -22px rgba(44,10,20,0.5)",
                   }}
                 >
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-[var(--input-bg)]">
+                  <div
+                    className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0"
+                    style={{ background: BLUSH }}
+                  >
                     <Image
                       src={item.image || ""}
                       alt={item.name}
@@ -131,22 +152,28 @@ export default function CartDrawer() {
                     />
                   </div>
 
-                  <div className="flex-1 flex flex-col justify-between">
+                  <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
                       <div className="flex justify-between items-start gap-2">
-                        <p className="text-sm font-medium line-clamp-2">{item.name}</p>
+                        <p
+                          className="text-sm font-medium line-clamp-2"
+                          style={{ color: WINE_TEXT }}
+                        >
+                          {item.name}
+                        </p>
                         <button
                           onClick={() => removeItem(item.id)}
                           aria-label={`Remove ${item.name}`}
-                          className="text-muted hover:text-red-400 transition"
+                          className="shrink-0 transition hover:opacity-60"
+                          style={{ color: WINE_MUTED }}
                         >
-                          <X size={14} />
+                          <X size={15} />
                         </button>
                       </div>
                       {item.variantLabel && (
                         <p
-                          className="text-xs mt-1"
-                          style={{ color: "rgb(212,175,55)" }}
+                          className="text-xs mt-1 font-medium"
+                          style={{ color: "#9a7b1f" }}
                         >
                           {item.variantLabel}
                         </p>
@@ -154,25 +181,44 @@ export default function CartDrawer() {
                     </div>
 
                     <div className="flex items-center justify-between mt-3">
-                      <p className="text-sm font-medium">
+                      <p
+                        className="text-sm font-semibold"
+                        style={{ color: WINE }}
+                      >
                         ₹{item.price.toLocaleString("en-IN")}
                       </p>
-                      
-                      {/* Quantity Controls */}
-                      <div className="flex items-center gap-3 bg-[var(--input-bg)] rounded-lg px-2 py-1 border border-[var(--input-border)]">
+
+                      {/* Quantity controls — pill */}
+                      <div
+                        className="flex items-center gap-3 rounded-full px-2.5 py-1"
+                        style={{
+                          background: BLUSH,
+                          border: `1px solid ${WINE_LINE}`,
+                        }}
+                      >
                         <button
                           onClick={() => {
-                            if (item.quantity > 1) updateQty(item.id, item.quantity - 1);
+                            if (item.quantity > 1)
+                              updateQty(item.id, item.quantity - 1);
                             else removeItem(item.id);
                           }}
-                          className="text-muted hover:text-foreground transition p-0.5"
+                          aria-label="Decrease quantity"
+                          className="transition hover:opacity-60 p-0.5"
+                          style={{ color: WINE }}
                         >
                           <Minus size={12} />
                         </button>
-                        <span className="text-xs w-4 text-center font-medium">{item.quantity}</span>
+                        <span
+                          className="text-xs w-4 text-center font-semibold"
+                          style={{ color: WINE_TEXT }}
+                        >
+                          {item.quantity}
+                        </span>
                         <button
                           onClick={() => updateQty(item.id, item.quantity + 1)}
-                          className="text-muted hover:text-foreground transition p-0.5"
+                          aria-label="Increase quantity"
+                          className="transition hover:opacity-60 p-0.5"
+                          style={{ color: WINE }}
                         >
                           <Plus size={12} />
                         </button>
@@ -185,44 +231,57 @@ export default function CartDrawer() {
           </div>
 
           {/* Footer */}
-          <div
-            className="px-6 py-4"
-            style={{
-              borderTop: "1px solid var(--border-subtle)",
-            }}
-          >
-            <div className="flex justify-between mb-4">
-              <span>Total</span>
-              <span>₹{subtotal.toLocaleString("en-IN")}</span>
-            </div>
-
-            {configLoaded && typeof freeShippingAbove === "number" && freeShippingAbove > 0 && (
-              <div className="text-xs mb-4" style={{ color: "var(--muted)" }}>
-                {subtotal >= freeShippingAbove
-                  ? "Free shipping unlocked on this order."
-                  : `Add ₹${Math.max(0, freeShippingAbove - subtotal).toLocaleString("en-IN")} more for free shipping.`}
-              </div>
-            )}
-
-            <Link
-              href="/cart"
-              onClick={() => {
-                track("view_cart_clicked", {
-                  source: "cart_drawer",
-                  cart_item_count: items.reduce((sum, i) => sum + i.quantity, 0),
-                  cart_unique_items: items.length,
-                  cart_value: subtotal,
-                });
-                close();
-              }}
-              className="block text-center rounded-xl
-                         bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
-                         py-3 text-black font-medium
-                         hover:brightness-110 transition"
+          {items.length > 0 && (
+            <div
+              className="px-6 pt-4 pb-6 mt-2"
+              style={{ borderTop: `1px solid ${WINE_LINE}` }}
             >
-              View Cart
-            </Link>
-          </div>
+              <div className="flex justify-between items-baseline mb-3">
+                <span className="text-sm" style={{ color: WINE_MUTED }}>
+                  Total
+                </span>
+                <span
+                  className="text-xl font-semibold"
+                  style={{ color: WINE }}
+                >
+                  ₹{subtotal.toLocaleString("en-IN")}
+                </span>
+              </div>
+
+              {configLoaded &&
+                typeof freeShippingAbove === "number" &&
+                freeShippingAbove > 0 && (
+                  <div className="text-xs mb-4" style={{ color: WINE_MUTED }}>
+                    {subtotal >= freeShippingAbove
+                      ? "🎉 Free shipping unlocked on this order."
+                      : `Add ₹${Math.max(
+                          0,
+                          freeShippingAbove - subtotal
+                        ).toLocaleString("en-IN")} more for free shipping.`}
+                  </div>
+                )}
+
+              <Link
+                href="/cart"
+                onClick={() => {
+                  track("view_cart_clicked", {
+                    source: "cart_drawer",
+                    cart_item_count: itemCount,
+                    cart_unique_items: items.length,
+                    cart_value: subtotal,
+                  });
+                  close();
+                }}
+                className="block text-center rounded-full
+                           bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
+                           py-3.5 text-black font-semibold
+                           hover:brightness-110 transition"
+                style={{ boxShadow: "0 14px 30px -14px rgba(180,140,40,0.7)" }}
+              >
+                View Cart
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

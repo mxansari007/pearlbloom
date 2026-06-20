@@ -1,6 +1,8 @@
 // src/app/contact/page.tsx
 import ContactForm from '../../components/ContactForm' // client component
 import { dbAdmin } from '@/libs/firebase-admin'
+import { Instagram, Facebook, Youtube, Linkedin } from 'lucide-react'
+import { FaWhatsapp, FaPinterestP } from 'react-icons/fa'
 
 export const metadata = {
   title: 'Contact — Pearl Bloom',
@@ -155,7 +157,7 @@ export default async function ContactPage() {
             </div>
 
             <div className="card p-6">
-              <ContactForm contactEmail={resolvedBusiness.email ?? ""} />
+              <ContactForm contactEmail="info@pearlbloom.in" />
             </div>
 
             {/* FAQ */}
@@ -187,7 +189,9 @@ export default async function ContactPage() {
                 <details className="card p-4">
                   <summary className="font-medium cursor-pointer">Wholesale & retail partnerships</summary>
                   <div className="mt-2 text-sm text-muted">
-                    We welcome trade partnerships. Please include &quot;Wholesale&quot; in the subject and provide company credentials.
+                    We welcome trade partnerships. Email{" "}
+                    <a href="mailto:sales@pearlbloom.in" className="underline underline-offset-2">sales@pearlbloom.in</a>{" "}
+                    with &quot;Wholesale&quot; in the subject and your company credentials.
                   </div>
                 </details>
               </div>
@@ -235,18 +239,29 @@ export default async function ContactPage() {
             <div className="card p-4">
               <h4 className="font-medium">Follow us</h4>
               <div className="flex gap-3 mt-3">
-                {resolvedBusiness.socials?.instagram ? (
-                  <a href={resolvedBusiness.socials.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="rounded-full w-10 h-10 flex items-center justify-center bg-white/6 hover:bg-white/8 transition">IG</a>
-                ) : null}
-                {resolvedBusiness.socials?.facebook ? (
-                  <a href={resolvedBusiness.socials.facebook} target="_blank" rel="noreferrer" aria-label="Facebook" className="rounded-full w-10 h-10 flex items-center justify-center bg-white/6 hover:bg-white/8 transition">FB</a>
-                ) : null}
-                {resolvedBusiness.socials?.pinterest ? (
-                  <a href={resolvedBusiness.socials.pinterest} target="_blank" rel="noreferrer" aria-label="Pinterest" className="rounded-full w-10 h-10 flex items-center justify-center bg-white/6 hover:bg-white/8 transition">PT</a>
-                ) : null}
-                {resolvedBusiness.socials?.whatsapp ? (
-                  <a href={resolvedBusiness.socials.whatsapp} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="rounded-full w-10 h-10 flex items-center justify-center bg-white/6 hover:bg-white/8 transition">WA</a>
-                ) : null}
+                {([
+                  { key: "instagram", label: "Instagram", icon: <Instagram size={18} /> },
+                  { key: "facebook", label: "Facebook", icon: <Facebook size={18} /> },
+                  { key: "pinterest", label: "Pinterest", icon: <FaPinterestP size={18} /> },
+                  { key: "youtube", label: "YouTube", icon: <Youtube size={18} /> },
+                  { key: "linkedin", label: "LinkedIn", icon: <Linkedin size={18} /> },
+                  { key: "whatsapp", label: "WhatsApp", icon: <FaWhatsapp size={18} /> },
+                ] as const).map((s) => {
+                  const url = (resolvedBusiness.socials as Record<string, string> | undefined)?.[s.key]
+                  if (!url) return null
+                  return (
+                    <a
+                      key={s.key}
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={s.label}
+                      className="footer-social w-10 h-10 rounded-xl flex items-center justify-center"
+                    >
+                      {s.icon}
+                    </a>
+                  )
+                })}
               </div>
             </div>
 

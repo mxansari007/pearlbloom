@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { useProductVariant } from '../hooks/useProductVariant'
 import { ChevronLeft, ChevronRight, ZoomIn, X } from 'lucide-react'
@@ -8,9 +9,11 @@ import { ChevronLeft, ChevronRight, ZoomIn, X } from 'lucide-react'
 type Props = {
   images?: string[]
   alt?: string
+  imageAlt?: Record<string, string>
 }
 
-export default function ProductGallery({ images = [], alt = '' }: Props) {
+export default function ProductGallery({ images = [], alt = '', imageAlt = {} }: Props) {
+  const altFor = (src: string, fallback: string) => imageAlt[src]?.trim() || alt || fallback
   const { selectedVariant } = useProductVariant()
   const variantSelected = !!selectedVariant
   const currentImages = variantSelected
@@ -19,6 +22,9 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
   const [index, setIndex] = useState(0)
   const [open, setOpen] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => setMounted(true), [])
   
   // Touch handling
   const touchStartX = useRef<number | null>(null)
@@ -136,23 +142,30 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
           aria-label="Open image in lightbox"
           className="gallery__main-btn"
         >
-          <div 
-            className="gallery__main-image"
-            style={{
-              transform: isDragging ? `translateX(${dragOffset}px)` : 'translateX(0)',
-              transition: isDragging ? 'none' : 'transform 0.3s ease-out',
-            }}
-          >
-            <Image
-              key={currentImages[safeIndex]}
-              src={currentImages[safeIndex]}
-              alt={alt || `Product image ${safeIndex + 1}`}
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-              draggable={false}
-            />
+          <div className="gallery__main-image">
+            <div
+              className="gallery__track"
+              style={{
+                transform: `translate3d(calc(${-safeIndex * 100}% + ${isDragging ? dragOffset : 0}px), 0, 0)`,
+                transition: isDragging
+                  ? 'none'
+                  : 'transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1)',
+              }}
+            >
+              {currentImages.map((src, i) => (
+                <div className="gallery__slide" key={`${src}-${i}`}>
+                  <Image
+                    src={src}
+                    alt={altFor(src, `Product image ${i + 1}`)}
+                    fill
+                    priority={i === 0}
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-contain"
+                    draggable={false}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </button>
 
@@ -211,7 +224,7 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
         <div className="gallery__thumbs">
           {currentImages.map((src, i) => (
             <button
-              key={src}
+              key={`${src}-${i}`}
               onClick={() => setIndex(i)}
               aria-label={`View image ${i + 1}`}
               aria-pressed={i === safeIndex}
@@ -219,7 +232,7 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
             >
               <Image
                 src={src}
-                alt={alt || `Thumbnail ${i + 1}`}
+                alt={altFor(src, `Thumbnail ${i + 1}`)}
                 fill
                 sizes="80px"
                 className="object-cover"
@@ -229,8 +242,9 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
         </div>
       )}
 
-      {/* Lightbox */}
-      {open && (
+      {/* Lightbox — portaled to <body> so the sticky gallery's stacking
+          context can't trap it beneath the page's description card */}
+      {open && mounted && createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -259,7 +273,7 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
               <Image
                 key={currentImages[safeIndex]}
                 src={currentImages[safeIndex]}
-                alt={alt || `Product image ${safeIndex + 1}`}
+                alt={altFor(currentImages[safeIndex], `Product image ${safeIndex + 1}`)}
                 fill
                 sizes="100vw"
                 className={`object-contain transition-transform duration-300 ${isZoomed ? 'scale-150 cursor-zoom-out' : 'cursor-zoom-in'}`}
@@ -306,13 +320,13 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
               <div className="lightbox__thumbs">
                 {currentImages.map((src, i) => (
                   <button
-                    key={src}
+                    key={`${src}-${i}`}
                     onClick={() => setIndex(i)}
                     className={`lightbox__thumb ${i === safeIndex ? 'lightbox__thumb--active' : ''}`}
                   >
                     <Image
                       src={src}
-                      alt={`Thumbnail ${i + 1}`}
+                      alt={altFor(src, `Thumbnail ${i + 1}`)}
                       fill
                       sizes="60px"
                       className="object-cover"
@@ -322,7 +336,8 @@ export default function ProductGallery({ images = [], alt = '' }: Props) {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

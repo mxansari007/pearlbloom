@@ -30,7 +30,67 @@ export function getStartingPrice(variants: Variant[]): number | null {
 }
 
 export function isOutOfStock(variant: Variant): boolean {
-  return variant.stock.track && variant.stock.quantity <= 0;
+  // Admin saves variant stock as a plain number; older/web shape is { track, quantity }.
+  const s = variant.stock as unknown;
+  if (typeof s === "number") return s <= 0;
+  if (s && typeof s === "object") {
+    const o = s as { track?: boolean; quantity?: number };
+    return !!o.track && (o.quantity ?? 0) <= 0;
+  }
+  return false;
+}
+
+// Product-level stock: out only when a tracked simple product hits 0, or when
+// every variant is out of stock.
+export function isProductOutOfStock(product: Product): boolean {
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  if (variants.length > 0) return variants.every((v) => isOutOfStock(v));
+
+  const inv = product.inventory as { trackStock?: boolean; stock?: number } | undefined;
+  const track = inv?.trackStock ?? product.inventoryPolicy?.trackStock ?? false;
+  if (!track) return false;
+  return (typeof inv?.stock === "number" ? inv.stock : 0) <= 0;
+}
+
+/**
+ * Real stock level for a variant. Admin saves `stock` as a plain number
+ * (treated as a tracked quantity); the older/web shape is { track, quantity }.
+ * `quantity` is null when stock is genuinely not tracked.
+ */
+export type StockLevel = {
+  tracked: boolean;
+  quantity: number | null;
+  lowStockThreshold: number | null;
+};
+
+export function getVariantStockLevel(variant: Variant): StockLevel {
+  const s = variant.stock as unknown;
+  if (typeof s === "number") {
+    return { tracked: true, quantity: s, lowStockThreshold: null };
+  }
+  if (s && typeof s === "object") {
+    const o = s as { track?: boolean; quantity?: number; lowStockThreshold?: number };
+    return {
+      tracked: !!o.track,
+      quantity: typeof o.quantity === "number" ? o.quantity : null,
+      lowStockThreshold:
+        typeof o.lowStockThreshold === "number" ? o.lowStockThreshold : null,
+    };
+  }
+  return { tracked: false, quantity: null, lowStockThreshold: null };
+}
+
+export function getProductStockLevel(product: Product): StockLevel {
+  const inv = product.inventory as
+    | { trackStock?: boolean; stock?: number; lowStockThreshold?: number }
+    | undefined;
+  const tracked = inv?.trackStock ?? product.inventoryPolicy?.trackStock ?? false;
+  return {
+    tracked,
+    quantity: typeof inv?.stock === "number" ? inv.stock : null,
+    lowStockThreshold:
+      typeof inv?.lowStockThreshold === "number" ? inv.lowStockThreshold : null,
+  };
 }
 
 export type PriceInfo = {
