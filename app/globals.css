@@ -4309,6 +4309,8 @@ a:focus {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
+  text-align: center;
   gap: 0.5rem;
   padding: 1.25rem;
   background: rgba(255, 255, 255, 0.02);
@@ -4316,6 +4318,10 @@ a:focus {
   border-radius: 12px;
   font-size: 0.9rem;
   color: var(--muted);
+}
+/* Kill the global <p> bottom margin so the text + link sit on one centered line. */
+.order-page__help p {
+  margin: 0;
 }
 
 .order-page__help-link {

@@ -90,11 +90,11 @@ export default function ProductAssuranceCards({
           <div className="mt-1.5 flex items-center" style={{ gap: "0.5rem" }}>
             <span
               className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
-              style={{ background: "rgba(94,24,48,0.08)", color: "#5e1830" }}
+              style={{ background: "rgba(94,24,48,0.08)", color: "#5e1830", transform: "translateY(-6px)" }}
             >
               {c.icon}
             </span>
-            <p className="font-semibold leading-snug" style={{ color: "#5e1830", fontSize: "0.77rem" }}>
+            <p className="font-semibold leading-snug" style={{ color: "#5e1830", fontSize: "0.77rem", transform: "translateY(1px)" }}>
               {c.title}
             </p>
           </div>

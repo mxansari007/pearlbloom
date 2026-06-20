@@ -447,7 +447,7 @@ export default function ChatWidget() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && send()}
                   placeholder="Type your message…"
-                  className="flex-1 px-4 py-2.5 rounded-full text-sm focus:outline-none transition-all"
+                  className="flex-1 min-w-0 px-4 py-2.5 rounded-full text-sm focus:outline-none transition-all"
                   style={{
                     background: "#ffffff",
                     border: "1px solid rgba(94,24,48,0.14)",
@@ -457,7 +457,7 @@ export default function ChatWidget() {
                 <button
                   onClick={send}
                   aria-label="Send message"
-                  className="px-5 py-2.5 rounded-full text-sm font-semibold text-black
+                  className="shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold text-black
                              bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
                              hover:brightness-110 transition"
                 >

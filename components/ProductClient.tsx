@@ -776,13 +776,13 @@ export default function ProductClient({
               </span>
               <p
                 className="font-semibold leading-tight"
-                style={{ color: "#5e1830", fontSize: "0.8rem" }}
+                style={{ color: "#5e1830", fontSize: "0.8rem", transform: "translateY(5px)" }}
               >
                 {f.title}
               </p>
             </div>
             {f.subtitle?.trim() && (
-              <p className="mt-2 leading-snug" style={{ color: "rgba(61,15,26,0.64)", fontSize: "0.68rem" }}>
+              <p className="mt-2 leading-snug" style={{ color: "rgba(61,15,26,0.64)", fontSize: "0.68rem", transform: "translateY(3px)" }}>
                 {f.subtitle}
               </p>
             )}

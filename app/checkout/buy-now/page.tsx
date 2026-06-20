@@ -587,24 +587,24 @@ export default function BuyNowCheckoutPage() {
             </button>
 
             <div
-              className="mt-4 rounded-xl p-4 text-sm"
+              className="mt-4 rounded-xl p-5 text-sm"
               style={{
                 background: "rgba(255,255,255,0.04)",
                 border: "1px solid var(--border-subtle)",
                 color: "var(--muted)",
               }}
             >
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <span style={{ color: "var(--fg)" }}>Secure checkout</span>
-                <span>Payments powered by Razorpay</span>
+              <div className="flex items-center justify-between gap-x-3 gap-y-1 flex-wrap">
+                <span className="font-medium" style={{ color: "var(--fg)" }}>Secure checkout</span>
+                <span className="text-xs">Payments powered by Razorpay</span>
               </div>
-              <div className="text-xs mt-2">
-                UPI • Cards • Netbanking • Wallets
-                <span className="mx-2">•</span>
-                <a href="/returns-and-refunds" className="underline underline-offset-2">Returns & refunds</a>
-                <span className="mx-2">•</span>
+              <div className="text-xs mt-3 leading-relaxed flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                <span>UPI • Cards • Netbanking • Wallets</span>
+                <span className="opacity-50">•</span>
+                <a href="/returns-and-refunds" className="underline underline-offset-2">Returns &amp; refunds</a>
+                <span className="opacity-50">•</span>
                 <a href="/shipping-and-delivery" className="underline underline-offset-2">Shipping</a>
-                <span className="mx-2">•</span>
+                <span className="opacity-50">•</span>
                 <a href="/contact" className="underline underline-offset-2">Need help?</a>
               </div>
             </div>
