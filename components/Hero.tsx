@@ -233,7 +233,7 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
                       <Sparkles size={8} style={{ color: "rgb(var(--bronze-rgb))" }} />
                       <p
                         className="font-semibold uppercase"
-                        style={{ color: "rgb(var(--bronze-rgb))", fontSize: "7px", letterSpacing: "0.22em" }}
+                        style={{ color: "rgb(var(--bronze-rgb))", fontSize: "9px", letterSpacing: "0.22em", transform: "translateY(7px)" }}
                       >
                         {featLabel}
                       </p>
