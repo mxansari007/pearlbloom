@@ -766,6 +766,9 @@ html[data-theme="light"] li {
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--header-text);
+  /* instant taps on touch — no 300ms delay / double-tap-zoom wait */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: color .25s ease, background-color .25s ease, box-shadow .3s ease, transform .25s ease;
 }
 .nav-pill__link:hover {

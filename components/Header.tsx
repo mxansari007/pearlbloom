@@ -123,6 +123,10 @@ export default function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // Only use hover-to-open on devices that actually hover (desktop). On touch
+  // screens hover is emulated, which made the first tap open-then-close — so we
+  // rely on tap/click there instead (single tap opens).
+  const [hoverCapable, setHoverCapable] = useState(false);
 
   const pathname = usePathname();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -142,6 +146,15 @@ export default function Header() {
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* Detect whether the device truly supports hover (desktop pointer) */
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const update = () => setHoverCapable(mq.matches);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
   }, []);
 
   /* Close menus on route change */
@@ -221,8 +234,8 @@ export default function Header() {
             <div
               ref={catalogRef}
               className="relative"
-              onMouseEnter={openCatalog}
-              onMouseLeave={closeCatalogSoon}
+              onMouseEnter={hoverCapable ? openCatalog : undefined}
+              onMouseLeave={hoverCapable ? closeCatalogSoon : undefined}
             >
               <button
                 type="button"
@@ -387,8 +400,8 @@ export default function Header() {
           <div
             ref={megaPanelRef}
             className="hidden lg:block absolute left-0 right-0 top-full animate-fade-in-up"
-            onMouseEnter={openCatalog}
-            onMouseLeave={closeCatalogSoon}
+            onMouseEnter={hoverCapable ? openCatalog : undefined}
+            onMouseLeave={hoverCapable ? closeCatalogSoon : undefined}
           >
             <div className="container">
               <div

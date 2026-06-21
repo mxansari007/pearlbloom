@@ -14,7 +14,7 @@ import CollectionCard from "../components/CollectionCard";
 import SubscribeForm from "../components/SubscriptionForm";
 
 import { getHomepageSections } from "../libs/homepage.server";
-import { getProductsByIds, getAllProducts, getFeaturedProducts } from "../libs/products.server";
+import { getProductsByIds, getAllProducts, getFeaturedProducts, getNewArrivalProducts } from "../libs/products.server";
 import { getCollectionsByIds } from "../libs/collections.server";
 import { getHeroData, getOccasionMedia } from "../libs/hero.server";
 import { dbAdmin } from "../libs/firebase-admin";
@@ -596,10 +596,15 @@ async function OffersSection() {
 }
 
 async function NewArrivalsSection() {
-  const all = await getAllProducts();
-  const products = [...all]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 8);
+  // Admin-curated first (products flagged "New Arrivals"); fall back to the
+  // newest-by-date list so the section is never empty.
+  let products = await getNewArrivalProducts(8);
+  if (!products.length) {
+    const all = await getAllProducts();
+    products = [...all]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 8);
+  }
 
   if (!products.length) return null;
 

@@ -320,6 +320,38 @@ export const getFeaturedProducts = unstable_cache(
 );
 
 /* ----------------------------------
+   Get products flagged "New Arrivals" in the admin (isNewArrival == true).
+   Returns [] when none are flagged so the homepage can fall back to the
+   newest-by-date list.
+----------------------------------- */
+const getNewArrivalProductsRaw = async (limit = 8): Promise<Product[]> => {
+  try {
+    const snap = await dbAdmin
+      .collection("products")
+      .where("isNewArrival", "==", true)
+      .limit(limit)
+      .get();
+
+    return snap.docs.map((d) => {
+      const product = serializeFirestore({
+        id: d.id,
+        ...(d.data() as Omit<Product, "id">),
+      }) as Product;
+      return normalizeProduct(product);
+    });
+  } catch (error) {
+    console.error("getNewArrivalProducts failed:", error);
+    return [];
+  }
+};
+
+export const getNewArrivalProducts = unstable_cache(
+  getNewArrivalProductsRaw,
+  ["new-arrival-products"],
+  { revalidate: 60, tags: ["products"] }
+);
+
+/* ----------------------------------
    Get all slugs (cached cross-request)
 ----------------------------------- */
 const getAllSlugsRaw = async (): Promise<string[]> => {

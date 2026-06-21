@@ -221,33 +221,32 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
                 )}
 
                 {usingCustomImage && (
-                  <>
-                    <div
-                      className="absolute bottom-4 left-4 rounded-2xl px-4 py-2.5 backdrop-blur-sm"
-                      style={{
-                        background: "rgba(255,255,255,0.86)",
-                        border: "1px solid var(--hero-card-border)",
-                        boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
-                      }}
-                    >
+                  <div
+                    className="absolute bottom-2.5 left-2.5 rounded-lg px-2.5 py-1 backdrop-blur-md"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.82))",
+                      border: "1px solid rgba(var(--bronze-rgb), 0.22)",
+                      boxShadow: "0 5px 14px rgba(44,10,20,0.14)",
+                    }}
+                  >
+                    <div className="flex items-center gap-1">
+                      <Sparkles size={8} style={{ color: "rgb(var(--bronze-rgb))" }} />
                       <p
-                        className="text-[10px] font-semibold uppercase tracking-[0.18em]"
-                        style={{ color: "rgb(var(--bronze-rgb))" }}
+                        className="font-semibold uppercase"
+                        style={{ color: "rgb(var(--bronze-rgb))", fontSize: "7px", letterSpacing: "0.22em" }}
                       >
                         {featLabel}
                       </p>
-                      {featName && (
-                        <p className="font-display italic text-sm" style={{ color: "#3a3a3a" }}>
-                          {featName}
-                        </p>
-                      )}
                     </div>
-                    <Sparkles
-                      size={18}
-                      className="absolute bottom-5 right-5"
-                      style={{ color: "rgb(var(--bronze-rgb))", opacity: 0.7 }}
-                    />
-                  </>
+                    {featName && (
+                      <p
+                        className="font-display italic leading-tight"
+                        style={{ color: "#2c0a14", fontSize: "10px", letterSpacing: "0.01em", marginTop: "1px" }}
+                      >
+                        {featName}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
