@@ -394,9 +394,8 @@ export default function Header() {
               <div
                 className="mt-2 rounded-2xl shadow-2xl overflow-hidden"
                 style={{
-                  background:
-                    "linear-gradient(155deg, #fdeff2 0%, #f5dde3 45%, #ecc9d2 100%)",
-                  border: "1px solid rgba(94,24,48,0.16)",
+                  background: "var(--mega-bg)",
+                  border: "1px solid var(--mega-border)",
                 }}
               >
                 <div className="grid grid-cols-[1.05fr_1.1fr_1.15fr_1fr] gap-8 p-7">

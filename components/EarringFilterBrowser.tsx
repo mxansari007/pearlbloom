@@ -177,7 +177,7 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:block lg:col-span-1 lg:sticky lg:top-24 h-fit">{Panel}</aside>
+      <aside className="hidden lg:block lg:col-span-1 lg:sticky lg:top-24 h-fit filter-browser-scroll">{Panel}</aside>
 
       {/* Main */}
       <div className="lg:col-span-3">

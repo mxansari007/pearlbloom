@@ -780,6 +780,16 @@ html[data-theme="light"] li {
 @media (prefers-reduced-motion: reduce) {
   .nav-pill__link { transition: none; }
 }
+/* Tablet / small-laptop (lg–xl): shrink the nav so every link fits without
+   clipping. Returns to full size at xl (1280px+). */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .nav-pill { padding: 0.22rem; }
+  .nav-pill__link {
+    padding: 0.4rem 0.6rem;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+}
 
 /* ===== Mobile menu (redesigned slide-in) v2 ===== */
 .mm-backdrop {
@@ -944,8 +954,9 @@ html[data-theme="light"] li {
 
 /* ===== Earrings filter sidebar ===== */
 .filter-scroll {
-  max-height: 196px;
+  max-height: 130px;
   overflow-y: scroll;            /* always show the bar so it reads as scrollable */
+  overscroll-behavior: contain;  /* keep the wheel inside the list — don't scroll the page */
   padding-right: 8px;
   scrollbar-width: thin;          /* Firefox */
   scrollbar-color: rgba(94,24,48,0.6) rgba(94,24,48,0.12);
@@ -954,6 +965,19 @@ html[data-theme="light"] li {
 .filter-scroll::-webkit-scrollbar-track { background: rgba(94,24,48,0.12); border-radius: 8px; }
 .filter-scroll::-webkit-scrollbar-thumb { background: rgba(94,24,48,0.55); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
 .filter-scroll::-webkit-scrollbar-thumb:hover { background: rgba(94,24,48,0.8); background-clip: content-box; }
+
+/* Outer scroll for the WHOLE desktop filter browser — its own scrollbar on the
+   LEFT that scrolls only the filter panel (never the page). */
+.filter-browser-scroll {
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;   /* scroll stays inside the filter browser */
+  direction: rtl;                 /* keep the (hidden) scroll gutter on the LEFT */
+  scrollbar-width: none;          /* Firefox: hide the scrollbar */
+  -ms-overflow-style: none;       /* old Edge/IE: hide the scrollbar */
+}
+.filter-browser-scroll > * { direction: ltr; } /* keep the panel content LTR */
+.filter-browser-scroll::-webkit-scrollbar { width: 0; height: 0; display: none; } /* Chrome/Safari: hide */
 
 /* ===== SEO content body + FAQ accordion ===== */
 .seo-link {
@@ -1019,6 +1043,9 @@ html[data-theme="light"] li {
   --header-muted: rgba(255, 255, 255, 0.8);
   --header-hover: rgba(255, 255, 255, 0.08);
   --nav-pill-bg: rgba(255, 255, 255, 0.06);
+  /* Catalog mega-menu (dark default) */
+  --mega-bg: linear-gradient(155deg, #2a1119 0%, #1d0d13 48%, #14090d 100%);
+  --mega-border: rgba(255, 255, 255, 0.10);
 }
 
 /* LIGHT THEME */
@@ -1029,6 +1056,9 @@ html[data-theme="light"] li {
   --header-muted: rgba(0, 0, 0, 0.75);
   --header-hover: rgba(0, 0, 0, 0.06);
   --nav-pill-bg: rgba(255, 255, 255, 0.72);
+  /* Catalog mega-menu (light) */
+  --mega-bg: linear-gradient(155deg, #fdeff2 0%, #f5dde3 45%, #ecc9d2 100%);
+  --mega-border: rgba(94, 24, 48, 0.16);
 }
 
 
