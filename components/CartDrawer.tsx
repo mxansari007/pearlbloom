@@ -7,14 +7,14 @@ import { ShoppingBag, Trash2, Plus, Minus, X } from "lucide-react";
 import { track } from "@/utils/analytics";
 import { useAppConfigStore } from "@/store/useAppStore";
 
-/* Brand palette (cream + maroon + gold) — laid out in the clean, floating
-   "FinSet" sidebar style: rounded panel, soft shadow, white item cards,
-   pill controls, airy spacing. */
-const WINE = "#5e1830";
-const WINE_TEXT = "#3d0f1a";
-const WINE_LINE = "rgba(94,24,48,0.12)";
-const WINE_MUTED = "rgba(61,15,26,0.62)";
-const BLUSH = "#f6e6e1";
+/* Theme-aware surface tokens (defined in globals.css). Light = cream + maroon;
+   dark = deep plum + light rose, so the drawer adapts to the active theme. */
+const WINE = "var(--drawer-accent)";
+const WINE_TEXT = "var(--drawer-text)";
+const WINE_LINE = "var(--drawer-line)";
+const WINE_MUTED = "var(--drawer-muted)";
+const BLUSH = "var(--drawer-pill)";
+const CARD = "var(--drawer-card)";
 
 export default function CartDrawer() {
   const { items, isOpen, close, removeItem, updateQty, clear } = useCartStore();
@@ -48,7 +48,7 @@ export default function CartDrawer() {
         <div
           className="flex flex-col h-full overflow-hidden rounded-[28px]"
           style={{
-            background: "linear-gradient(180deg, #fdf8f6 0%, #f6e6e1 100%)",
+            background: "var(--drawer-bg)",
             border: `1px solid ${WINE_LINE}`,
             boxShadow: "0 30px 80px -30px rgba(44,10,20,0.55)",
             color: WINE_TEXT,
@@ -64,7 +64,7 @@ export default function CartDrawer() {
                 <span
                   className="text-[11px] px-2.5 py-1 rounded-full font-semibold"
                   style={{
-                    background: "#ffffff",
+                    background: CARD,
                     color: WINE,
                     border: `1px solid ${WINE_LINE}`,
                   }}
@@ -89,7 +89,7 @@ export default function CartDrawer() {
                 aria-label="Close cart"
                 className="grid place-items-center w-9 h-9 rounded-full transition hover:rotate-90"
                 style={{
-                  background: "#ffffff",
+                  background: CARD,
                   color: WINE,
                   border: `1px solid ${WINE_LINE}`,
                 }}
@@ -134,7 +134,7 @@ export default function CartDrawer() {
                   key={item.id}
                   className="flex gap-4 rounded-2xl p-3"
                   style={{
-                    background: "#ffffff",
+                    background: CARD,
                     border: `1px solid ${WINE_LINE}`,
                     boxShadow: "0 10px 30px -22px rgba(44,10,20,0.5)",
                   }}

@@ -1,5 +1,53 @@
 @import "tailwindcss";
 
+/* Footer gradient — top blends with the page above (dark in dark mode). */
+:root {
+  --footer-grad: linear-gradient(180deg, #060607 0%, #150a10 12%, #320f1b 32%, #4f1322 58%, #5e1830 100%);
+}
+:root[data-theme="light"] {
+  --footer-grad: linear-gradient(180deg, #fafafa 0%, #f3dde2 10%, #b56a78 20%, #4f1322 33%, #5a1626 62%, #74203a 100%);
+}
+
+/* Account page action tiles — subtle lift + gold border on hover */
+.account-tile {
+  display: block;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.account-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--gold-rgb), 0.45) !important;
+  box-shadow: 0 14px 30px -22px rgba(0, 0, 0, 0.4);
+}
+
+/* Cart drawer + chat widget surfaces — theme-aware.
+   :root holds the DARK defaults; the light overrides come below. */
+:root {
+  --drawer-bg: linear-gradient(180deg, #18121b 0%, #0e0a10 100%);
+  --drawer-card: #1f1822;
+  --drawer-accent: #efb9c6;
+  --drawer-text: #f4e9ec;
+  --drawer-muted: rgba(244, 233, 236, 0.62);
+  --drawer-line: rgba(255, 255, 255, 0.12);
+  --drawer-pill: rgba(255, 255, 255, 0.06);
+  --filter-bg: linear-gradient(155deg, #1d1421 0%, #160f1a 55%, #110b14 100%);
+  --filter-border: rgba(255, 255, 255, 0.12);
+}
+:root[data-theme="light"] {
+  --drawer-bg: linear-gradient(180deg, #fdf8f6 0%, #f6e6e1 100%);
+  --drawer-card: #ffffff;
+  --drawer-accent: #5e1830;
+  --drawer-text: #3d0f1a;
+  --drawer-muted: rgba(61, 15, 26, 0.62);
+  --drawer-line: rgba(94, 24, 48, 0.12);
+  --drawer-pill: #f6e6e1;
+  --filter-bg: linear-gradient(155deg, #fdeff2 0%, #f5dde3 45%, #ecc9d2 100%);
+  --filter-border: rgba(94, 24, 48, 0.16);
+}
+/* Brighter filter option labels on the dark filter panel for readability. */
+:root[data-theme="dark"] .filter-option:not(.is-active) {
+  color: #dcc08a;
+}
+
 /* "View All" section links — bronze base, darker maroon on hover */
 .view-all-link {
   color: rgb(var(--bronze-rgb));

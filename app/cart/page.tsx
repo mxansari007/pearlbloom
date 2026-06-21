@@ -12,11 +12,12 @@ import { track } from "@/utils/analytics";
 import CouponPanel from "@/components/CouponPanel";
 
 /* Brand palette (cream + maroon + gold) — matches CartDrawer's FinSet look */
-const WINE = "#5e1830";
-const WINE_TEXT = "#3d0f1a";
-const WINE_LINE = "rgba(94,24,48,0.12)";
-const WINE_MUTED = "rgba(61,15,26,0.62)";
-const BLUSH = "#f6e6e1";
+const WINE = "var(--drawer-accent)";
+const WINE_TEXT = "var(--drawer-text)";
+const WINE_LINE = "var(--drawer-line)";
+const WINE_MUTED = "var(--drawer-muted)";
+const BLUSH = "var(--drawer-pill)";
+const CARD = "var(--drawer-card)";
 
 export default function CartPage() {
   const router = useRouter();
@@ -96,7 +97,7 @@ export default function CartPage() {
     <div
       className="min-h-screen relative overflow-hidden"
       style={{
-        background: "linear-gradient(180deg, #fdf8f6 0%, #f6e6e1 100%)",
+        background: "var(--drawer-bg)",
         color: WINE_TEXT,
       }}
     >
@@ -114,7 +115,7 @@ export default function CartPage() {
                 className="text-xs transition flex items-center gap-1 px-3 py-1 rounded-full hover:opacity-70"
                 style={{
                   color: "#b1465a",
-                  background: "#ffffff",
+                  background: CARD,
                   border: `1px solid ${WINE_LINE}`,
                 }}
               >
@@ -169,7 +170,7 @@ export default function CartPage() {
                   key={item.id}
                   className="flex gap-4 rounded-2xl p-4"
                   style={{
-                    background: "#ffffff",
+                    background: CARD,
                     border: `1px solid ${WINE_LINE}`,
                     boxShadow: "0 10px 30px -22px rgba(44,10,20,0.5)",
                   }}
@@ -251,7 +252,7 @@ export default function CartPage() {
             <div
               className="rounded-2xl p-6 h-fit"
               style={{
-                background: "#ffffff",
+                background: CARD,
                 border: `1px solid ${WINE_LINE}`,
                 boxShadow: "0 20px 50px -30px rgba(44,10,20,0.45)",
               }}

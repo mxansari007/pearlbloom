@@ -22,6 +22,7 @@ export interface AppUser {
   firstName?: string;
   lastName?: string;
   email?: string;
+  birthday?: string; // ISO date (YYYY-MM-DD), optional — used for birthday offers
 
   createdAt: number;
   lastLoginAt: number;

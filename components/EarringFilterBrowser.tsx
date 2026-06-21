@@ -147,8 +147,8 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
       className="rounded-2xl p-5"
       style={{
         background:
-          "linear-gradient(155deg, #fdeff2 0%, #f5dde3 45%, #ecc9d2 100%)",
-        border: "1px solid rgba(94,24,48,0.16)",
+          "var(--filter-bg)",
+        border: "1px solid var(--filter-border)",
       }}
     >
       {/* Header */}
@@ -241,9 +241,9 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
           }`}
           style={{
             background:
-              "linear-gradient(155deg, #fdeff2 0%, #f5dde3 45%, #ecc9d2 100%)",
-            border: "1px solid rgba(94,24,48,0.16)",
-            color: "var(--header-text)",
+              "var(--filter-bg)",
+            border: "1px solid var(--filter-border)",
+            color: "var(--fg)",
             boxShadow: "0 30px 70px rgba(0,0,0,0.35)",
           }}
         >

@@ -419,27 +419,49 @@ export default function OrderDetailsPage() {
             Order Status
           </h2>
 
-          <div className="order-page__status-tracker">
-            {STATUS_STEPS.map((step, idx) => {
-              const isDone = idx <= currentIndex;
-              const isActive = idx === currentIndex;
+          {order.status === "cancelled" ? (
+            <div
+              className="flex items-center gap-3 rounded-xl px-5 py-4"
+              style={{
+                background: "rgba(239,68,68,0.10)",
+                border: "1px solid rgba(239,68,68,0.35)",
+                color: "#ef4444",
+              }}
+            >
+              <svg className="w-6 h-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="font-semibold">Order Cancelled</p>
+                <p className="text-sm" style={{ color: "var(--muted)" }}>
+                  This order has been cancelled. If you were charged, any refund will be processed to
+                  your original payment method.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="order-page__status-tracker">
+              {STATUS_STEPS.map((step, idx) => {
+                const isDone = idx <= currentIndex;
+                const isActive = idx === currentIndex;
 
-              return (
-                <div
-                  key={step.key}
-                  className={`order-page__status-step ${isDone ? "order-page__status-step--done" : ""} ${isActive ? "order-page__status-step--active" : ""}`}
-                >
-                  {idx !== 0 && (
-                    <div className={`order-page__status-line ${isDone ? "order-page__status-line--done" : ""}`} />
-                  )}
-                  <div className="order-page__status-dot">
-                    {isDone ? "✓" : idx + 1}
+                return (
+                  <div
+                    key={step.key}
+                    className={`order-page__status-step ${isDone ? "order-page__status-step--done" : ""} ${isActive ? "order-page__status-step--active" : ""}`}
+                  >
+                    {idx !== 0 && (
+                      <div className={`order-page__status-line ${isDone ? "order-page__status-line--done" : ""}`} />
+                    )}
+                    <div className="order-page__status-dot">
+                      {isDone ? "✓" : idx + 1}
+                    </div>
+                    <p className="order-page__status-label">{step.label}</p>
                   </div>
-                  <p className="order-page__status-label">{step.label}</p>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* TRACKING DETAILS */}

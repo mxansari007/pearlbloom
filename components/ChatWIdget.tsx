@@ -221,6 +221,17 @@ export default function ChatWidget() {
     };
   }, [launcherOpen]);
 
+  /* Let other parts of the app open the chat (e.g. the account page button). */
+  useEffect(() => {
+    const open = () => {
+      setMinimized(false);
+      setLauncherOpen(false);
+      setHasUnread(false);
+    };
+    window.addEventListener("pearlbloom:open-chat", open);
+    return () => window.removeEventListener("pearlbloom:open-chat", open);
+  }, []);
+
   /* ---------------- Send ---------------- */
 
   const send = async () => {
@@ -335,16 +346,16 @@ export default function ChatWidget() {
         <div
           className="w-[340px] max-w-[calc(100vw-2rem)] rounded-[24px] overflow-hidden"
           style={{
-            background: "linear-gradient(180deg, #fdf8f6 0%, #f6e6e1 100%)",
-            border: "1px solid rgba(94,24,48,0.12)",
+            background: "var(--drawer-bg)",
+            border: "1px solid var(--drawer-line)",
             boxShadow: "0 30px 80px -28px rgba(44,10,20,0.55)",
-            color: "#3d0f1a",
+            color: "var(--drawer-text)",
           }}
         >
           {/* Header */}
           <div
             className="px-4 py-3 flex justify-between items-center"
-            style={{ borderBottom: "1px solid rgba(94,24,48,0.10)" }}
+            style={{ borderBottom: "1px solid var(--drawer-line)" }}
           >
             <div className="flex items-center gap-2.5">
               <span
@@ -355,7 +366,7 @@ export default function ChatWidget() {
               >
                 <MessageCircle size={16} />
               </span>
-              <span className="font-medium" style={{ color: "#5e1830" }}>
+              <span className="font-medium" style={{ color: "var(--drawer-accent)" }}>
                 Chat with us
               </span>
             </div>
@@ -367,9 +378,9 @@ export default function ChatWidget() {
               aria-label="Minimize chat"
               className="grid place-items-center w-8 h-8 rounded-full transition hover:opacity-70"
               style={{
-                background: "#ffffff",
-                color: "#5e1830",
-                border: "1px solid rgba(94,24,48,0.12)",
+                background: "var(--drawer-card)",
+                color: "var(--drawer-accent)",
+                border: "1px solid var(--drawer-line)",
                 lineHeight: 1,
               }}
             >
@@ -379,12 +390,12 @@ export default function ChatWidget() {
 
           {/* AUTH / CONTENT */}
           {!authInitialized ? (
-            <div className="p-4 text-sm" style={{ color: "rgba(61,15,26,0.62)" }}>
+            <div className="p-4 text-sm" style={{ color: "var(--drawer-muted)" }}>
               Loading chat…
             </div>
           ) : !isAuthenticated ? (
             <div className="p-5 space-y-4 text-sm">
-              <p style={{ color: "rgba(61,15,26,0.7)" }}>
+              <p style={{ color: "var(--drawer-muted)" }}>
                 Please login to start chatting.
               </p>
               <button
@@ -398,7 +409,7 @@ export default function ChatWidget() {
               </button>
             </div>
           ) : !chatReady ? (
-            <div className="p-4 text-sm" style={{ color: "rgba(61,15,26,0.62)" }}>
+            <div className="p-4 text-sm" style={{ color: "var(--drawer-muted)" }}>
               Initializing chat…
             </div>
           ) : (
@@ -419,13 +430,13 @@ export default function ChatWidget() {
                           ? {
                               background:
                                 "linear-gradient(135deg, #facc15, #f59e0b)",
-                              color: "#3d0f1a",
+                              color: "#2c0a14",
                               borderBottomRightRadius: 6,
                             }
                           : {
-                              background: "#ffffff",
-                              color: "#3d0f1a",
-                              border: "1px solid rgba(94,24,48,0.10)",
+                              background: "var(--drawer-card)",
+                              color: "var(--drawer-text)",
+                              border: "1px solid var(--drawer-line)",
                               borderBottomLeftRadius: 6,
                             }
                       }
@@ -440,7 +451,7 @@ export default function ChatWidget() {
               {/* Input */}
               <div
                 className="p-3 flex gap-2 items-center"
-                style={{ borderTop: "1px solid rgba(94,24,48,0.10)" }}
+                style={{ borderTop: "1px solid var(--drawer-line)" }}
               >
                 <input
                   value={input}
@@ -449,9 +460,9 @@ export default function ChatWidget() {
                   placeholder="Type your message…"
                   className="flex-1 min-w-0 px-4 py-2.5 rounded-full text-sm focus:outline-none transition-all"
                   style={{
-                    background: "#ffffff",
-                    border: "1px solid rgba(94,24,48,0.14)",
-                    color: "#3d0f1a",
+                    background: "var(--drawer-card)",
+                    border: "1px solid var(--drawer-line)",
+                    color: "var(--drawer-text)",
                   }}
                 />
                 <button

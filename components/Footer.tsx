@@ -147,11 +147,10 @@ export default function Footer() {
   // background — in both light and dark site themes. --gold-rgb is left intact so
   // the gold accents keep glowing.
   const footerStyle: Record<string, string> = {
-    background:
-      // Upper part fades from the light page background (above the footer) down into
-      // deep maroon — matching the newsletter card — and is fully maroon by ~33%,
-      // before the text columns (which sit ~40%+ down) so they stay readable.
-      "linear-gradient(180deg, #fafafa 0%, #f3dde2 10%, #b56a78 20%, #4f1322 33%, #5a1626 62%, #74203a 100%)",
+    // Theme-aware gradient (defined in globals.css): the top fades from the page
+    // background above the footer (light in light mode, near-black in dark mode)
+    // down into deep maroon, so it blends with the section above in both themes.
+    background: "var(--footer-grad)",
     color: "#fdeee9",
     "--fg": "#fdeee9",
     "--muted": "rgba(253, 238, 233, 0.62)",
