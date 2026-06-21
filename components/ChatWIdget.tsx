@@ -98,27 +98,31 @@ export default function ChatWidget() {
 
     const initChat = async () => {
       const ref = doc(dbClient, "chats", chatId);
-      const snap = await getDoc(ref);
-
-      if (!snap.exists()) {
-        await setDoc(ref, {
-          // uid lets Firestore rules scope this chat to its owner (the chatId
-          // is phone-derived, which rules can't tie to the caller on their own).
-          uid: user?.uid ?? null,
-          status: "open",
-          createdAt: serverTimestamp(),
-          lastMessage: "",
-          lastMessageAt: serverTimestamp(),
-          lastSender: "user",
-          user: {
-            firstName: user?.firstName,
-            lastName: user?.lastName,
-            phone: user?.phone,
+      try {
+        // Create-or-merge in one write. We deliberately DON'T getDoc first:
+        // the security rules require the chat doc to carry `uid`, and reading a
+        // doc that lacks it (older chats) or doesn't exist yet is denied — which
+        // would hang the widget on "Initializing chat…". A merge write is
+        // allowed (request.resource.data.uid == auth.uid) and also backfills
+        // `uid` onto legacy chat docs so reads/messages work afterwards.
+        await setDoc(
+          ref,
+          {
+            uid: user?.uid ?? null,
+            status: "open",
+            lastSender: "user",
+            user: {
+              firstName: user?.firstName ?? null,
+              lastName: user?.lastName ?? null,
+              phone: user?.phone ?? null,
+            },
           },
-        });
+          { merge: true }
+        );
+        setChatReady(true);
+      } catch (e) {
+        console.error("Chat init failed:", e);
       }
-
-      setChatReady(true);
     };
 
     initChat();
