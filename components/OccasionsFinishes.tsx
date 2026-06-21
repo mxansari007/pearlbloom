@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, ShieldCheck, Gem, Droplets, Circle, Sparkles, Moon } from "lucide-react";
+import type { OccasionMedia } from "../libs/hero.server";
 
 const UNSPLASH = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=640&q=70`;
@@ -45,7 +47,7 @@ function SectionHead({ kicker, title, href, cta }: { kicker: string; title: stri
   );
 }
 
-export default function OccasionsFinishes() {
+export default function OccasionsFinishes({ occasions }: { occasions?: OccasionMedia }) {
   return (
     <section className="relative" style={{ background: "var(--bg)" }}>
       <div className="container py-16 md:py-20">
@@ -54,16 +56,23 @@ export default function OccasionsFinishes() {
           <div>
             <SectionHead kicker="Dressed for Life" title="Shop by Occasion" href="/earrings" cta="View all Occasions" />
             <div className="grid grid-cols-2 gap-3 md:gap-4">
-              {OCCASIONS.map((o) => (
+              {OCCASIONS.map((o) => {
+                const ov = occasions?.[o.slug];
+                const imgSrc = ov?.url || o.src || UNSPLASH(o.img);
+                const imgAlt = ov?.alt?.trim() || `${o.label} earrings`;
+                return (
                 <Link
                   key={o.slug}
                   href={`/earrings/occasion/${o.slug}`}
                   className="occasion-card group relative block overflow-hidden rounded-2xl aspect-[4/3]"
                   style={{ backgroundColor: o.bg }}
                 >
-                  <div
-                    className="occasion-card__img absolute inset-0"
-                    style={{ backgroundImage: `url(${o.src ?? UNSPLASH(o.img)})`, backgroundSize: "cover", backgroundPosition: "center" }}
+                  <Image
+                    src={imgSrc}
+                    alt={imgAlt}
+                    fill
+                    sizes="(max-width: 1024px) 50vw, 25vw"
+                    className="occasion-card__img object-cover"
                   />
                   <div
                     className="absolute inset-0"
@@ -77,7 +86,8 @@ export default function OccasionsFinishes() {
                     <p className="occasion-card__desc leading-snug">{o.desc}</p>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
 

@@ -16,7 +16,7 @@ import SubscribeForm from "../components/SubscriptionForm";
 import { getHomepageSections } from "../libs/homepage.server";
 import { getProductsByIds, getAllProducts, getFeaturedProducts } from "../libs/products.server";
 import { getCollectionsByIds } from "../libs/collections.server";
-import { getHeroData } from "../libs/hero.server";
+import { getHeroData, getOccasionMedia } from "../libs/hero.server";
 import { dbAdmin } from "../libs/firebase-admin";
 
 import type { Product } from "../types/products";
@@ -673,10 +673,12 @@ async function BestSellersSection() {
 export default async function Home() {
   const heroDataPromise = getHeroData();
   const sectionsPromise = getHomepageSections();
+  const occasionMediaPromise = getOccasionMedia();
 
-  const [hero, sections] = await Promise.all([
+  const [hero, sections, occasionMedia] = await Promise.all([
     heroDataPromise,
     sectionsPromise,
+    occasionMediaPromise,
   ]);
 
   return (
@@ -688,7 +690,7 @@ export default async function Home() {
       <ShopByStyle />
 
       {/* Shop by occasion + Explore our finishes */}
-      <OccasionsFinishes />
+      <OccasionsFinishes occasions={occasionMedia} />
 
       <Suspense fallback={null}>
         <BannerCarouselSection placement="home_top" />

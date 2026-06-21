@@ -21,6 +21,23 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
   const rawCta = hero?.ctaLink?.trim();
   const ctaLink = !rawCta || rawCta === "/products" ? "/earrings" : rawCta;
 
+  // Featured image is admin-configurable (Settings → Hero). Fall back to the
+  // bundled image, which has its caption baked in — so only render the caption
+  // overlay when a custom image is set.
+  const usingCustomImage = !!hero?.heroImage?.url;
+  const lightImg = hero?.heroImage?.url || "/newearring.png";
+  // Dark-mode image is optional; when set, both layers are stacked and CSS
+  // crossfades between them as the theme toggles.
+  const hasDarkImg = !!hero?.heroImageDark?.url;
+  const darkImg = hero?.heroImageDark?.url || lightImg;
+  const featLabel = hero?.featuredLabel?.trim() || "Featured Earring";
+  const featName = hero?.featuredName?.trim() || "";
+  const heroAlt = usingCustomImage
+    ? featName
+      ? `Featured earring — ${featName}`
+      : "Featured earring"
+    : "Featured earring — Riviera ridged Gold Hoops";
+
   return (
     <section
       className="relative overflow-hidden"
@@ -182,14 +199,56 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
                 style={{ background: "#ffffff", border: "1px solid var(--hero-card-border)", boxShadow: "0 30px 70px rgba(0,0,0,0.12)" }}
               >
                 <Image
-                  src="/newearring.png"
-                  alt="Featured earring — Riviera ridged Gold Hoops"
+                  src={lightImg}
+                  alt={heroAlt}
                   fill
                   priority
                   fetchPriority="high"
                   sizes="(max-width: 1024px) 90vw, 45vw"
-                  className="object-cover"
+                  className={`object-cover hero-img${hasDarkImg ? " hero-img-light" : ""}`}
                 />
+
+                {hasDarkImg && (
+                  <Image
+                    src={darkImg}
+                    alt={heroAlt}
+                    fill
+                    priority
+                    fetchPriority="high"
+                    sizes="(max-width: 1024px) 90vw, 45vw"
+                    className="object-cover hero-img hero-img-dark"
+                  />
+                )}
+
+                {usingCustomImage && (
+                  <>
+                    <div
+                      className="absolute bottom-4 left-4 rounded-2xl px-4 py-2.5 backdrop-blur-sm"
+                      style={{
+                        background: "rgba(255,255,255,0.86)",
+                        border: "1px solid var(--hero-card-border)",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+                      }}
+                    >
+                      <p
+                        className="text-[10px] font-semibold uppercase tracking-[0.18em]"
+                        style={{ color: "rgb(var(--bronze-rgb))" }}
+                      >
+                        {featLabel}
+                      </p>
+                      {featName && (
+                        <p className="font-display italic text-sm" style={{ color: "#3a3a3a" }}>
+                          {featName}
+                        </p>
+                      )}
+                    </div>
+                    <Sparkles
+                      size={18}
+                      className="absolute bottom-5 right-5"
+                      style={{ color: "rgb(var(--bronze-rgb))", opacity: 0.7 }}
+                    />
+                  </>
+                )}
               </div>
             </div>
           </div>

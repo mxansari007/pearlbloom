@@ -952,6 +952,18 @@ html[data-theme="light"] li {
 .mega-scroll::-webkit-scrollbar-thumb { background: rgba(94,24,48,0.55); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
 .mega-scroll::-webkit-scrollbar-thumb:hover { background: rgba(94,24,48,0.8); background-clip: content-box; }
 
+/* ===== Hero featured image — light/dark crossfade =====
+   Both images are stacked; opacity is driven by the theme so toggling dark
+   mode smoothly fades between them. (:root default is the DARK theme.) */
+.hero-img { transition: opacity .6s ease; }
+.hero-img-light { opacity: 0; }
+.hero-img-dark  { opacity: 1; }
+:root[data-theme="light"] .hero-img-light { opacity: 1; }
+:root[data-theme="light"] .hero-img-dark  { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-img { transition: none; }
+}
+
 /* ===== Earrings filter sidebar ===== */
 .filter-scroll {
   max-height: 130px;
