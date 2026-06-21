@@ -224,8 +224,8 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
                   <div
                     className="absolute bottom-2.5 left-2.5 rounded-lg px-2.5 py-1 backdrop-blur-md"
                     style={{
-                      background: "linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.82))",
-                      border: "1px solid rgba(var(--bronze-rgb), 0.22)",
+                      background: "var(--hero-cap-bg)",
+                      border: "1px solid var(--hero-cap-border)",
                       boxShadow: "0 5px 14px rgba(44,10,20,0.14)",
                     }}
                   >
@@ -241,7 +241,7 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
                     {featName && (
                       <p
                         className="font-display italic leading-tight"
-                        style={{ color: "#2c0a14", fontSize: "10px", letterSpacing: "0.01em", marginTop: "1px" }}
+                        style={{ color: "var(--hero-cap-name)", fontSize: "10px", letterSpacing: "0.01em", marginTop: "1px" }}
                       >
                         {featName}
                       </p>

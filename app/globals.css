@@ -1061,6 +1061,10 @@ html[data-theme="light"] li {
   /* Catalog mega-menu (dark default) */
   --mega-bg: linear-gradient(155deg, #2a1119 0%, #1d0d13 48%, #14090d 100%);
   --mega-border: rgba(255, 255, 255, 0.10);
+  /* Hero featured-image caption card (dark default) */
+  --hero-cap-bg: linear-gradient(135deg, rgba(38, 21, 27, 0.92), rgba(20, 11, 14, 0.82));
+  --hero-cap-border: rgba(255, 255, 255, 0.07);
+  --hero-cap-name: #f4e8db;
 }
 
 /* LIGHT THEME */
@@ -1074,6 +1078,10 @@ html[data-theme="light"] li {
   /* Catalog mega-menu (light) */
   --mega-bg: linear-gradient(155deg, #fdeff2 0%, #f5dde3 45%, #ecc9d2 100%);
   --mega-border: rgba(94, 24, 48, 0.16);
+  /* Hero featured-image caption card (light) */
+  --hero-cap-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.82));
+  --hero-cap-border: rgba(44, 10, 20, 0.10);
+  --hero-cap-name: #2c0a14;
 }
 
 
