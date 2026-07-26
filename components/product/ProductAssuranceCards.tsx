@@ -73,28 +73,23 @@ export default function ProductAssuranceCards({
       {rendered.map((c, i) => (
         <div
           key={`${c.eyebrow}-${i}`}
-          className="rounded-2xl transition-transform duration-300 hover:-translate-y-0.5"
-          style={{
-            padding: "0.72rem",
-            background: "linear-gradient(140deg, #fdeff2 0%, #f8e7ea 55%, #ffffff 100%)",
-            border: "1px solid rgba(94,24,48,0.14)",
-            boxShadow: "0 12px 26px -18px rgba(44,10,20,0.40)",
-          }}
+          className="pdp-acard rounded-2xl"
+          style={{ padding: "0.72rem" }}
         >
           <p
             className="font-semibold uppercase tracking-[0.16em]"
-            style={{ color: "rgba(61,15,26,0.6)", fontSize: "0.55rem" }}
+            style={{ color: "var(--muted)", fontSize: "0.55rem" }}
           >
             {c.eyebrow}
           </p>
           <div className="mt-1.5 flex items-center" style={{ gap: "0.5rem" }}>
             <span
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
-              style={{ background: "rgba(94,24,48,0.08)", color: "#5e1830", transform: "translateY(-6px)" }}
+              className="pdp-acard__icon grid h-7 w-7 shrink-0 place-items-center rounded-full"
+              style={{ transform: "translateY(-6px)" }}
             >
               {c.icon}
             </span>
-            <p className="font-semibold leading-snug" style={{ color: "#5e1830", fontSize: "0.77rem", transform: "translateY(1px)" }}>
+            <p className="font-semibold leading-snug" style={{ color: "var(--fg)", fontSize: "0.77rem", transform: "translateY(1px)" }}>
               {c.title}
             </p>
           </div>

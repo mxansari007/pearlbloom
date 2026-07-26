@@ -9,7 +9,7 @@ const posthogAssetsHost =
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: {
-    optimizePackageImports: ["lucide-react", "date-fns", "lodash"],
+    optimizePackageImports: ["lucide-react", "date-fns", "lodash", "react-icons"],
   },
 
   async rewrites() {
@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
   },
 
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",
@@ -38,17 +39,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "cdn.yoursite.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
         hostname: "res.cloudinary.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "your-s3-bucket.amazonaws.com",
         pathname: "/**",
       },
     ],

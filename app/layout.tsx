@@ -19,12 +19,13 @@ import FacebookPixel from '@/components/FacebookPixel'
 // adjust weights if you need more/less variants.
 const playfair = Playfair_Display({
   weight: ['400', '600', '700'],
+  style: ['normal', 'italic'],
   subsets: ['latin'],
   variable: '--font-playfair',
   display: 'swap',
 })
 const inter = Inter({
-  weight: ['300', '400', '600', '700'],
+  weight: ['400', '600', '700'],
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
@@ -40,8 +41,16 @@ export const metadata = {
   keywords: ['artificial earrings', 'anti-tarnish earrings', 'earrings for women', 'gold-plated earrings', 'jhumka earrings', 'Pearl Bloom'],
   applicationName: 'Pearl Bloom',
   icons: {
-    icon: '/logo.svg',
+    icon: [
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
+  manifest: '/site.webmanifest',
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
@@ -78,12 +87,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="preconnect" href="https://pearlboom-74976.firebaseapp.com" />
         <link rel="preconnect" href="https://www.googleapis.com" />
         <link rel="preconnect" href="https://apis.google.com" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap"
-          rel="stylesheet"
-        />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
         {/* Sitewide Organization + WebSite structured data */}
         <script
           type="application/ld+json"

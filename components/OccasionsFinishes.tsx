@@ -26,8 +26,8 @@ const FINISHES = [
 
 function SectionHead({ kicker, title, href, cta }: { kicker: string; title: string; href: string; cta: string }) {
   return (
-    <div className="flex items-end justify-between gap-4 mb-6">
-      <div>
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-1 sm:gap-4 mb-6">
+      <div className="min-w-0">
         <span className="inline-block text-[11px] font-semibold uppercase tracking-[0.24em] mb-2" style={{ color: "rgb(var(--bronze-rgb))" }}>
           {kicker}
         </span>
@@ -37,7 +37,7 @@ function SectionHead({ kicker, title, href, cta }: { kicker: string; title: stri
       </div>
       <Link
         href={href}
-        className="group inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold transition-colors"
+        className="group inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold transition-colors whitespace-nowrap"
         style={{ color: "rgb(var(--bronze-rgb))" }}
       >
         {cta}
@@ -99,7 +99,7 @@ export default function OccasionsFinishes({ occasions }: { occasions?: OccasionM
                 <Link
                   key={slug}
                   href={`/earrings/finish/${slug}`}
-                  className="finish-card group flex items-center gap-3 rounded-xl px-4 py-3"
+                  className="finish-card group flex items-center gap-3 rounded-xl px-4 py-3 overflow-hidden"
                 >
                   <span className="finish-card__icon flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
                     <Icon size={17} />
@@ -112,7 +112,7 @@ export default function OccasionsFinishes({ occasions }: { occasions?: OccasionM
                       {desc}
                     </p>
                   </div>
-                  <span className="finish-card__tag shrink-0 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider">
+                  <span className="finish-card__tag rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider whitespace-nowrap">
                     {tag}
                   </span>
                 </Link>

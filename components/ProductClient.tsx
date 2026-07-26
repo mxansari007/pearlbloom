@@ -541,7 +541,7 @@ export default function ProductClient({
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
               style={{ background: "rgba(239,68,68,0.12)", color: "var(--error-color, #ef4444)" }}
             >
-              ● Out of Stock
+              ● Sold Out
             </span>
           ) : (
             <span
@@ -688,7 +688,7 @@ export default function ProductClient({
             }}
           >
             {outOfStock
-              ? "Out of Stock"
+              ? "Sold Out"
               : isAdding
                 ? "Adding…"
                 : (
@@ -750,39 +750,24 @@ export default function ProductClient({
         {featureCards.map((f, i) => (
           <div
             key={`${f.title}-${i}`}
-            className="rounded-2xl transition-transform duration-300 hover:-translate-y-0.5"
-            style={{
-              padding: "0.85rem",
-              background: f.highlight
-                ? "linear-gradient(140deg, #fdf3e6 0%, #fbe7ec 55%, #ffffff 100%)"
-                : "linear-gradient(140deg, #fdeff2 0%, #f8e7ea 55%, #ffffff 100%)",
-              border: f.highlight
-                ? "1px solid rgba(var(--gold-rgb),0.55)"
-                : "1px solid rgba(94,24,48,0.14)",
-              boxShadow: f.highlight
-                ? "0 12px 26px -16px rgba(180,140,40,0.55)"
-                : "0 12px 26px -18px rgba(44,10,20,0.40)",
-            }}
+            className={`pdp-acard rounded-2xl${f.highlight ? " pdp-acard--gold" : ""}`}
+            style={{ padding: "0.85rem" }}
           >
             <div className="flex items-center gap-2.5">
               <span
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-full"
-                style={{
-                  background: f.highlight ? "rgba(var(--gold-rgb),0.18)" : "rgba(94,24,48,0.08)",
-                  color: f.highlight ? "rgb(var(--bronze-rgb))" : "#5e1830",
-                }}
+                className={`pdp-acard__icon${f.highlight ? " pdp-acard__icon--gold" : ""} grid h-8 w-8 shrink-0 place-items-center rounded-full`}
               >
                 {resolveFeatureIcon(f.icon, 14)}
               </span>
               <p
                 className="font-semibold leading-tight"
-                style={{ color: "#5e1830", fontSize: "0.8rem", transform: "translateY(5px)" }}
+                style={{ color: "var(--fg)", fontSize: "0.8rem", transform: "translateY(5px)" }}
               >
                 {f.title}
               </p>
             </div>
             {f.subtitle?.trim() && (
-              <p className="mt-2 leading-snug" style={{ color: "rgba(61,15,26,0.64)", fontSize: "0.68rem", transform: "translateY(3px)" }}>
+              <p className="mt-2 leading-snug" style={{ color: "var(--muted)", fontSize: "0.68rem", transform: "translateY(3px)" }}>
                 {f.subtitle}
               </p>
             )}

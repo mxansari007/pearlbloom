@@ -68,7 +68,7 @@ export default function ProductCard({ product, priority = false }: { product: Pr
         {outOfStock && (
           <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ background: "rgba(0,0,0,0.45)" }}>
             <span className="rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-white" style={{ background: "rgba(0,0,0,0.82)", border: "1px solid rgba(255,255,255,0.25)" }}>
-              Out of Stock
+              Sold Out
             </span>
           </div>
         )}

@@ -5,7 +5,6 @@ import {
   addDoc,
   collection,
   doc,
-  getDoc,
   onSnapshot,
   orderBy,
   query,
@@ -13,7 +12,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { dbClient } from "../libs/firebase-client";
-import { useAuthStore } from "@/store/useAppStore";
+import { useAuthStore, useAppConfigStore } from "@/store/useAppStore";
 import { FaWhatsapp } from "react-icons/fa";
 import { MessageCircle } from "lucide-react";
 
@@ -21,14 +20,6 @@ type Message = {
   sender: "user" | "admin";
   text: string;
 };
-
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === "object" && v !== null && !Array.isArray(v);
-}
-
-function asString(v: unknown): string | null {
-  return typeof v === "string" ? v : null;
-}
 
 function buildWhatsAppHref(input: string, message: string) {
   const v = input.trim();
@@ -52,12 +43,17 @@ function buildWhatsAppHref(input: string, message: string) {
 
 export default function ChatWidget() {
   const { user, isAuthenticated, authInitialized } = useAuthStore();
+  const whatsappNumber = useAppConfigStore((s) => s.whatsappNumber);
   const defaultWhatsAppMessage = "Hi Pearl Bloom, I need help with an order.";
   const placeholderWhatsAppNumber = "7618209009";
   const fallbackWhatsAppHref = buildWhatsAppHref(
     placeholderWhatsAppNumber,
     defaultWhatsAppMessage
   );
+
+  const whatsAppHref = (whatsappNumber
+    ? buildWhatsAppHref(whatsappNumber, defaultWhatsAppMessage)
+    : null) ?? fallbackWhatsAppHref;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -67,9 +63,6 @@ export default function ChatWidget() {
   const [minimized, setMinimized] = useState(true);
   const [hasUnread, setHasUnread] = useState(false);
   const [launcherOpen, setLauncherOpen] = useState(false);
-  const [whatsAppHref, setWhatsAppHref] = useState<string | null>(
-    fallbackWhatsAppHref
-  );
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const firstLoadRef = useRef(true);
@@ -127,51 +120,6 @@ export default function ChatWidget() {
 
     initChat();
   }, [authInitialized, isAuthenticated, chatId, user]);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const snap = await getDoc(doc(dbClient, "siteSettings", "main"));
-        const data = snap.exists() ? (snap.data() as unknown) : null;
-        if (!data || !isRecord(data)) {
-          setWhatsAppHref(fallbackWhatsAppHref);
-          return;
-        }
-
-        const footer = isRecord(data.footer) ? data.footer : null;
-        const business = isRecord(data.business) ? data.business : null;
-        const businessSocials = business && isRecord(business.socials) ? business.socials : null;
-
-        const footerSocialLinks = footer && Array.isArray(footer.socialLinks) ? footer.socialLinks : null;
-        const footerWhatsApp = footerSocialLinks
-          ? footerSocialLinks
-              .map((x) => (isRecord(x) ? { platform: asString(x.platform), url: asString(x.url) } : null))
-              .filter((x): x is NonNullable<typeof x> => Boolean(x && x.platform && x.url))
-              .find((x) => x.platform === "whatsapp")?.url ?? null
-          : null;
-
-        const candidates = [
-          asString(businessSocials?.whatsapp),
-          asString(business?.whatsapp),
-          asString(business?.whatsappNumber),
-          footerWhatsApp,
-          asString(footer?.contactPhone),
-          placeholderWhatsAppNumber,
-        ].filter((x): x is string => Boolean(x && x.trim()));
-
-        const href =
-          candidates
-            .map((x) => buildWhatsAppHref(x, defaultWhatsAppMessage))
-            .find((x): x is string => Boolean(x)) ?? null;
-
-        setWhatsAppHref(href ?? fallbackWhatsAppHref);
-      } catch {
-        setWhatsAppHref(fallbackWhatsAppHref);
-      }
-    };
-
-    load();
-  }, [defaultWhatsAppMessage, fallbackWhatsAppHref]);
 
   /* ---------------- Messages listener ---------------- */
 

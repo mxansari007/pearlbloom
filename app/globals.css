@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+/* Global box-sizing reset — ensures padding never pushes elements wider than declared width */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Prevent media from overflowing their containers */
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
 /* Footer gradient — top blends with the page above (dark in dark mode). */
 :root {
   --footer-grad: linear-gradient(180deg, #060607 0%, #150a10 12%, #320f1b 32%, #4f1322 58%, #5e1830 100%);
@@ -290,11 +304,11 @@ html {
 }
 
 /* Prevent stray horizontal overflow on mobile (off-canvas drawers, wide rows).
-   `clip` clips without creating a scroll container, so it does NOT break the
-   desktop sticky filter sidebar the way `overflow: hidden` would. */
+   `hidden` clips overflow and creates a scroll container for the viewport —
+   broader browser support than `clip`. */
 html,
 body {
-  overflow-x: clip;
+  overflow-x: hidden;
   max-width: 100%;
 }
 
@@ -3347,6 +3361,38 @@ a:focus {
   background: linear-gradient(135deg, #8a2740 0%, #c63350 100%);
   border-color: rgba(216, 63, 89, 0.55);
   box-shadow: 0 6px 16px -8px rgba(198, 51, 80, 0.6);
+}
+
+/* ── Assurance cards & feature badges (product detail) ── */
+.pdp-acard {
+  background: var(--card-bg-soft);
+  border: 1px solid var(--card-border);
+  transition: transform 0.3s ease;
+}
+.pdp-acard:hover { transform: translateY(-2px); }
+
+:root[data-theme="light"] .pdp-acard {
+  background: linear-gradient(140deg, #fdeff2 0%, #f8e7ea 55%, #ffffff 100%);
+  border-color: rgba(94, 24, 48, 0.14);
+  box-shadow: 0 12px 26px -18px rgba(44, 10, 20, 0.40);
+}
+:root[data-theme="light"] .pdp-acard--gold {
+  background: linear-gradient(140deg, #fdf3e6 0%, #fbe7ec 55%, #ffffff 100%);
+  border-color: rgba(var(--gold-rgb), 0.55);
+  box-shadow: 0 12px 26px -16px rgba(180, 140, 40, 0.55);
+}
+
+.pdp-acard__icon {
+  background: rgba(var(--gold-rgb), 0.12);
+  color: rgb(var(--bronze-rgb));
+}
+:root[data-theme="light"] .pdp-acard__icon {
+  background: rgba(94, 24, 48, 0.08);
+  color: #5e1830;
+}
+:root[data-theme="light"] .pdp-acard__icon--gold {
+  background: rgba(var(--gold-rgb), 0.18);
+  color: rgb(var(--bronze-rgb));
 }
 
 .product-page__grid {

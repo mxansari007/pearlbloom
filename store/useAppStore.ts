@@ -82,6 +82,7 @@ interface AppConfigState {
   exchangeDays: number | null;
   ugcImages: string[];
   instagramUrl: string | null;
+  whatsappNumber: string | null;
   lastFetchedAt: number | null;
   loadConfig: () => Promise<void>;
 }
@@ -99,6 +100,7 @@ export const useAppConfigStore = create<AppConfigState>()(
       exchangeDays: null,
       ugcImages: [],
       instagramUrl: null,
+      whatsappNumber: null,
       lastFetchedAt: null,
       loadConfig: async () => {
         try {
@@ -131,6 +133,27 @@ export const useAppConfigStore = create<AppConfigState>()(
             asNumberOrNull((data as unknown as { free_shipping_above?: unknown })?.free_shipping_above) ??
             asNumberOrNull((data as unknown as { freeShippingThreshold?: unknown })?.freeShippingThreshold) ??
             asNumberOrNull((data as unknown as { shipping?: { freeAbove?: unknown } })?.shipping?.freeAbove);
+
+          // Extract WhatsApp number from nested siteSettings structure
+          const raw = data as unknown as Record<string, unknown>;
+          const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+          const asStr = (v: unknown): string | null => typeof v === "string" && v.trim() ? v.trim() : null;
+          const footer = isObj(raw?.footer) ? raw.footer : null;
+          const business = isObj(raw?.business) ? raw.business : null;
+          const businessSocials = isObj(business?.socials) ? business.socials : null;
+          const footerSocialLinks = Array.isArray(footer?.socialLinks) ? footer.socialLinks : [];
+          const footerWhatsApp = footerSocialLinks
+            .map((x: unknown) => isObj(x) ? { platform: asStr(x.platform), url: asStr(x.url) } : null)
+            .filter((x): x is { platform: string; url: string } => Boolean(x?.platform && x?.url))
+            .find((x) => x.platform === "whatsapp")?.url ?? null;
+          const whatsappNumber =
+            asStr(businessSocials?.whatsapp) ??
+            asStr(business?.whatsapp) ??
+            asStr(business?.whatsappNumber) ??
+            footerWhatsApp ??
+            asStr(footer?.contactPhone) ??
+            null;
+
           set({
             configLoaded: true,
             testMode,
@@ -142,6 +165,7 @@ export const useAppConfigStore = create<AppConfigState>()(
             exchangeDays: asNumberOrNull(data?.exchangeDays),
             ugcImages: asStringArray(data?.ugcImages),
             instagramUrl: typeof data?.instagramUrl === "string" ? data.instagramUrl : null,
+            whatsappNumber,
             lastFetchedAt: Date.now(),
           });
         } catch {
@@ -156,6 +180,7 @@ export const useAppConfigStore = create<AppConfigState>()(
             exchangeDays: null,
             ugcImages: [],
             instagramUrl: null,
+            whatsappNumber: null,
             lastFetchedAt: Date.now(),
           });
         }
@@ -173,6 +198,7 @@ export const useAppConfigStore = create<AppConfigState>()(
         exchangeDays: state.exchangeDays,
         ugcImages: state.ugcImages,
         instagramUrl: state.instagramUrl,
+        whatsappNumber: state.whatsappNumber,
         lastFetchedAt: state.lastFetchedAt,
       }),
     }
