@@ -1232,11 +1232,10 @@ a:focus {
   padding-right: 1.25rem;
 }
 
-/* small screens tweak */
 @media (max-width: 640px) {
   .container {
-    padding-left: .75rem;
-    padding-right: .75rem;
+    padding-left: .75rem !important;
+    padding-right: .75rem !important;
   }
 }
 
@@ -1850,16 +1849,6 @@ a:focus {
   letter-spacing: .12em;
   font-size: .8rem;
 }
-
-.container {
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
-}
-
-
 
 /* -----------------------------------------
    LIST VIEW REFINEMENT

@@ -124,7 +124,9 @@ export default function ProductCard({ product, priority = false }: { product: Pr
           </p>
         )}
 
-        <TaxonomyChips product={product} className="mt-2.5" />
+        <div className="hidden sm:block">
+          <TaxonomyChips product={product} className="mt-2.5" />
+        </div>
 
         <div className="mt-auto pt-3">
           <div className="product-card__price-row">

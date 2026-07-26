@@ -49,11 +49,11 @@ function SectionHead({ kicker, title, href, cta }: { kicker: string; title: stri
 
 export default function OccasionsFinishes({ occasions }: { occasions?: OccasionMedia }) {
   return (
-    <section className="relative" style={{ background: "var(--bg)" }}>
+    <section className="relative overflow-hidden" style={{ background: "var(--bg)" }}>
       <div className="container py-16 md:py-20">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-14">
           {/* Shop by Occasion */}
-          <div>
+          <div className="min-w-0">
             <SectionHead kicker="Dressed for Life" title="Shop by Occasion" href="/earrings" cta="View all Occasions" />
             <div className="grid grid-cols-2 gap-3 md:gap-4">
               {OCCASIONS.map((o) => {
@@ -92,7 +92,7 @@ export default function OccasionsFinishes({ occasions }: { occasions?: OccasionM
           </div>
 
           {/* Explore Our Finishes */}
-          <div>
+          <div className="min-w-0">
             <SectionHead kicker="Made to Last" title="Explore Our Finishes" href="/earrings" cta="View all Finishes" />
             <div className="space-y-2.5">
               {FINISHES.map(({ slug, label, desc, tag, icon: Icon }) => (

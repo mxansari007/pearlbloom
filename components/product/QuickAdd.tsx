@@ -123,7 +123,7 @@ export default function QuickAdd({ product, className = "" }: { product: Product
         onClick={onClick}
         disabled={oos}
         aria-label={oos ? "Sold out" : isMulti ? "Choose options" : `Quick add to cart for ${inr(displayPrice)}`}
-        className="quick-add-btn w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold tracking-wide transition-all active:scale-95 disabled:opacity-60"
+        className="quick-add-btn w-full inline-flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all active:scale-95 disabled:opacity-60"
         style={{
           background: oos ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.95)",
           color: "#0a0a0a",
