@@ -133,7 +133,7 @@ export default function QuickAdd({ product, className = "" }: { product: Product
       >
         {added ? <Check size={16} /> : <Plus size={16} />}
         <span>
-          {oos ? "Sold Out" : added ? "Added" : isMulti ? "Quick Add" : `Quick Add · ${inr(displayPrice)}`}
+          {oos ? "Sold Out" : added ? "Added" : "Quick Add"}
         </span>
       </button>
     </div>

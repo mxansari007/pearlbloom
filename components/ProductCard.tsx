@@ -118,12 +118,6 @@ export default function ProductCard({ product, priority = false }: { product: Pr
           </Link>
         </h3>
 
-        {product.shortDescription && (
-          <p className="mt-1 text-xs line-clamp-2" style={{ color: "var(--muted)" }}>
-            {product.shortDescription}
-          </p>
-        )}
-
         <div className="hidden sm:block">
           <TaxonomyChips product={product} className="mt-2.5" />
         </div>
