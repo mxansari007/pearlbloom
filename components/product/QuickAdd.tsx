@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, ShoppingBag } from "lucide-react";
 import type { Product, Variant } from "../../types/products";
 import { useCartStore, type CartItem } from "@/store/useCartStore";
 import {
@@ -15,7 +15,7 @@ import { track } from "@/utils/analytics";
 
 const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 
-export default function QuickAdd({ product, className = "" }: { product: Product; className?: string }) {
+export default function QuickAdd({ product, className = "", iconOnly = false }: { product: Product; className?: string; iconOnly?: boolean }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.open);
   const [open, setOpen] = useState(false);
@@ -118,24 +118,36 @@ export default function QuickAdd({ product, className = "" }: { product: Product
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={oos}
-        aria-label={oos ? "Sold out" : isMulti ? "Choose options" : `Quick add to cart for ${inr(displayPrice)}`}
-        className="quick-add-btn w-full inline-flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all active:scale-95 disabled:opacity-60"
-        style={{
-          background: oos ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.95)",
-          color: "#0a0a0a",
-          border: "1px solid rgba(255,255,255,0.7)",
-          boxShadow: "0 4px 18px rgba(0,0,0,0.18)",
-        }}
-      >
-        {added ? <Check size={16} /> : <Plus size={16} />}
-        <span>
-          {oos ? "Sold Out" : added ? "Added" : "Quick Add"}
-        </span>
-      </button>
+      {iconOnly ? (
+        <button
+          type="button"
+          onClick={onClick}
+          disabled={oos}
+          aria-label={oos ? "Sold out" : isMulti ? "Choose options" : `Add to cart for ${inr(displayPrice)}`}
+          className="product-card__add-btn"
+        >
+          {added ? <Check size={18} /> : <ShoppingBag size={18} />}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onClick}
+          disabled={oos}
+          aria-label={oos ? "Sold out" : isMulti ? "Choose options" : `Quick add to cart for ${inr(displayPrice)}`}
+          className="quick-add-btn w-full inline-flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all active:scale-95 disabled:opacity-60"
+          style={{
+            background: oos ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.95)",
+            color: "#0a0a0a",
+            border: "1px solid rgba(255,255,255,0.7)",
+            boxShadow: "0 4px 18px rgba(0,0,0,0.18)",
+          }}
+        >
+          {added ? <Check size={16} /> : <Plus size={16} />}
+          <span>
+            {oos ? "Sold Out" : added ? "Added" : "Quick Add"}
+          </span>
+        </button>
+      )}
     </div>
   );
 }

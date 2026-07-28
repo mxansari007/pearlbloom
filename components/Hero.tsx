@@ -115,7 +115,7 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
               <Link
                 href={ctaLink}
                 className="group inline-flex items-center gap-2.5 rounded-lg px-7 py-4 text-sm font-bold uppercase tracking-wider text-white transition-all duration-300 hover:opacity-75 hover:-translate-y-0.5"
-                style={{ background: "rgb(var(--bronze-rgb))", boxShadow: "0 14px 30px rgba(var(--bronze-rgb), 0.30)" }}
+                style={{ background: "linear-gradient(135deg, #241a1d 0%, rgb(var(--wine-rgb)) 100%)", boxShadow: "0 14px 30px rgba(var(--wine-rgb), 0.30)" }}
               >
                 Browse Full Catalog
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />

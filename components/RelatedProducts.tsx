@@ -23,12 +23,10 @@ export default async function RelatedProducts({
   if (!suggestions.length) return null;
 
   return (
-    <div className="-mx-5 sm:mx-0 bg-[var(--grid-divider)] p-px sm:bg-transparent sm:p-0">
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-px sm:gap-6">
-        {suggestions.map((p) => (
-          <ProductCard product={p} key={p.id} />
-        ))}
-      </div>
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+      {suggestions.map((p) => (
+        <ProductCard product={p} key={p.id} />
+      ))}
     </div>
   );
 }

@@ -10,7 +10,8 @@ import {
   type CatType,
   type EarringCategory,
 } from "../libs/earringCategories";
-import { Filter, Check, Lock, SlidersHorizontal, X } from "lucide-react";
+import { Filter, Check, Lock, SlidersHorizontal, X, ChevronDown } from "lucide-react";
+import { getProductPriceInfo, getStartingVariantPriceInfo } from "../libs/pricing";
 
 type Props = {
   products: Product[];
@@ -30,11 +31,22 @@ function hayMatches(hay: string, c: EarringCategory) {
 
 type Selected = Record<CatType, string[]>;
 
+function getDisplayPrice(p: Product): number {
+  const variants = Array.isArray(p.variants) ? p.variants : [];
+  const info =
+    variants.length > 0
+      ? getStartingVariantPriceInfo(p)
+      : getProductPriceInfo(p);
+  return info?.final ?? 0;
+}
+
 export default function EarringFilterBrowser({ products, lockedType, lockedSlug }: Props) {
   const [sel, setSel] = useState<Selected>({ style: [], finish: [], occasion: [] });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ style: true });
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
 
-  // Lock body scroll + close on Escape while the mobile drawer is open
   useEffect(() => {
     if (!mobileOpen) return;
     document.documentElement.classList.add("no-scroll");
@@ -51,16 +63,24 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
   const isLocked = (key: CatType, slug: string) => key === lockedType && slug === lockedSlug;
 
   const toggle = (key: CatType, slug: string) => {
-    if (isLocked(key, slug)) return; // locked: cannot toggle off
+    if (isLocked(key, slug)) return;
     setSel((s) => ({
       ...s,
       [key]: s[key].includes(slug) ? s[key].filter((x) => x !== slug) : [...s[key], slug],
     }));
   };
 
-  const clearAll = () => setSel({ style: [], finish: [], occasion: [] });
+  const toggleSection = (key: string) => {
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
-  // Effective selections include the locked category
+  const clearAll = () => {
+    setSel({ style: [], finish: [], occasion: [] });
+    setPriceMin("");
+    setPriceMax("");
+    setOpenSections({});
+  };
+
   const effective = useMemo<Selected>(() => {
     const e: Selected = { style: [...sel.style], finish: [...sel.finish], occasion: [...sel.occasion] };
     if (lockedType && lockedSlug && !e[lockedType].includes(lockedSlug)) {
@@ -69,7 +89,8 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
     return e;
   }, [sel, lockedType, lockedSlug]);
 
-  const userCount = sel.style.length + sel.finish.length + sel.occasion.length;
+  const hasPriceFilter = priceMin !== "" || priceMax !== "";
+  const userCount = sel.style.length + sel.finish.length + sel.occasion.length + (hasPriceFilter ? 1 : 0);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -77,7 +98,7 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
       for (const section of SECTIONS) {
         const slugs = effective[section.key];
         if (!slugs.length) continue;
-        const tagged = p[section.key] ?? []; // exact admin facet tags
+        const tagged = p[section.key] ?? [];
         const ok = slugs.some((slug) => {
           if (tagged.includes(slug)) return true;
           const c = section.items.find((i) => i.slug === slug);
@@ -85,69 +106,126 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
         });
         if (!ok) return false;
       }
+
+      if (hasPriceFilter) {
+        const price = getDisplayPrice(p);
+        if (priceMin !== "" && price < Number(priceMin)) return false;
+        if (priceMax !== "" && price > Number(priceMax)) return false;
+      }
+
       return true;
     });
-  }, [products, effective]);
+  }, [products, effective, priceMin, priceMax, hasPriceFilter]);
 
-  // Never empty the landing page when only the locked filter is applied (some
-  // categories have no tagged products yet) — fall back to the full catalog.
   const display = filtered.length === 0 && userCount === 0 ? products : filtered;
 
-  // Section list. On desktop each section gets its own capped scroll area; in the
-  // mobile drawer the sections expand and the whole panel scrolls as one (FinSet-style).
-  const renderSections = (scrollPerSection: boolean) =>
+  const renderSections = () =>
     SECTIONS.map((section) => {
       const count = effective[section.key].length;
+      const isOpen = openSections[section.key] ?? false;
       return (
-        <div key={section.key} className="py-3">
-          <div className="flex items-center justify-between mb-2">
+        <div key={section.key} className="filter-section">
+          <button
+            type="button"
+            onClick={() => toggleSection(section.key)}
+            className="filter-section__header"
+          >
             <span className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: "var(--fg)" }}>
               {section.title}
             </span>
-            {count > 0 && (
-              <span
-                className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: "rgba(var(--gold-rgb),0.16)", color: "rgb(var(--bronze-rgb))" }}
-              >
-                {count}
-              </span>
-            )}
-          </div>
-
-          <div className={`${scrollPerSection ? "filter-scroll" : ""} space-y-1`}>
-            {section.items.map((c) => {
-              const active = effective[section.key].includes(c.slug);
-              const locked = isLocked(section.key, c.slug);
-              return (
-                <button
-                  key={c.slug}
-                  type="button"
-                  onClick={() => toggle(section.key, c.slug)}
-                  className={`filter-option ${active ? "is-active" : ""} w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm`}
+            <div className="flex items-center gap-2">
+              {count > 0 && (
+                <span
+                  className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(var(--gold-rgb),0.16)", color: "rgb(var(--bronze-rgb))" }}
                 >
-                  <span className="flex items-center gap-2 text-left">
-                    {active && <Check size={14} />}
-                    <span className={active ? "font-semibold" : ""}>{c.name}</span>
-                  </span>
-                  {locked && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider opacity-80">
-                      <Lock size={11} /> Lock
+                  {count}
+                </span>
+              )}
+              <ChevronDown
+                size={14}
+                className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                style={{ color: "var(--muted)" }}
+              />
+            </div>
+          </button>
+          {isOpen && (
+            <div className="filter-section__body space-y-1">
+              {section.items.map((c) => {
+                const active = effective[section.key].includes(c.slug);
+                const locked = isLocked(section.key, c.slug);
+                return (
+                  <button
+                    key={c.slug}
+                    type="button"
+                    onClick={() => toggle(section.key, c.slug)}
+                    className={`filter-option ${active ? "is-active" : ""} w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm`}
+                  >
+                    <span className="flex items-center gap-2 text-left">
+                      {active && <Check size={14} />}
+                      <span className={active ? "font-semibold" : ""}>{c.name}</span>
                     </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                    {locked && (
+                      <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider opacity-80">
+                        <Lock size={11} /> Lock
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       );
     });
+
+  const PriceSection = (
+    <div className="filter-section">
+      <button
+        type="button"
+        onClick={() => toggleSection("price")}
+        className="filter-section__header"
+      >
+        <span className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: "var(--fg)" }}>
+          Filter by Price
+        </span>
+        <ChevronDown
+          size={14}
+          className={`transition-transform duration-200 ${openSections["price"] ? "rotate-180" : ""}`}
+          style={{ color: "var(--muted)" }}
+        />
+      </button>
+      {openSections["price"] && (
+        <div className="filter-section__body">
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              placeholder="Min ₹"
+              value={priceMin}
+              onChange={(e) => setPriceMin(e.target.value)}
+              className="filter-price-input"
+              min="0"
+            />
+            <span className="text-sm shrink-0" style={{ color: "var(--muted)" }}>—</span>
+            <input
+              type="number"
+              placeholder="Max ₹"
+              value={priceMax}
+              onChange={(e) => setPriceMax(e.target.value)}
+              className="filter-price-input"
+              min="0"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   const Panel = (
     <div
       className="rounded-2xl p-5"
       style={{
-        background:
-          "var(--filter-bg)",
+        background: "var(--filter-bg)",
         border: "1px solid var(--filter-border)",
       }}
     >
@@ -170,7 +248,8 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
         </button>
       </div>
 
-      {renderSections(true)}
+      {renderSections()}
+      {PriceSection}
     </div>
   );
 
@@ -220,34 +299,31 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
         )}
       </div>
 
-      {/* Mobile drawer — FinSet-style floating panel */}
+      {/* Mobile drawer */}
       <div
         className={`mm-backdrop fixed inset-0 z-50 flex lg:hidden ${
           mobileOpen
-            ? "opacity-100 pointer-events-auto visible"
-            : "opacity-0 pointer-events-none invisible"
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
         onMouseDown={(e) => {
           if (e.target === e.currentTarget) setMobileOpen(false);
         }}
         style={{ background: "rgba(0,0,0,0.45)" }}
       >
+        {/* Wrapper — positioned like CartDrawer: right edge, full height, p-3 gap */}
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Filters"
-          className={`mm-panel ml-auto my-3 mr-3 h-[calc(100%-1.5rem)] w-[88%] max-w-sm rounded-[1.75rem] overflow-hidden flex flex-col transform-gpu ${
-            mobileOpen ? "translate-x-0 opacity-100" : "translate-x-[115%] opacity-0"
+          className={`mm-panel-wrap absolute right-0 top-0 h-full w-full max-w-md p-3 ${
+            mobileOpen ? "is-open" : ""
           }`}
-          style={{
-            background:
-              "var(--filter-bg)",
-            border: "1px solid var(--filter-border)",
-            color: "var(--fg)",
-            boxShadow: "0 30px 70px rgba(0,0,0,0.35)",
-          }}
         >
-          <div className="h-full grid grid-rows-[auto_minmax(0,1fr)_auto] px-5 py-5">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Filters"
+            className="mm-panel flex flex-col h-full overflow-hidden rounded-[28px]"
+          >
+          <div className="flex flex-col h-full overflow-hidden px-5 py-5">
             {/* Header */}
             <div className="flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
@@ -275,13 +351,14 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
             </div>
 
             {/* Sections — whole-area scroll */}
-            <div className="mt-3 min-h-full overflow-y-auto -mr-2 pr-1.5 filter-scroll">
-              {renderSections(false)}
+            <div className="mt-3 flex-1 min-h-0 overflow-y-auto -mr-2 pr-1.5 filter-browser-scroll">
+              {renderSections()}
+              {PriceSection}
             </div>
 
             {/* Footer */}
             <div
-              className="mt-4 pt-4 shrink-0 flex items-center gap-3"
+              className="mt-4 pt-4 pb-[env(safe-area-inset-bottom,0px)] shrink-0 flex items-center gap-3"
               style={{ borderTop: "1px solid var(--header-border)" }}
             >
               <button
@@ -302,6 +379,7 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
               </button>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
