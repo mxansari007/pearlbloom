@@ -1063,12 +1063,18 @@ html[data-theme="light"] li {
   overflow-y: scroll;            /* always show the bar so it reads as scrollable */
   padding-right: 8px;
   scrollbar-width: thin;          /* Firefox */
-  scrollbar-color: rgba(94,24,48,0.6) rgba(94,24,48,0.12);
+  scrollbar-color: rgba(198,174,126,0.35) transparent;
 }
-.mega-scroll::-webkit-scrollbar { width: 9px; }
-.mega-scroll::-webkit-scrollbar-track { background: rgba(94,24,48,0.12); border-radius: 8px; }
-.mega-scroll::-webkit-scrollbar-thumb { background: rgba(94,24,48,0.55); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
-.mega-scroll::-webkit-scrollbar-thumb:hover { background: rgba(94,24,48,0.8); background-clip: content-box; }
+.mega-scroll::-webkit-scrollbar { width: 5px; }
+.mega-scroll::-webkit-scrollbar-track { background: transparent; }
+.mega-scroll::-webkit-scrollbar-thumb { background: rgba(198,174,126,0.35); border-radius: 999px; }
+.mega-scroll::-webkit-scrollbar-thumb:hover { background: rgba(198,174,126,0.6); }
+
+:root[data-theme="light"] .mega-scroll {
+  scrollbar-color: rgba(125,110,77,0.3) transparent;
+}
+:root[data-theme="light"] .mega-scroll::-webkit-scrollbar-thumb { background: rgba(125,110,77,0.3); }
+:root[data-theme="light"] .mega-scroll::-webkit-scrollbar-thumb:hover { background: rgba(125,110,77,0.55); }
 
 /* ===== Hero featured image — light/dark crossfade =====
    Both images are stacked; opacity is driven by the theme so toggling dark
@@ -1191,7 +1197,7 @@ html[data-theme="light"] li {
   --header-hover: rgba(0, 0, 0, 0.06);
   --nav-pill-bg: rgba(255, 255, 255, 0.72);
   /* Catalog mega-menu (light) */
-  --mega-bg: linear-gradient(155deg, #fdeff2 0%, #f5dde3 45%, #ecc9d2 100%);
+  --mega-bg: #f9f8f8;
   --mega-border: rgba(94, 24, 48, 0.16);
   /* Hero featured-image caption card (light) */
   --hero-cap-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.82));
