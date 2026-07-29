@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useCartStore } from "@/store/useCartStore";
 import Image from "next/image";
@@ -20,6 +21,16 @@ export default function CartDrawer() {
   const { items, isOpen, close, removeItem, updateQty, clear } = useCartStore();
   const configLoaded = useAppConfigStore((s) => s.configLoaded);
   const freeShippingAbove = useAppConfigStore((s) => s.freeShippingAbove);
+
+  /* ---------- lock body scroll when open ---------- */
+  useEffect(() => {
+    if (isOpen) {
+      document.documentElement.classList.add("no-scroll");
+    } else {
+      document.documentElement.classList.remove("no-scroll");
+    }
+    return () => document.documentElement.classList.remove("no-scroll");
+  }, [isOpen]);
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);

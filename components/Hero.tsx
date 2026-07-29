@@ -41,7 +41,7 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
   return (
     <section
       className="relative overflow-hidden"
-      style={{ background: "linear-gradient(135deg, var(--hero-grad-1), var(--hero-grad-2))" }}
+      style={{ background: "linear-gradient(to bottom, var(--hero-grad-1), var(--hero-grad-2))" }}
     >
       {/* soft ambient glow */}
       <div className="absolute inset-0 pointer-events-none">

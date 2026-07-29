@@ -369,7 +369,8 @@ export default function Header() {
           <div className="lg:hidden flex items-center gap-1">
             <ThemeToggle />
             <button
-              onClick={openCart}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); openCart(); }}
               aria-label="Open cart"
               className="header-icon-hover relative w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ color: "var(--header-text)" }}
@@ -385,9 +386,10 @@ export default function Header() {
               )}
             </button>
             <button
-              onClick={() => setOpen(true)}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setOpen(true); }}
               aria-label="Open menu"
-              className="header-icon-hover w-10 h-10 rounded-xl flex items-center justify-center"
+              className="header-icon-hover ml-auto w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ color: "var(--header-text)" }}
             >
               <Menu size={22} strokeWidth={1.5} />

@@ -500,7 +500,7 @@ export default function ProductClient({
       {/* Price card */}
       <div
         className="mt-5 rounded-2xl p-4 md:p-5"
-        style={{ background: "#f9f8f8", border: "1px solid var(--card-border)" }}
+        style={{ background: "var(--price-card-bg)", border: "1px solid var(--card-border)" }}
       >
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--muted)" }}>
           Honest Everyday Price
@@ -844,7 +844,7 @@ export default function ProductClient({
                 className="overflow-hidden rounded-2xl"
                 style={{
                   border: "1px solid var(--card-border)",
-                  background: "#f9f8f8",
+                  background: "var(--price-card-bg)",
                   boxShadow: "0 18px 44px -30px rgba(44,10,20,0.45)",
                 }}
               >
@@ -870,7 +870,7 @@ export default function ProductClient({
                     <li
                       key={`${k}-${i}`}
                       className="flex items-baseline justify-between gap-5 px-4 py-1.5"
-                      style={{ background: i % 2 === 1 ? "#f5f3f3" : "transparent" }}
+                      style={{ background: "transparent" }}
                     >
                       {k ? (
                         <>

@@ -42,7 +42,7 @@ const CARDS: Card[] = [
 
 export default function AlternativeSection() {
   return (
-    <section className="relative" style={{ background: "var(--bg)" }}>
+    <section className="relative alternative-section">
       <div className="container py-16 md:py-20">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
@@ -67,9 +67,9 @@ export default function AlternativeSection() {
               key={c.title}
               className="relative rounded-2xl p-6 flex flex-col"
               style={{
-                background: c.highlight ? "var(--hero-card)" : "var(--hero-tile)",
+                background: c.highlight ? "var(--alternative-card-highlight-bg)" : "var(--alternative-card-bg)",
                 border: c.highlight
-                  ? "1.5px solid rgba(var(--bronze-rgb), 0.55)"
+                  ? "1px solid rgb(var(--wine-rgb))"
                   : "1px solid var(--hero-card-border)",
                 boxShadow: c.highlight ? "0 18px 40px rgba(0,0,0,0.10)" : "none",
               }}
@@ -107,7 +107,7 @@ export default function AlternativeSection() {
           ))}
         </div>
 
-        <p className="text-justify italic text-sm mt-10 max-w-3xl" style={{ color: "var(--muted)", textAlignLast: "center", marginLeft: "auto", marginRight: "auto" }}>
+        <p className="text-justify italic text-sm max-w-3xl" style={{ color: "var(--muted)", marginTop: "15px", textAlignLast: "center", marginLeft: "auto", marginRight: "auto" }}>
           &ldquo;We took out the expensive boutique packaging, celebrity endorsement fees, and mall
           retail rents to build beautiful, anti-tarnish earrings for your everyday schedule.&rdquo;
         </p>

@@ -19,7 +19,7 @@ video {
   --footer-grad: linear-gradient(180deg, #060607 0%, #150a10 12%, #320f1b 32%, #4f1322 58%, #5e1830 100%);
 }
 :root[data-theme="light"] {
-  --footer-grad: linear-gradient(180deg, #fafafa 0%, #f3dde2 10%, #b56a78 20%, #4f1322 33%, #5a1626 62%, #74203a 100%);
+  --footer-grad: linear-gradient(180deg, #f9f8f8 0%, #f9f8f8 10%, #b56a78 20%, #4f1322 33%, #5a1626 62%, #74203a 100%);
 }
 
 /* Account page action tiles — subtle lift + gold border on hover */
@@ -54,7 +54,7 @@ video {
   --drawer-muted: rgba(61, 15, 26, 0.62);
   --drawer-line: rgba(94, 24, 48, 0.12);
   --drawer-pill: #f6e6e1;
-  --filter-bg: linear-gradient(155deg, #fdeff2 0%, #f5dde3 45%, #ecc9d2 100%);
+  --filter-bg: #f9f8f8;
   --filter-border: rgba(94, 24, 48, 0.16);
 }
 /* Brighter filter option labels on the dark filter panel for readability. */
@@ -555,8 +555,13 @@ html[data-theme="light"] li {
   --hero-card-border: rgba(255, 255, 255, 0.10);
   --hero-hairline: rgba(255, 255, 255, 0.12);
   --hero-tile: rgba(255, 255, 255, 0.04);
+  --trust-bg: rgba(255, 255, 255, 0.05);
+  --shop-section-bg: var(--hero-grad-2);
+  --product-grid-bg: var(--bg);
   --bronze-rgb: 198 174 126;       /* warm bronze for dark bg */
   --gold-soft-rgb: 210 184 132;
+  --alternative-card-bg: var(--hero-tile);
+  --alternative-card-highlight-bg: var(--hero-card);
 }
 
 :root[data-theme="light"] {
@@ -567,8 +572,13 @@ html[data-theme="light"] li {
   --hero-card-border: rgba(0, 0, 0, 0.08);
   --hero-hairline: rgba(0, 0, 0, 0.10);
   --hero-tile: #edd6ce;            /* a touch darker than the --bg blush so cards sit on it */
+  --trust-bg: #f9f8f8;
+  --shop-section-bg: linear-gradient(to bottom, #efe4d3 0%, #f9f8f8 100%);
+  --product-grid-bg: #f9f8f8;
   --bronze-rgb: 125 110 77;        /* #7d6e4d warm taupe-bronze */
   --gold-soft-rgb: 176 148 96;     /* #b09460 soft gold accent */
+  --alternative-card-bg: #f9f8f8;
+  --alternative-card-highlight-bg: #f9f8f8;
 }
 
 /* ===== Shop by Style slider (homepage) ===== */
@@ -577,7 +587,7 @@ html[data-theme="light"] li {
 
 .style-card {
   background: var(--hero-tile);
-  border: 1px solid var(--hero-card-border);
+  border: 1px solid rgb(var(--wine-rgb));
   transition: transform .3s cubic-bezier(.2, .8, .2, 1), box-shadow .3s ease, background .3s ease, border-color .3s ease;
 }
 .style-card:hover {
@@ -608,7 +618,7 @@ html[data-theme="light"] li {
   position: relative;
   will-change: transform;
   background: var(--hero-tile);
-  border: 1px solid var(--hero-card-border);
+  border: 1px solid rgb(var(--wine-rgb));
   transition:
     transform .35s cubic-bezier(.22, .61, .36, 1),
     box-shadow .35s ease, background-color .35s ease, border-color .35s ease;
@@ -655,6 +665,7 @@ html[data-theme="light"] li {
 :root[data-theme="light"] .style-card .style-glyph { color: #5e1830; }
 :root[data-theme="light"] .style-card .style-label { color: #3d0f1a; }
 :root[data-theme="light"] .style-card:hover .style-label { color: #7a1e2b; }
+:root[data-theme="light"] .finish-card { background: #f9f8f8; }
 :root[data-theme="light"] .finish-card__icon { color: #5e1830; }
 :root[data-theme="light"] .finish-card__label { color: #1f1015; }
 :root[data-theme="light"] .finish-card__desc { color: rgba(61, 15, 26, 0.74); }
@@ -667,6 +678,9 @@ html[data-theme="light"] li {
 @media (prefers-reduced-motion: reduce) {
   .finish-card, .finish-card:hover, .finish-card:active { transform: none; }
 }
+
+.alternative-section { background: var(--bg); }
+:root[data-theme="light"] .alternative-section { background: #f9f8f8; }
 
 /* ===== Shop by Occasion — image tiles (light-red hover effect) ===== */
 .occasion-card {
@@ -2261,6 +2275,8 @@ a:focus {
   --card-border-hover: rgba(212, 175, 55, 0.35);
   --card-muted: rgba(255, 255, 255, 0.6);
   --grid-divider: rgba(255, 255, 255, 0.08);
+  --price-card-bg: rgba(255, 255, 255, 0.04);
+  --product-details-stripe: rgba(255, 255, 255, 0.08);
 }
 
 /* Light */
@@ -2271,6 +2287,8 @@ a:focus {
   --card-border-hover: rgba(212, 175, 55, 0.45);
   --card-muted: rgba(0, 0, 0, 0.6);
   --grid-divider: rgba(0, 0, 0, 0.08);
+  --price-card-bg: #f9f8f8;
+  --product-details-stripe: #f5f3f3;
 }
 
 /* ===============================

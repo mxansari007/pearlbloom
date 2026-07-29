@@ -49,7 +49,7 @@ function SectionHead({ kicker, title, href, cta }: { kicker: string; title: stri
 
 export default function OccasionsFinishes({ occasions }: { occasions?: OccasionMedia }) {
   return (
-    <section className="relative overflow-hidden" style={{ background: "var(--bg)" }}>
+    <section className="relative overflow-hidden" style={{ background: "transparent" }}>
       <div className="container py-16 md:py-20">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-14">
           {/* Shop by Occasion */}

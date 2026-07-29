@@ -120,7 +120,7 @@ export default function ShopByStyle() {
   };
 
   return (
-    <section className="relative" style={{ background: "var(--bg)" }}>
+    <section className="relative" style={{ background: "transparent" }}>
       <div className="container py-16 md:py-20">
         {/* Header */}
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between mb-9">
