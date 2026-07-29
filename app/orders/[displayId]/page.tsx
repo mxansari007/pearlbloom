@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -65,22 +65,9 @@ export default function OrderDetailsPage() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [retrying, setRetrying] = useState(false);
 
-  /* ---------------- Auth Guard ---------------- */
-
-  useEffect(() => {
-    if (!authInitialized) return;
-
-    if (!isAuthenticated || !user) {
-      router.replace(`/login?redirect=/orders/${displayId}`);
-      return;
-    }
-
-    loadOrder();
-  }, [authInitialized, isAuthenticated, user, displayId]);
-
   /* ---------------- Load Order by displayId ---------------- */
 
-  const loadOrder = async () => {
+  const loadOrder = useCallback(async () => {
     if (!user?.uid) return;
     try {
       setLoading(true);
@@ -122,7 +109,7 @@ export default function OrderDetailsPage() {
               const pData = productSnap.data();
               return { ...item, slug: pData.slug };
             }
-          } catch (e) {
+          } catch {
             console.error("Failed to fetch slug for product", item.productId);
           }
           return item;
@@ -142,38 +129,22 @@ export default function OrderDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [displayId, router, user?.uid]);
 
-  /* ---------------- Timer & Expiry Logic ---------------- */
+  /* ---------------- Auth Guard ---------------- */
 
   useEffect(() => {
-    if (!order || order.status !== "pending") return;
+    if (!authInitialized) return;
 
-    // 5 minutes in milliseconds
-    const EXPIRY_DURATION = 5 * 60 * 1000;
-    const expiresAt = order.createdAt + EXPIRY_DURATION;
+    if (!isAuthenticated || !user) {
+      router.replace(`/login?redirect=/orders/${displayId}`);
+      return;
+    }
 
-    const checkTimer = () => {
-      const now = Date.now();
-      const diff = expiresAt - now;
+    void loadOrder();
+  }, [authInitialized, displayId, isAuthenticated, loadOrder, router, user]);
 
-      if (diff <= 0) {
-        handleDeleteOrder();
-      } else {
-        setTimeLeft(diff);
-      }
-    };
-
-    // Initial check
-    checkTimer();
-
-    // Interval
-    const timerId = setInterval(checkTimer, 1000);
-
-    return () => clearInterval(timerId);
-  }, [order]);
-
-  const handleDeleteOrder = async () => {
+  const handleDeleteOrder = useCallback(async () => {
     if (!order || !order.id) return;
     try {
       await deleteDoc(doc(dbClient, "orders", order.id));
@@ -181,7 +152,24 @@ export default function OrderDetailsPage() {
     } catch (err) {
       console.error("Failed to delete expired order", err);
     }
-  };
+  }, [order, router]);
+
+  /* ---------------- Timer & Expiry Logic ---------------- */
+
+  useEffect(() => {
+    if (!order || order.status !== "pending") return;
+
+    const expiresAt = order.createdAt + 5 * 60 * 1000;
+    const checkTimer = () => {
+      const diff = expiresAt - Date.now();
+      if (diff <= 0) void handleDeleteOrder();
+      else setTimeLeft(diff);
+    };
+
+    checkTimer();
+    const timerId = setInterval(checkTimer, 1000);
+    return () => clearInterval(timerId);
+  }, [handleDeleteOrder, order]);
 
   /* ---------------- Retry Payment Logic ---------------- */
 

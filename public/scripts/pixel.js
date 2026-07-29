@@ -10,7 +10,8 @@ const PIXEL_ID =
 function initializeFacebookPixel(f, b, e, v, n, t, s) {
   if (f.fbq) return;
   n = f.fbq = function () {
-    n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+    if (n.callMethod) n.callMethod.apply(n, arguments);
+    else n.queue.push(arguments);
   };
   if (!f._fbq) f._fbq = n;
   n.push = n;
@@ -39,7 +40,7 @@ if (PIXEL_ID) {
     q.forEach((args) => {
       try {
         window.fbq.apply(window, args);
-      } catch (e) {}
+      } catch {}
     });
     window.__pbFbqQueue = [];
   }

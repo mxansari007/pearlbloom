@@ -885,7 +885,9 @@ html[data-theme="light"] li {
 .mm-accordion > div { overflow: hidden; }
 
 .mm-sub {
-  display: block;
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
   padding: 0.4rem 0.6rem;
   border-radius: 0.6rem;
   font-size: 0.85rem;
@@ -1935,8 +1937,8 @@ a:focus {
   }
 
   .product-card__wishlist {
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 2.75rem;
+    height: 2.75rem;
     top: 0.45rem;
     right: 0.45rem;
   }
@@ -1947,8 +1949,8 @@ a:focus {
   }
 
   .product-card__add-btn {
-    width: 2rem;
-    height: 2rem;
+    width: 2.75rem;
+    height: 2.75rem;
   }
 
   .product-card__add-btn svg {

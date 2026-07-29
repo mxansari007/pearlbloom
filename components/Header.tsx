@@ -73,13 +73,6 @@ const CURATED: { label: string; desc: string; href: string }[] = [
   { label: "Best Sellers", desc: "Treasured favorites voted by you", href: "/earrings/best-sellers" },
 ];
 
-const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "All Earrings", href: "/earrings" },
-  { label: "New Arrivals", href: "/earrings/new-arrivals" },
-  { label: "Best Sellers", href: "/earrings/best-sellers" },
-];
-
 function MegaColumn({
   title,
   count,
@@ -134,6 +127,7 @@ export default function Header() {
   const catalogRef = useRef<HTMLDivElement | null>(null);
   const megaPanelRef = useRef<HTMLDivElement | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrolledRef = useRef(false);
 
   const openCart = useCartStore((s) => s.open);
   const cartCount = useCartStore((s) => s.items.reduce((sum, item) => sum + item.quantity, 0));
@@ -141,7 +135,11 @@ export default function Header() {
   /* Scroll detection */
   useEffect(() => {
     function onScroll() {
-      setScrolled(window.scrollY > 20);
+      const nextScrolled = window.scrollY > 20;
+      if (nextScrolled !== scrolledRef.current) {
+        scrolledRef.current = nextScrolled;
+        setScrolled(nextScrolled);
+      }
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
@@ -156,13 +154,6 @@ export default function Header() {
     mq.addEventListener?.("change", update);
     return () => mq.removeEventListener?.("change", update);
   }, []);
-
-  /* Close menus on route change */
-  useEffect(() => {
-    setOpen(false);
-    setUserMenuOpen(false);
-    setCatalogOpen(false);
-  }, [pathname]);
 
   /* Click-outside handlers */
   useEffect(() => {

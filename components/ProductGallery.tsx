@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { useProductVariant } from '../hooks/useProductVariant'
@@ -22,9 +22,7 @@ export default function ProductGallery({ images = [], alt = '', imageAlt = {} }:
   const [index, setIndex] = useState(0)
   const [open, setOpen] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => setMounted(true), [])
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
   
   // Touch handling
   const touchStartX = useRef<number | null>(null)
@@ -35,10 +33,13 @@ export default function ProductGallery({ images = [], alt = '', imageAlt = {} }:
 
   const minSwipeDistance = 50
 
-  // Reset index when images change
-  useEffect(() => {
+  const imageSetKey = `${variantSelected}:${currentImages.join('|')}`
+  const [previousImageSetKey, setPreviousImageSetKey] = useState(imageSetKey)
+  if (previousImageSetKey !== imageSetKey) {
+    setPreviousImageSetKey(imageSetKey)
     setIndex(0)
-  }, [currentImages.length, variantSelected])
+    setIsZoomed(false)
+  }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

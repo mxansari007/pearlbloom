@@ -3,7 +3,6 @@ export const revalidate = 60;
 
 import type { Metadata } from 'next'
 import { getAllProducts, attachRatings } from '../../libs/products.server'
-import CollectionHero from '../../components/CollectionHero'
 import CollectionBrowser from '../../components/CollectionBrowser'
 import type { Product } from '../../types/products'
 

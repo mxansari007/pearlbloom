@@ -285,7 +285,7 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
         {display.length ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
             {display.map((p, i) => (
-              <ProductCard key={p.slug || p.id} product={p} priority={i < 4} />
+              <ProductCard key={p.slug || p.id} product={p} priority={i < 2} />
             ))}
           </div>
         ) : (
@@ -350,7 +350,7 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
                 type="button"
                 aria-label="Close filters"
                 onClick={() => setMobileOpen(false)}
-                className="mm-close flex items-center justify-center w-9 h-9 rounded-full"
+                className="mm-close flex items-center justify-center w-11 h-11 rounded-full"
               >
                 <X size={18} />
               </button>

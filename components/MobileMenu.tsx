@@ -173,7 +173,7 @@ export default function MobileMenu({ open, onClose, catalog }: Props) {
             <button
               aria-label="Close menu"
               onClick={onClose}
-              className="mm-close flex items-center justify-center w-9 h-9 rounded-full"
+              className="mm-close flex items-center justify-center w-11 h-11 rounded-full"
             >
               <X size={18} />
             </button>

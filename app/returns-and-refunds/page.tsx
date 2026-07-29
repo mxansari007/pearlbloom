@@ -73,9 +73,9 @@ export default function ReturnsAndRefundsPage() {
             <h2 className="text-lg font-medium">How to request</h2>
             <p className="text-sm text-muted mt-2">
               Visit your{" "}
-              <a href="/orders" className="underline underline-offset-2">Orders</a>{" "}
+              <Link href="/orders" className="underline underline-offset-2">Orders</Link>{" "}
               page for order details, then reach us through{" "}
-              <a href="/contact" className="underline underline-offset-2">Contact</a>{" "}
+              <Link href="/contact" className="underline underline-offset-2">Contact</Link>{" "}
               within 2 days of delivery with your order ID, unboxing video, and photos. Our team will
               guide you through the next steps.
             </p>
@@ -91,3 +91,4 @@ export default function ReturnsAndRefundsPage() {
     </main>
   );
 }
+import Link from "next/link";

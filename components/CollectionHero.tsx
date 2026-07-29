@@ -1,6 +1,6 @@
 // src/components/CollectionHero.tsx
 import Image from 'next/image'
-import type { ReactNode } from 'react'
+import Link from 'next/link'
 
 export default function CollectionHero({
   title,
@@ -24,7 +24,7 @@ export default function CollectionHero({
 
           <div className="mt-6 flex gap-3">
             <a href="#browse" className="btn-cta">Browse collections</a>
-            <a href="/contact" className="rounded-md px-4 py-2 border border-white/6 hover:bg-white/2 transition text-sm">Custom design</a>
+            <Link href="/contact" className="rounded-md px-4 py-2 border border-white/6 hover:bg-white/2 transition text-sm">Custom design</Link>
           </div>
 
           <div className="mt-6 text-sm text-muted">
@@ -33,8 +33,7 @@ export default function CollectionHero({
         </div>
 
         <div className="relative h-72 lg:h-96 w-full">
-          {/* use native <img> for now (keeps config minimal); replace with next/image if you want optimization */}
-          <img src={image} alt={title} className="w-full h-full object-cover" />
+          {image ? <Image src={image} alt={title} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" /> : null}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         </div>
       </div>

@@ -3,33 +3,12 @@ import './globals.css'
 import { Suspense, type ReactNode } from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
-import ChatWidget from '@/components/ChatWIdget'
 
-// next/font/google (App Router friendly)
-import { Playfair_Display, Inter } from 'next/font/google'
-import SunriseOverlay from '../components/SunriseOverlay' // adjust path if needed
 import AuthProvider from '@/components/AuthProvider'
-import CartDrawer from "@/components/CartDrawer";
+import ClientOverlays from "@/components/ClientOverlays";
 import { ThemeApplier } from '@/components/ThemeApplier'
-import Script from 'next/script'
 import PostHogClient from '@/components/PostHogClient'
 import FacebookPixel from '@/components/FacebookPixel'
-
-// load Playfair Display for headings (Display) and Inter for body.
-// adjust weights if you need more/less variants.
-const playfair = Playfair_Display({
-  weight: ['400', '600', '700'],
-  style: ['normal', 'italic'],
-  subsets: ['latin'],
-  variable: '--font-playfair',
-  display: 'swap',
-})
-const inter = Inter({
-  weight: ['400', '600', '700'],
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-})
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://pearlbloom.in'
 
@@ -80,9 +59,7 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    // apply both font variables on html so CSS can use them if needed
-    <AuthProvider>
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="en">
       <head>
         <link rel="preconnect" href="https://pearlboom-74976.firebaseapp.com" />
         <link rel="preconnect" href="https://www.googleapis.com" />
@@ -125,21 +102,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="min-h-screen bg-[--background] text-[--foreground] font-sans">
-        <FacebookPixel />
-        <Suspense fallback={null}>
-          <PostHogClient />
-        </Suspense>
-
-      
-        <ThemeApplier />
-        <Header />
-
-        <main>{children}</main>
-        <CartDrawer />
-        <ChatWidget />
-        <Footer />
+        <AuthProvider>
+          <FacebookPixel />
+          <Suspense fallback={null}>
+            <PostHogClient />
+          </Suspense>
+          <ThemeApplier />
+          <Header />
+          <main>{children}</main>
+          <ClientOverlays />
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
-    </AuthProvider>
   )
 }

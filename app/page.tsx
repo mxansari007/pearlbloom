@@ -11,7 +11,6 @@ import AlternativeSection from "../components/AlternativeSection";
 import ReviewsSection from "../components/ReviewsSection";
 import ProductGrid from "../components/ProductGrid";
 import CollectionCard from "../components/CollectionCard";
-import SubscribeForm from "../components/SubscriptionForm";
 
 import { getHomepageSections } from "../libs/homepage.server";
 import { getProductsByIds, getAllProducts, getFeaturedProducts, getNewArrivalProducts } from "../libs/products.server";
@@ -726,6 +725,14 @@ export default async function Home() {
               fallback={<CollectionsSkeleton title={section.title} />}
             >
               <CollectionsRowSection section={section} />
+            </Suspense>
+          );
+        }
+
+        if (section.type === "featuredProducts") {
+          return (
+            <Suspense key={section.id} fallback={<SectionSkeleton title={section.title} />}>
+              <FeaturedProductsSection section={section} />
             </Suspense>
           );
         }

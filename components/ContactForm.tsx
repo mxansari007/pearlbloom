@@ -75,7 +75,7 @@ export default function ContactForm({ contactEmail = CONTACT_RECIPIENT }: Props)
       openMailClient()
       setSent(true)
       localStorage.removeItem(STORAGE_KEY)
-    } catch (err) {
+    } catch {
       setError('Could not send message. Please try again or email us directly.')
     } finally {
       setLoading(false)

@@ -107,7 +107,7 @@ export default function CheckoutPage() {
       router.replace("/cart");
       return;
     }
-  }, [authInitialized, isAuthenticated, items, isOrderPlaced]);
+  }, [authInitialized, isAuthenticated, items, isOrderPlaced, router]);
 
   if (!authInitialized) {
     return (

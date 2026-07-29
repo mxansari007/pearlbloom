@@ -213,8 +213,7 @@ export default function Hero({ hero }: { hero: HeroData | null }) {
                     src={darkImg}
                     alt={heroAlt}
                     fill
-                    priority
-                    fetchPriority="high"
+                    loading="lazy"
                     sizes="(max-width: 1024px) 90vw, 45vw"
                     className="object-cover hero-img hero-img-dark"
                   />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { Sparkles, ShieldCheck } from "lucide-react";
 import { useAppConfigStore } from "@/store/useAppStore";
@@ -32,8 +32,7 @@ export default function ProductAssuranceCards({
   // Persisted config rehydrates from localStorage before React hydrates, so
   // render the server-safe default until mounted to keep SSR and the first
   // client render identical (only matters for the dynamic fallback below).
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
 
   useEffect(() => {
     if (!configLoaded) loadConfig();

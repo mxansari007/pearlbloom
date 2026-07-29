@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { addDoc, collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
+import { addDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { X, Star, Loader2 } from "lucide-react";
 import { dbClient } from "@/libs/firebase-client";
 import { useAuthStore } from "@/store/useAppStore";
