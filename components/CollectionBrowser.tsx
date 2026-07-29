@@ -444,7 +444,11 @@ export default function CollectionBrowser({ initialProducts, categories = [] }: 
           </button>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); setFilterDrawerOpen(true); }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setFilterDrawerOpen(true);
+            }}
             className="flex items-center justify-center gap-2 py-4 text-sm font-semibold tracking-wide"
             style={{
               color: "var(--fg)",

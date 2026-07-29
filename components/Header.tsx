@@ -370,7 +370,14 @@ export default function Header() {
             <ThemeToggle />
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); openCart(); }}
+              onClick={(e) => {
+                // Buttons may be rendered inside a navigable header area by
+                // a parent integration. Cancelling both propagation and the
+                // anchor default keeps this action local in either case.
+                e.preventDefault();
+                e.stopPropagation();
+                openCart();
+              }}
               aria-label="Open cart"
               className="header-icon-hover relative w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ color: "var(--header-text)" }}
@@ -387,7 +394,11 @@ export default function Header() {
             </button>
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setOpen(true);
+              }}
               aria-label="Open menu"
               className="header-icon-hover ml-auto w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ color: "var(--header-text)" }}

@@ -267,7 +267,13 @@ export default function EarringFilterBrowser({ products, lockedType, lockedSlug 
           {/* Mobile filter toggle */}
           <button
             type="button"
-            onClick={() => setMobileOpen(true)}
+            onClick={(e) => {
+              // Prevent a surrounding mobile navigation target from treating
+              // this panel control as a click on the home link.
+              e.preventDefault();
+              e.stopPropagation();
+              setMobileOpen(true);
+            }}
             className="lg:hidden inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold"
             style={{ border: "1px solid var(--hero-card-border)", background: "var(--hero-card)", color: "var(--fg)" }}
           >

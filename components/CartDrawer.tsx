@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCartStore } from "@/store/useCartStore";
 import Image from "next/image";
 import { ShoppingBag, Trash2, Plus, Minus, X } from "lucide-react";
@@ -19,6 +20,7 @@ const CARD = "var(--drawer-card)";
 
 export default function CartDrawer() {
   const { items, isOpen, close, removeItem, updateQty, clear } = useCartStore();
+  const pathname = usePathname();
   const configLoaded = useAppConfigStore((s) => s.configLoaded);
   const freeShippingAbove = useAppConfigStore((s) => s.freeShippingAbove);
 
@@ -31,6 +33,13 @@ export default function CartDrawer() {
     }
     return () => document.documentElement.classList.remove("no-scroll");
   }, [isOpen]);
+
+  // This drawer is mounted in the root layout and therefore survives route
+  // changes. Close it on navigation so a partially opened drawer cannot leave
+  // the document scroll-locked on the destination page.
+  useEffect(() => {
+    close();
+  }, [pathname, close]);
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);

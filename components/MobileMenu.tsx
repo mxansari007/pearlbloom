@@ -55,9 +55,10 @@ export default function MobileMenu({ open, onClose, catalog }: Props) {
 
   /* ---------- lock body scroll ---------- */
   useEffect(() => {
+    let focusTimer: ReturnType<typeof setTimeout> | undefined;
     if (open) {
       document.documentElement.classList.add("no-scroll");
-      setTimeout(() => {
+      focusTimer = setTimeout(() => {
         const firstFocusable = panelRef.current?.querySelector<HTMLElement>(
           'a, button, [tabindex]:not([tabindex="-1"])'
         );
@@ -66,7 +67,10 @@ export default function MobileMenu({ open, onClose, catalog }: Props) {
     } else {
       document.documentElement.classList.remove("no-scroll");
     }
-    return () => document.documentElement.classList.remove("no-scroll");
+    return () => {
+      if (focusTimer) clearTimeout(focusTimer);
+      document.documentElement.classList.remove("no-scroll");
+    };
   }, [open]);
 
   /* ---------- close on escape + focus trap ---------- */
