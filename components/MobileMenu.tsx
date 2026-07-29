@@ -143,7 +143,9 @@ export default function MobileMenu({ open, onClose, catalog }: Props) {
         aria-modal="true"
         aria-label="Mobile menu"
         className={`mm-panel ml-auto my-3 mr-3 h-[calc(100%-1.5rem)] w-[88%] max-w-sm rounded-[1.75rem] overflow-hidden flex flex-col transform-gpu ${
-          open ? "translate-x-0 opacity-100" : "translate-x-[115%] opacity-0"
+          open
+            ? "translate-x-0 opacity-100 pointer-events-auto visible"
+            : "translate-x-[115%] opacity-0 pointer-events-none invisible"
         }`}
         style={{
           background: "var(--panel)",
