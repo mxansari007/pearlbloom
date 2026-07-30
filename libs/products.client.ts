@@ -79,6 +79,11 @@ function mapProductDoc(
   brand: data.brand ?? "",
   categories: Array.isArray(data.categories) ? data.categories : [],
 
+    // Video
+  youtubeVideoUrl: data.youtubeVideoUrl ?? "",
+  videoThumbnailImage: data.videoThumbnailImage ?? "",
+  videoThumbnailAltText: data.videoThumbnailAltText ?? "",
+
   // Flags
   isFeatured: Boolean(data.isFeatured),
 

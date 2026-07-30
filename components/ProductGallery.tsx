@@ -4,15 +4,18 @@ import { useEffect, useState, useRef, useCallback, useSyncExternalStore } from '
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { useProductVariant } from '../hooks/useProductVariant'
-import { ChevronLeft, ChevronRight, ZoomIn, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ZoomIn, X, Play } from 'lucide-react'
 
 type Props = {
   images?: string[]
   alt?: string
   imageAlt?: Record<string, string>
+  youtubeVideoUrl?: string
+  videoThumbnailImage?: string
+  videoThumbnailAltText?: string
 }
 
-export default function ProductGallery({ images = [], alt = '', imageAlt = {} }: Props) {
+export default function ProductGallery({ images = [], alt = '', imageAlt = {}, youtubeVideoUrl, videoThumbnailImage, videoThumbnailAltText }: Props) {
   const altFor = (src: string, fallback: string) => imageAlt[src]?.trim() || alt || fallback
   const { selectedVariant } = useProductVariant()
   const variantSelected = !!selectedVariant
@@ -22,6 +25,24 @@ export default function ProductGallery({ images = [], alt = '', imageAlt = {} }:
   const [index, setIndex] = useState(0)
   const [open, setOpen] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
+  const [showVideo, setShowVideo] = useState(false)
+
+  const hasVideo = !variantSelected && !!youtubeVideoUrl && !!videoThumbnailImage
+  const videoIndex = currentImages.length
+  const totalSlides = currentImages.length + (hasVideo ? 1 : 0)
+
+  function getYouTubeVideoId(url: string): string | null {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    ]
+    for (const p of patterns) {
+      const m = url.match(p)
+      if (m) return m[1]
+    }
+    return null
+  }
+
+  const videoId = youtubeVideoUrl ? getYouTubeVideoId(youtubeVideoUrl) : null
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
   
   // Touch handling
@@ -64,17 +85,17 @@ export default function ProductGallery({ images = [], alt = '', imageAlt = {} }:
     }
   }, [open])
 
-  const safeIndex = Math.min(index, Math.max(0, currentImages.length - 1))
+  const safeIndex = Math.min(index, Math.max(0, totalSlides - 1))
 
   const next = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation()
-    setIndex((i) => (i + 1) % currentImages.length)
-  }, [currentImages.length])
+    setIndex((i) => (i + 1) % totalSlides)
+  }, [totalSlides])
 
   const prev = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation()
-    setIndex((i) => (i - 1 + currentImages.length) % currentImages.length)
-  }, [currentImages.length])
+    setIndex((i) => (i - 1 + totalSlides) % totalSlides)
+  }, [totalSlides])
 
   // Touch handlers for swipe
   const onTouchStart = (e: React.TouchEvent) => {
@@ -113,6 +134,7 @@ export default function ProductGallery({ images = [], alt = '', imageAlt = {} }:
   }
 
   function openAt(i: number) {
+    if (hasVideo && i === videoIndex) return
     setIndex(i)
     setOpen(true)
   }
@@ -166,6 +188,38 @@ export default function ProductGallery({ images = [], alt = '', imageAlt = {} }:
                   />
                 </div>
               ))}
+              {hasVideo && (
+                <div className="gallery__slide" key="video-slide">
+                  {showVideo && videoId ? (
+                    <iframe
+                      src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full"
+                      title={videoThumbnailAltText || "Product video"}
+                    />
+                  ) : (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <Image
+                        src={videoThumbnailImage!}
+                        alt={videoThumbnailAltText || "Product video thumbnail"}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-contain"
+                        draggable={false}
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setShowVideo(true) }}
+                        aria-label="Play product video"
+                        className="absolute z-10 flex items-center justify-center w-16 h-16 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                      >
+                        <Play size={28} className="ml-0.5" fill="white" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </button>
@@ -177,7 +231,7 @@ export default function ProductGallery({ images = [], alt = '', imageAlt = {} }:
         </div>
 
         {/* Navigation arrows */}
-        {currentImages.length > 1 && (
+        {totalSlides > 1 && (
           <>
             <button
               onClick={(e) => { e.stopPropagation(); prev(); }}
@@ -197,9 +251,9 @@ export default function ProductGallery({ images = [], alt = '', imageAlt = {} }:
         )}
 
         {/* Dots indicator (mobile-friendly) */}
-        {currentImages.length > 1 && (
+        {totalSlides > 1 && (
           <div className="gallery__dots">
-            {currentImages.map((_, i) => (
+            {Array.from({ length: totalSlides }).map((_, i) => (
               <button
                 key={i}
                 onClick={(e) => { e.stopPropagation(); setIndex(i); }}
@@ -211,7 +265,7 @@ export default function ProductGallery({ images = [], alt = '', imageAlt = {} }:
         )}
 
         {/* Swipe hint for mobile */}
-        {currentImages.length > 1 && (
+        {totalSlides > 1 && (
           <div className="gallery__swipe-hint">
             <ChevronLeft size={14} />
             <span>Swipe</span>
@@ -221,7 +275,7 @@ export default function ProductGallery({ images = [], alt = '', imageAlt = {} }:
       </div>
 
       {/* Thumbnails (hidden on very small screens) */}
-      {currentImages.length > 1 && (
+      {totalSlides > 1 && (
         <div className="gallery__thumbs">
           {currentImages.map((src, i) => (
             <button
@@ -240,6 +294,26 @@ export default function ProductGallery({ images = [], alt = '', imageAlt = {} }:
               />
             </button>
           ))}
+          {hasVideo && (
+            <button
+              key="video-thumb"
+              onClick={() => { setIndex(videoIndex); setShowVideo(false) }}
+              aria-label="View product video"
+              aria-pressed={safeIndex === videoIndex}
+              className={`gallery__thumb relative ${safeIndex === videoIndex ? 'gallery__thumb--active' : ''}`}
+            >
+              <Image
+                src={videoThumbnailImage!}
+                alt={videoThumbnailAltText || "Video thumbnail"}
+                fill
+                sizes="80px"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <Play size={16} fill="white" className="text-white" />
+              </div>
+            </button>
+          )}
         </div>
       )}
 

@@ -96,6 +96,9 @@ export default async function ProductDetail({ product }: { product: Product }) {
                   images={images}
                   alt={product.name}
                   imageAlt={product.imageAlt}
+                  youtubeVideoUrl={product.youtubeVideoUrl}
+                  videoThumbnailImage={product.videoThumbnailImage}
+                  videoThumbnailAltText={product.videoThumbnailAltText}
                 />
                 <ProductAssuranceCards cards={product.assuranceCards} />
               </div>

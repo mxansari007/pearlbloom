@@ -79,6 +79,13 @@ export type Product = {
   /** url -> alt text for each product image (admin-set; SEO + accessibility). */
   imageAlt?: Record<string, string>;
 
+  /** YouTube video URL for the product video (admin-set, optional). */
+  youtubeVideoUrl?: string;
+  /** Admin-uploaded thumbnail image for the YouTube video. */
+  videoThumbnailImage?: string;
+  /** Alt text for the video thumbnail image. */
+  videoThumbnailAltText?: string;
+
   /** Admin SEO overrides for the product detail page. */
   metaTitle?: string;
   metaDescription?: string;
